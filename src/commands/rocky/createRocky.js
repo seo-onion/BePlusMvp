@@ -1,5 +1,4 @@
 const { SlashCommandBuilder } = require("discord.js");
-const { data } = require("../utility/ping");
 
 module.exports = {
   data: new SlashCommandBuilder()
