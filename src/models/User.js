@@ -4,7 +4,7 @@ const { sequelize } = require("../config/database");
 const User = sequelize.define(
   "User",
   {
-    Userid: {
+    userid: {
       type: DataTypes.STRING, 
       primaryKey: true,
     },
@@ -21,6 +21,15 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    GoogleToken: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    GoogleRefreshToken: { 
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+
     age: {
       type: DataTypes.INTEGER,
       allowNull: true,
