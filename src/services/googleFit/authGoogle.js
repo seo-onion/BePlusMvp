@@ -5,7 +5,7 @@ const express = require("express");
 const AuthGoogle = express();
 
 AuthGoogle.get("/api/auth/google", (req, res) => {
-  const authUrl=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.REDIRECT_URI}&response_type=code&scope=https://www.googleapis.com/auth/fitness.activity.read&access_type=offline&prompt=consent`;
+  const authUrl=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}&response_type=code&scope=https://www.googleapis.com/auth/fitness.activity.read&access_type=offline&prompt=consent`;
   
   res.redirect(authUrl);
 });
@@ -20,9 +20,9 @@ AuthGoogle.get("/api/auth/google/callback", async (req, res) => {
   try {
       const params = new URLSearchParams({
           code,
-          client_id: process.env.CLIENT_ID,
-          client_secret: process.env.CLIENT_SECRET,
-          redirect_uri: process.env.REDIRECT_URI,
+          client_id: process.env.GOOGLE_CLIENT_ID,
+          client_secret: process.env.GOOGLE_CLIENT_SECRET,
+          redirect_uri: process.env.GOOGLE_REDIRECT_URI,
           grant_type: "authorization_code",
       });
 
@@ -43,6 +43,7 @@ AuthGoogle.get("/api/auth/google/callback", async (req, res) => {
           return res.status(500).send("Error al obtener el token.");
       }
 
+      
 
       
       process.env.ACCESS_TOKEN = data.access_token
