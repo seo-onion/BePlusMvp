@@ -1,5 +1,6 @@
-const { Sequelize, DataTypes } = require("sequelize");
+const { Sequelize} = require("sequelize");
 require("dotenv").config();
+
 
 const sequelize = new Sequelize(
   process.env.POSTGRES_DB,
@@ -13,9 +14,6 @@ const sequelize = new Sequelize(
   }
 );
 
-sequelize
-  .authenticate()
-  .then(() => console.log("✅ Conexión a la base de datos exitosa"))
-  .catch((err) => console.error("❌ Error de conexión:", err));
 
-module.exports = { sequelize, DataTypes };
+
+module.exports = {sequelize};

@@ -9,15 +9,11 @@ module.exports = {
         .setDescription("Vincula tu cuenta de Discord con la aplicacion de google fit"),
 
     async execute(interaction) {
-        member = interaction.member;
+        const Id = interaction.user.id; // Obtiene el ID del usuario de Discord
 
-        if (!member.roles.cache.has(ROLE_ID)) {
-            return interaction.reply({ content: '⛔ tu cuenta ya está vinculada :D.', ephemeral: true });
-        }
+        // Generar la URL de autenticación con el ID del usuario como parámetro de estado
+        const authUrl = `http://localhost:3000/api/auth/google?id=${Id}`;
 
-        await interaction.reply({
-            content: `Haz clic en el siguiente enlace para vincular tu cuenta con Google Fit:\n[autenticarme](${URL})`,
-            ephemeral: true,
-        });
+        await interaction.reply(`🔗 Haz clic en el siguiente enlace para vincular Google Fit: [Conectar Google Fit](${authUrl})`);
     },
 };
