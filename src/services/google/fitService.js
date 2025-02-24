@@ -1,9 +1,10 @@
 const axios = require('axios');
 const Auth = require("../../models/User/Auth");
 const User = require("../../models/User/Users");
-const Claim = require("../../models/Fit/Currency");
+const Transaction = require("../../models/Item/Transaction");
 const { refreshGoogleToken } = require("../token/tokenService");
-
+const { createTransaction } = require("../item/economyService");
+const { Op } = require("sequelize");
 
 exports.addGoogleAuth = async (req) => {
     try {
@@ -87,38 +88,42 @@ exports.getSteps = async (req) => {
 exports.claimRockyCoins = async (userId) => {
 
     try {
-        const lastClaim = await Claim.findOne(
-            {
-                where: {
-                    userId: userId,
-                    lastClaimedAt: new Date().toISOString().split("T")[0],
-                    type: "reclamar"
+        console.log("Obteniendo las recompensas del día anterior")
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    
+        const lastClaim = await Transaction.findOne({
+            where: {
+                userId: userId,
+                type: "reward",
+                productId: "db98908a-466d-4681-a40a-fe8e06af9d8b",
+                createdAt: {
+                    [Op.between]: [startOfDay, endOfDay] // ✅ Filtrar por transacciones del día
                 }
-            })
+            }
+        });
 
-        console.log(lastClaim)
+        
         if (lastClaim) {
+            console.log("Recompensa ya obtenida")
             return {
                 success: false,
-                message: "Ya hiciste claim antes"
+                message: "Recompensa ya obtenida"
             }
         }
-
+        
         const newClaim = await this.getSteps({ startTimeMillis: Date.now() - 86400000 * 2, endTimeMillis: Date.now() - 86400000, userId: userId })
         const user = await User.findByPk(userId)
 
-
-
+        const oldRockyCoins = user.rockyCoins
         const rockyCoinsObtained = Math.floor(newClaim.steps / 1000)
-        const oldRockyCoins = user.rockyCoins;
 
-
-
-        await Claim.create({
+        await createTransaction({
             userId: userId,
-            rockyCoins: rockyCoinsObtained,
-            type: "reclamar",
-            lastClaimedAt: new Date().toISOString().split("T")[0]
+            amount: rockyCoinsObtained,
+            type: "reward",
+            productId: "db98908a-466d-4681-a40a-fe8e06af9d8b"
         })
 
 
@@ -126,6 +131,7 @@ exports.claimRockyCoins = async (userId) => {
             rockyCoins: oldRockyCoins + rockyCoinsObtained
         })
 
+        console.log("Rockycoins reclamadas correctamente")
         return {
             success: true,
             message: `RockyCoins obtenidas: ${rockyCoinsObtained}`

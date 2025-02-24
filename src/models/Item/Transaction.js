@@ -8,21 +8,17 @@ const Transaction = sequelize.define("Transaction", {
         primaryKey: true
     },
     userId: {
-        type: DataTypes.STRING,
-        allowNull: false
+        type: DataTypes.STRING
     },
     amount: {
-        type: DataTypes.INTEGER,
-        allowNull: false
+        type: DataTypes.INTEGER
     },
     type: {
-        type: DataTypes.ENUM("reward"),
-        allowNull: false
+        type: DataTypes.ENUM("reward") //Types of transaction (it will be more)
     },
 
     productId: {
-        type: DataTypes.STRING,
-        allowNull: true
+        type: DataTypes.STRING
     },
 
     createdAt: {

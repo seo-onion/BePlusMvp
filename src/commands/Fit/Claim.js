@@ -15,8 +15,8 @@ module.exports = {
         return (
             await interaction.editReply({
                 content: claim.message,
-                flags: 64
+                flags: 64 
             })
         )
-    },
-};
+        },
+    };
