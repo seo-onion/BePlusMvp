@@ -19,11 +19,11 @@ const Auth = sequelize.define("Auth", {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    GoogleToken: {
+    googleToken: {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    GoogleRefreshToken: {
+    googleRefreshToken: {
       type: DataTypes.STRING,
       allowNull: true,
     },

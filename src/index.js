@@ -4,11 +4,9 @@ const {sequelize} = require("./config/database")
 
 async function main() {
   try {
-    
     console.log("⏳ Conectando a la base de datos...");
     await sequelize.authenticate();
     console.log("✅ Base de datos conectada.");
-
     console.log("⏳ Sincronizando modelos...");
     await sequelize.sync({ alter: true }); // ⚠️ Usa `alter: true` para actualizar sin borrar datos
     console.log("✅ Modelos sincronizados.");

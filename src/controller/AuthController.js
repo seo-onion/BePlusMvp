@@ -3,7 +3,7 @@ require("dotenv").config();
 
 const { getOAuthToken } = require("../services/token/tokenService")
 const { createUser, assignRoleToUser } = require("../services/user/userService")
-const { AddGoogleAuth } = require("../services/google/fitService")
+const { addGoogleAuth } = require("../services/google/fitService")
 
 const GUILD_ID = process.env.GUILD_ID
 NOT_VERIFICATED_ROLE = process.env.NOT_VERIFICATED_ROLE
@@ -121,11 +121,13 @@ const googleAuth = async (req, res) => {
 
         const { access_token, refresh_token } = response;
 
-        await AddGoogleAuth({
+        const authUser = await addGoogleAuth({
             token: access_token,
             refreshToken: refresh_token,
             userId: state
         })
+
+        res.render("response", authUser)
 
     } catch (error) {
         console.error("❌ Error en la autenticación:", error);

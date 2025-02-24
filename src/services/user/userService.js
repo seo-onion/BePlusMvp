@@ -1,5 +1,5 @@
 const User = require("../../models/User/Users");
-const Auth = require("../../models/User/Auth")
+const Auth = require("../../models/User/Auth");
 const Profile = require("../../models/User/Profile")
 require("dotenv").config();
 const axios = require("axios")
@@ -14,7 +14,10 @@ exports.createUser = async (req) => {
   const { id, email, token, refreshToken } = req;
 
   if (!id || !email || !token || !refreshToken) {
-    throw new Error("Faltan datos requeridos");
+    return {
+      success: false,
+      message: "Faltan datos requeridos ",
+    }
   }
 
   let user = await User.findOne({ where: { userId: id } })
@@ -118,3 +121,18 @@ exports.editUser = async (req, res) => {
   }
 };
 
+exports.getAllUser = async () => {
+  try {
+
+    console.log(await User.findAll())
+
+  } catch (error) {
+      console.error("❌ Error al obtener usuarios:", error.message);
+  }
+};
+
+exports.deleteUser = async (id) => {
+  const user = await User.findByPk(id);
+  await user.destroy();
+  console.log(`Se eliminó el usuario ${id}`)
+}

@@ -4,7 +4,7 @@ const Profile = require("./Profile");
 const Auth = require("./Auth");
 
 
-const User = sequelize.define("User", {
+const User = sequelize.define("Users", {
     userId: {
         type: DataTypes.STRING,
         primaryKey: true,
