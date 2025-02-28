@@ -22,11 +22,12 @@ const Items = sequelize.define("Items", {
         allowNull: true
     },
     category: {
-        type: DataTypes.ENUM("badge"),
+        type: DataTypes.ENUM("clothes", "colors", "faces", "emotes", "poses"),
         allowNull: false
     },
 
 }, { timestamps: false });
 
+const ITEM_CATEGORIES = [...Items.getAttributes().category.values];
 
-module.exports = Items;
+module.exports = { Items, ITEM_CATEGORIES };

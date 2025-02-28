@@ -4,3 +4,8 @@ node_module
 trash
 node_modules/
 .node_modules/
+.idea/
+config/
+models/
+migrations
+seeders

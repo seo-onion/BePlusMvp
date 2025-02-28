@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { claimRockyCoins } = require("../../services/google/fitService")
 
 module.exports = {
+    // Setting SlashComandBuilder
     data: new SlashCommandBuilder()
         .setName("reclamar")
         .setDescription("Convierte tus pasos en RockyCoins"),
