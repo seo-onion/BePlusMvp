@@ -4,7 +4,7 @@ const Profile = require("./Profile");
 const Auth = require("./Auth");
 
 
-const User = sequelize.define("Users", {
+const Users = sequelize.define("Users", {
     userId: {
         type: DataTypes.STRING,
         primaryKey: true,
@@ -32,11 +32,11 @@ const User = sequelize.define("Users", {
 });
 
 
-User.hasOne(Auth, { foreignKey: "userId", onDelete: "CASCADE" });
-Auth.belongsTo(User, { foreignKey: "userId" });
+Users.hasOne(Auth, { foreignKey: "userId", onDelete: "CASCADE" });
+Auth.belongsTo(Users, { foreignKey: "userId" });
 
 
-User.hasOne(Profile, { foreignKey: "userId", onDelete: "CASCADE" });
-Profile.belongsTo(User, { foreignKey: "userId" });
+Users.hasOne(Profile, { foreignKey: "userId", onDelete: "CASCADE" });
+Profile.belongsTo(Users, { foreignKey: "userId" });
 
-module.exports = User;
+module.exports = {Users};

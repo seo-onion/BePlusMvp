@@ -1,5 +1,9 @@
-const { DataTypes } = require("sequelize");
+const { DataTypes } =  require("sequelize");
 const { sequelize } = require("../../config/database");
+//const { dictionaryItemsFromCategory } = require("../../models/Store/loadItem");
+const itemsData = require("../../services/Store/storeItems.json");
+
+const ITEM_CATEGORIES = Object.keys(itemsData);
 
 const Items = sequelize.define("Items", {
     id: {
@@ -22,12 +26,10 @@ const Items = sequelize.define("Items", {
         allowNull: true
     },
     category: {
-        type: DataTypes.ENUM("clothes", "colors", "faces", "emotes", "poses"),
-        allowNull: false
+        type: DataTypes.STRING,
+        allowNull: false,
     },
 
 }, { timestamps: false });
 
-const ITEM_CATEGORIES = [...Items.getAttributes().category.values];
-
-module.exports = { Items, ITEM_CATEGORIES };
+module.exports = { Items, ITEM_CATEGORIES};
