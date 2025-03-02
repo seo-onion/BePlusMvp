@@ -2,10 +2,14 @@ const axios = require('axios');
 const Auth = require("../../models/User/Auth");
 const User = require("../../models/User/Users");
 const Transaction = require("../../models/Item/Transaction");
+const UserSteps = require("../../models/Fit/UserSteps")
+const DateHelper = require("../../utils/dateHelper")
 const { refreshGoogleToken } = require("../token/tokenService");
-const { createTransaction } = require("../item/economyService");
+const { addRockyCoins } = require("../item/economyService");
 const { Op } = require("sequelize");
 
+
+//? Service Auth with google fit
 exports.addGoogleAuth = async (req) => {
     try {
         const { token, refreshToken, userId } = req;
@@ -38,8 +42,54 @@ exports.addGoogleAuth = async (req) => {
     }
 };
 
+//? Service register the number of steps of yesterday in the BD
+exports.registerSteps = async (req) => {
+    const { userId, steps } = req;
+
+    console.log("Registrar pasos en la base de datos")
+
+    const { today } = DateHelper.getTodayDate()
+    const registro = await UserSteps.findOne({ where: { userId, date: today } });
+
+    if (registro) {
+        await registro.update({
+            steps: steps
+        })
+        console.log("Aumentando el numero de pasos");
+    } else {
+        await UserSteps.create({ userId, steps, date: today });
+        console.log("Registrando pasos")
+    }
+}
+
+//? Get user steps of a day
+exports.getDaySteps = async (req) => {
+    const { userId, date } = req
+
+    const totalSteps = await UserSteps.findOne({ where: { userId, date: date } });
+
+    if (!totalSteps) {
+        return null
+    }
+
+    return totalSteps
+}
+
+
+//? Get all steps of a user
+exports.getAccumulatedSteps = async (userId) => {
+    const result = await UserSteps.sum("steps", { where: { userId } });
+    if (!result) {
+        return null
+    }
+
+    return result
+}
+
+
+//? Get number of steps in a range of time
 exports.getSteps = async (req) => {
-    
+
     const { startTimeMillis, endTimeMillis, userId } = req;
     console.log(`el usuario con el id ${userId} hizo un getStep`)
 
@@ -53,21 +103,21 @@ exports.getSteps = async (req) => {
         if (!auth) {
             return { success: false, message: "El usuario no existe" };
         }
-        
+
         var response;
         try {
             response = await axios.post(
                 "https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate",
-                {aggregateBy: [{ dataTypeName: "com.google.step_count.delta", dataSourceId: "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps"}], bucketByTime: { durationMillis: 86400000 },startTimeMillis, endTimeMillis},
-                {headers: {'Authorization': `Bearer ${auth.googleToken}`, 'Content-Type': 'application/json'}}
+                { aggregateBy: [{ dataTypeName: "com.google.step_count.delta", dataSourceId: "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps" }], bucketByTime: { durationMillis: 86400000 }, startTimeMillis, endTimeMillis },
+                { headers: { 'Authorization': `Bearer ${auth.googleToken}`, 'Content-Type': 'application/json' } }
             );
         } catch {
-            await refreshGoogleToken(userId);
+            const newToken = await refreshGoogleToken(userId);
 
             response = await axios.post(
                 "https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate",
-                {aggregateBy: [{ dataTypeName: "com.google.step_count.delta", dataSourceId: "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps"}], bucketByTime: { durationMillis: 86400000 },startTimeMillis, endTimeMillis},
-                {headers: {'Authorization': `Bearer ${auth.googleToken}`, 'Content-Type': 'application/json'}}
+                { aggregateBy: [{ dataTypeName: "com.google.step_count.delta", dataSourceId: "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps" }], bucketByTime: { durationMillis: 86400000 }, startTimeMillis, endTimeMillis },
+                { headers: { 'Authorization': `Bearer ${newToken}`, 'Content-Type': 'application/json' } }
             );
         }
 
@@ -76,15 +126,17 @@ exports.getSteps = async (req) => {
             return total + stepCount;
         }, 0);
 
-        return { success: true, message: `numero de pasos: ${steps}`, steps };
+
+        return steps;
 
     } catch (error) {
         console.error("Error fetching step data:", error.response?.data || error.message);
-        return { success: false, message: "Error al obtener los pasos." };
+        return null;
     }
 };
 
 
+//? claimrockyCoins with yours steps
 exports.claimRockyCoins = async (userId) => {
 
     try {
@@ -92,125 +144,36 @@ exports.claimRockyCoins = async (userId) => {
         const now = new Date();
         const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
         const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-    
+
         const lastClaim = await Transaction.findOne({
             where: {
                 userId: userId,
                 type: "reward",
                 productId: "db98908a-466d-4681-a40a-fe8e06af9d8b",
                 createdAt: {
-                    [Op.between]: [startOfDay, endOfDay] // ✅ Filtrar por transacciones del día
+                    [Op.between]: [startOfDay, endOfDay]
                 }
             }
         });
 
-        
+
         if (lastClaim) {
             console.log("Recompensa ya obtenida")
-            return {
-                success: false,
-                message: "Recompensa ya obtenida"
-            }
+            return null
         }
-        
-        const newClaim = await this.getSteps({ startTimeMillis: Date.now() - 86400000 * 2, endTimeMillis: Date.now() - 86400000, userId: userId })
+
+        const { startTimeMillis, endTimeMillis } = DateHelper.getYesterday();
+
+        const newClaim = await this.getSteps({ startTimeMillis: startTimeMillis, endTimeMillis: endTimeMillis, userId: userId })
         const user = await User.findByPk(userId)
-
-        const oldRockyCoins = user.rockyCoins
-        const rockyCoinsObtained = Math.floor(newClaim.steps / 1000)
-
-        await createTransaction({
-            userId: userId,
-            amount: rockyCoinsObtained,
-            type: "reward",
-            productId: "db98908a-466d-4681-a40a-fe8e06af9d8b"
-        })
-
-
-        await user.update({
-            rockyCoins: oldRockyCoins + rockyCoinsObtained
-        })
+        const rockyCoinsObtained = Math.floor(newClaim / 1000)
+        await addRockyCoins({userId: user.userId, quantity: rockyCoinsObtained})
 
         console.log("Rockycoins reclamadas correctamente")
-        return {
-            success: true,
-            message: `RockyCoins obtenidas: ${rockyCoinsObtained}`
-        }
+        return rockyCoinsObtained;
 
     } catch (error) {
-        return { success: false, message: "Error al obtener los rockycoins" }
+        return null
     }
 }
 
-
-
-
-exports.ranking = async (userId) => {
-
-    try {
-
-        const lastClaim = await Claim.findOne(
-            {
-                where: {
-                    userId: userId,
-                    lastClaimedAt: new Date().toISOString().split("T")[0],
-                    type: "racha"
-                }
-            })
-
-        console.log(lastClaim)
-        if (lastClaim) {
-            return {
-                success: false,
-                message: "Ya reclamaste esta racha"
-            }
-        }
-
-        const newClaim = await this.getSteps({ startTimeMillis: Date.now() - 86400000 * 2, endTimeMillis: Date.now() - 86400000, userId: userId })
-        const user = await User.findByPk(userId)
-
-        const oldRockyGems = user.rockyGems;
-        var newGems = 0;
-
-
-        if (newClaim.steps < 10000) {
-            return {
-                success: false,
-                message: "Aún no alcanzas ninguna meta de pasos"
-            }
-        } else {
-
-
-            if (newClaim.steps >= 10000 && newClaim.steps < 12499) {
-                newGems = 3;
-            } else if (newClaim.steps >= 12499 && newClaim.steps < 15000) {
-                newGems = 6;
-            } else if (newClaim.steps >= 15000) {
-                newGems = 9;
-            }
-
-            await Claim.create({
-                userId: userId,
-                rockyCoins: newGems,
-                type: "racha",
-                lastClaimedAt: new Date().toISOString().split("T")[0]
-            })
-
-            await user.update({
-                rockyGems: oldRockyGems + newGems
-            })
-
-
-
-        }
-
-        return {
-            success: true,
-            message: `RockyGems obtenidas: ${newGems}`
-        }
-
-
-    } catch (error) {
-        return { success: false, message: "Error al obtener los rockycoins" }
-    }
-}
