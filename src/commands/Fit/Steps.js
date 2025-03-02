@@ -1,5 +1,7 @@
-const { SlashCommandBuilder } = require("discord.js");
-const { getSteps } = require('../../services/google/fitService');
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { getSteps, registerSteps } = require('../../services/google/fitService');
+const DateHelper = require("../../utils/dateHelper")
+const createErrorEmbed = require("../../utils/errorEmbed")
 const ROLE_ID = process.env.TESTER_ROLE;
 
 module.exports = {
@@ -18,11 +20,12 @@ module.exports = {
         ),
     
     async execute(interaction) {
-        await interaction.deferReply({ ephemeral: true }); // 🟢 Asegura que la respuesta sea diferida
+        await interaction.deferReply({ ephemeral: true }); // 🟢 Respuesta diferida
 
         const member = interaction.member;
         const id = interaction.user.id;
         const time = interaction.options.getString('tiempo');
+        
 
         console.log(`Usuario: ${id} pidió pasos para ${time}`);
 
@@ -32,24 +35,48 @@ module.exports = {
 
         try {
             let steps;
-            const now = Date.now();
+            let timePeriod;
+
             if (time === 'day') {
-                steps = await getSteps({ startTimeMillis: now - 86400000, endTimeMillis: now, userId: id });
+                const { startTimeMillis, endTimeMillis } = DateHelper.getToday();
+                steps = await getSteps({ startTimeMillis, endTimeMillis, userId: id });
+                await registerSteps({ userId: id, steps: steps });
+
+                timePeriod = "📅 Hoy";
             } else if (time === 'week') {
-                steps = await getSteps({ startTimeMillis: now - (86400000 * 7), endTimeMillis: now, userId: id });
+                const { startTimeMillis, endTimeMillis } = DateHelper.getLastWeek();
+                steps = await getSteps({ startTimeMillis, endTimeMillis, userId: id });
+                timePeriod = "📅 Última Semana";
             } else if (time === 'month') {
-                steps = await getSteps({ startTimeMillis: now - (86400000 * 31), endTimeMillis: now, userId: id });
+                const { startTimeMillis, endTimeMillis } = DateHelper.getStartOfMonth();
+                steps = await getSteps({ startTimeMillis, endTimeMillis, userId: id });
+                timePeriod = "📅 Último Mes";
             }
 
-            if (!steps || !steps.message) {
-                throw new Error("No se pudieron obtener los pasos.");
+            if (!steps) {
+                const errorEmbed = createErrorEmbed("No se ha podido recuperar el numero de pasos"); 
+                return interaction.editReply({ embeds: [errorEmbed] });
             }
 
-            return await interaction.editReply({ content: `🚶‍♂️ **Pasos registrados en el período seleccionado:** ${steps.message}`, ephemeral: true });
+            const embed = new EmbedBuilder()
+                .setColor("#00FF00") // Verde llamativo
+                .setTitle("🚶‍♂️ Registro de Pasos")
+                .setDescription(`Aquí están tus pasos acumulados en el período seleccionado:`)
+                .addFields(
+                    { name: "⏳ Período", value: timePeriod, inline: true },
+                    { name: "👣 Pasos Contados", value: `**${steps}**`, inline: true }
+                )
+                .setFooter({ text: "¡Sigue caminando para obtener más recompensas!" });
+            
+                
+            return await interaction.editReply({ embeds: [embed] }); 
+
 
         } catch (error) {
             console.error("Error al obtener los pasos:", error);
-            return interaction.editReply({ content: "❌ Ocurrió un error al obtener los pasos. Inténtalo más tarde.", ephemeral: true });
+            const errorEmbed = createErrorEmbed(error.message); 
+            return interaction.editReply({ embeds: [errorEmbed] });
+
         }
     },
 };
