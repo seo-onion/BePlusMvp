@@ -131,6 +131,17 @@ exports.getAllUser = async () => {
   }
 };
 
+exports.getUserProfile = async (userId)=> {
+  try{
+    const profile = await Profile.findByPk(userId);
+    return profile
+
+  } catch{
+    console.error("No se encontró al usuario")
+    return null
+  }
+}
+
 exports.deleteUser = async (id) => {
   const user = await User.findByPk(id);
   await user.destroy();

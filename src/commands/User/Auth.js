@@ -28,7 +28,7 @@ module.exports = {
         "🔗 **Haz clic en el siguiente enlace para autenticarte y comenzar tu aventura:**\n" +
         `[Autenticarme](${DISCORD_URI})`
       )
-      .setImage("https://imgur.com/tHu78tP")
+      .setImage("https://media.discordapp.net/attachments/1331719510243282986/1345217857117618186/WhatsApp_Image_2025-02-28_at_5.27.07_AM1.jpeg?ex=67c3bf42&is=67c26dc2&hm=92e64cdff48c0d1e8b7dc03eb1e85fcdcf73f984cd5753b5fbf8c5c38b4b86ca&=&format=webp&width=786&height=786")
       .setFooter({ text: "¡Empieza hoy y sé la mejor versión de ti mismo!" });
 
     return await interaction.reply({ embeds: [embed], ephemeral: true });

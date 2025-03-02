@@ -31,3 +31,5 @@ const Auth = sequelize.define("Auth", {
   
   module.exports = Auth;
   
+
+

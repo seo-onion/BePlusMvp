@@ -13,7 +13,7 @@ module.exports = {
         const authUrl = `${URL}?id=${Id}`;
 
         const embed = new EmbedBuilder()
-        .setColor("#34A853") // Color verde de Google Fit
+        .setColor("#34A853")
         .setTitle("📊 ¡Vincula tu cuenta con Google Fit!")
         .setDescription(
           "Be Plus ahora puede sincronizarse con **Google Fit** para medir tu actividad física. 🏃‍♂️\n\n" +
