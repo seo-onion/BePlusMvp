@@ -2,11 +2,15 @@ const app = require("./server")
 const client = require("./bot");
 const {sequelize} = require("./config/database")
 
-const User = require("./models/User")
 async function main() {
   try {
-    
-    await sequelize.sync({force: true})
+    console.log("⏳ Conectando a la base de datos...");
+    await sequelize.authenticate();
+    console.log("✅ Base de datos conectada.");
+    console.log("⏳ Sincronizando modelos...");
+    await sequelize.sync({ alter: true }); // ⚠️ Usa `alter: true` para actualizar sin borrar datos
+    console.log("✅ Modelos sincronizados.");
+
 
     // Run server
     app.listen(3000, () => {

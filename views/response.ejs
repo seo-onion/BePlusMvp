@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado de Registro</title>
+    <style>
+        /* Estilos generales */
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(to bottom, #81c9ec, #203a43);
+            color: white;
+        }
+
+        /* Contenedor con fondo semi-transparente */
+        .container {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 500px;
+        }
+
+        /* Imagen */
+        .imagen {
+            width: 200px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        /* Mensajes */
+        .success-text {
+            color: #ffed58; /* Amarillo brillante */
+        }
+
+        .error-text {
+            color: #ffed58; /* Amarillo brillante */
+        }
+
+        .message {
+            font-size: 18px;
+            margin: 15px 0;
+        }
+
+        /* Botón */
+        .boton {
+            display: inline-block;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 8px;
+            background-color: #ffed58;
+            color: #203a43;
+            transition: 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .boton:hover {
+            background-color: #f7e13e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="https://imgur.com/voND4sA" alt="Estado" class="imagen">
+
+        <% if (success) { %>
+            <h1 class="success-text">✅ Funciona</h1>
+            <p class="message"><%= message || "Todo salió bien y no sé por qué..." %></p>
+        <% } else { %>
+            <h1 class="error-text">❌ Ups, tuviste un problema</h1>
+            <p class="message"><%= message || "Honestamente no tengo la más mínima idea" %></p>
+        <% } %>
+    </div>
+</body>
+</html>
