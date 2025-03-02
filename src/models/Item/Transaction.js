@@ -8,17 +8,19 @@ const Transaction = sequelize.define("Transaction", {
         primaryKey: true
     },
     userId: {
-        type: DataTypes.STRING
+        type: DataTypes.STRING,
+        allowNull: false,
     },
     amount: {
         type: DataTypes.INTEGER
     },
     type: {
-        type: DataTypes.ENUM("reward") //Types of transaction (it will be more)
+        type: DataTypes.ENUM("reward", "compra") //Types of transaction (it will be more)
     },
 
     productId: {
-        type: DataTypes.STRING
+        type: DataTypes.STRING,
+        allowNull: false,
     },
 
     createdAt: {
@@ -29,4 +31,4 @@ const Transaction = sequelize.define("Transaction", {
 }, { timestamps: false });
 
 
-module.exports = Transaction;
+module.exports = {Transaction};

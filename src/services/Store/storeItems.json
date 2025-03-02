@@ -1,0 +1,39 @@
+{
+  "clothes": {
+    "Moustache": 3,
+    "Nerd": 5,
+    "Angel": 7,
+    "Devil": 10
+  },
+  "colors": {
+    "Navy blue": 5,
+    "Lead gray": 10,
+    "Gray": 7,
+    "Grayish brown": 20,
+    "Dark gray": 1,
+    "Metallic blue": 1
+  },
+  "faces": {
+    "Glasses": 8,
+    "Scarf": 5,
+    "Earrings": 12,
+    "Mask": 10
+  },
+  "emotes": {
+    "Eyes up": 1,
+    "Eyes down": 1,
+    "Wink up": 1,
+    "Wink down": 1,
+    "Robot": 1,
+    "Sad":1,
+    "Separated": 1
+  },
+  "poses": {
+    "Cool Glasses": 8,
+    "Happy": 5,
+    "Disgusted": 7,
+    "Confused": 6,
+    "In Love": 10,
+    "Worried": 3
+  }
+}
