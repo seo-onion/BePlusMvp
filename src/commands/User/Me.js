@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const createErrorEmbed = require("../../utils/errorEmbed")
 const { getUserProfile } = require("../../services/user/userService");
 const { getAchievementById } = require("../../services/achievement/achievementService");
+const User = require("../../models/User/Users");
 const UserAchievements = require("../../models/Achievement/UserAchievements");
 
 module.exports = {
@@ -20,6 +21,13 @@ module.exports = {
       const errorEmbed = createErrorEmbed(error.message);
       return interaction.editReply({ embeds: [errorEmbed] });
     }
+    const UserLocated = await User.findByPk(userId);
+    if (!UserLocated) {
+      console.warn(`⚠️ Usuario ${userId} no encontrado en la base de datos.`);
+      return interaction.editReply({ content: "No se encontró tu perfil en la base de datos." });
+    }
+
+    console.log("RockyCoins:", UserLocated.rockyCoins); // Debugging log
 
     // Obtener los logros del usuario
     const userAchievements = await UserAchievements.findAll({
@@ -38,7 +46,10 @@ module.exports = {
         { name: "👤 Nombre", value: profile.name || "No especificado", inline: true },
         { name: "🏷️ Apodo", value: profile.nickname || "No especificado", inline: true },
         { name: "📅 Edad", value: profile.age ? `${profile.age} años` : "No especificado", inline: true },
-        { name: "⚧️ Género", value: profile.gender ? profile.gender.replace(/_/g, " ") : "No especificado", inline: true }
+        { name: "⚧️ Género", value: profile.gender ? profile.gender.replace(/_/g, " ") : "No especificado", inline: true },
+          {name: "🪙 RockyCoins", value : UserLocated.rockyCoins? `${UserLocated.rockyCoins} RockyCoins` : "No especificado", inline: true},
+          {name: "💎 RockyGems", value : UserLocated.rockyGems? `${UserLocated.rockyGems} RockyGems` : "No especificado", inline: true},
+
       )
       .setFooter({ text: "¡Sigue progresando y desbloquea más logros!" })
       .setTimestamp();

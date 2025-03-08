@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-const { Items } = require("../../models/Item/Items.js");
+const  Items  = require("../../models/Item/Items.js");
 
 const ITEMS_PER_PAGE = 5;
 

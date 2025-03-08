@@ -11,7 +11,6 @@ exports.createAchievement = async (req) => {
     });
 }
 
-
 exports.getAllAchievements = async () => {
     return await Achievements.findAll();
 }
