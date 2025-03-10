@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require("discord.js");
 const {createAchievement} = require("../../services/achievement/achievementService")
-
+const TESTER_ROLE = process.env.ADMIN;
 
 const logros = [
     { name: "Racha Perfecta", description: "Lograste completar 30 días consecutivos sin fallar tu hábito. ¡Eres imparable!", emoji: "🏆", points: 100 },
@@ -21,6 +21,17 @@ module.exports = {
   async execute(interaction) {
     
     try {
+        const member = interaction.member;
+        // COMPROBAR QUE TIENE EL ROL DE ADMIN
+        if (!member.roles.cache.has(TESTER_ROLE)) {
+            console.log("No Tienes los permisos para ejecutar este comando, no eres TESTER ");
+            return interaction.reply({
+                content: "⛔ No tienes permisos para ejecutar este comando.",
+                ephemeral: true
+            });
+        } else{
+            console.log("Tienes los permisos para ejecutar este comando. ERES TESTER");
+        }
         for (const logro of logros) {
             await createAchievement(
                 {

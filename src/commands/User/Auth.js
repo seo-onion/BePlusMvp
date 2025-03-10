@@ -9,14 +9,13 @@ module.exports = {
   async execute(interaction) {
 
     const member = interaction.member;
-/*
+
     if (!member.roles.cache.has(ROLE_ID)) {
       return interaction.reply({ 
         content: '⛔ Ya estás registrado en Be+ :D.', 
         ephemeral: true 
       });
     }
-*/
     const embed = new EmbedBuilder()
       .setColor("#00AEEF") 
       .setTitle("¡Bienvenido a Be Plus! 🎉")
