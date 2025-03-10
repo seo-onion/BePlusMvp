@@ -1,8 +1,8 @@
 const { Items } = require("../../models/Item/Items");
 const { Store } = require("../../models/Store/Store");
-const { Currency } = require("../../models/Fit/Currency");
-const {Users} = require("../../models/User/Users.js");
-const {UserItems} = require("../../models/Item/UserItems");
+
+const Users = require("../../models/User/Users.js");
+const UserItems = require("../../models/Item/UserItems");
 const {Transaction} = require("../../models/Item/Transaction");
 
 

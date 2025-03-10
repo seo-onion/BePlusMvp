@@ -8,6 +8,7 @@ const Users = sequelize.define("Users", {
     userId: {
         type: DataTypes.STRING,
         primaryKey: true,
+        unique: true,
     },
     email: {
         type: DataTypes.STRING,
@@ -40,5 +41,5 @@ Users.hasOne(Profile, { foreignKey: "userId", onDelete: "CASCADE" });
 Profile.belongsTo(Users, { foreignKey: "userId" });
 
 
-module.exports = User;
+module.exports = Users;
 
