@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require("discord.js");
 const {deleteUser} = require("../../services/user/userService")
-const TESTER_ROLE = process.env.ADMIN;
+const TESTER_ROLE = process.env.TESTER_ROLE;
 
 module.exports = {
   data: new SlashCommandBuilder()

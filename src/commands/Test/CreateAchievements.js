@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require("discord.js");
 const {createAchievement} = require("../../services/achievement/achievementService")
-const TESTER_ROLE = process.env.ADMIN;
+const TESTER_ROLE = process.env.TESTER_ROLE;
 
 const logros = [
     { name: "Racha Perfecta", description: "Lograste completar 30 días consecutivos sin fallar tu hábito. ¡Eres imparable!", emoji: "🏆", points: 100 },
