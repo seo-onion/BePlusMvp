@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require("discord.js");
 const storeInstance = require("../../services/Store/storeService");
+const createErrorEmbed = require("../../utils/errorEmbed");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -16,25 +17,37 @@ module.exports = {
                 .setRequired(true)
         ),
 
+    restricted: true, // ✅ Se restringe el comando para que solo Beta Testers lo usen
+
     async execute(interaction) {
-        await interaction.deferReply(); // ✅ Prevents timeout
+        await interaction.deferReply({ ephemeral: true }); // 🔄 Deferimos la respuesta para evitar errores con editReply()
 
         try {
             const category = interaction.options.getString("category");
             const itemName = interaction.options.getString("item");
+            const userId = interaction.user.id;
 
-            // ✅ Ensure `storeInstance` exists before calling `buyItem()`
+            console.log(`🛒 Usuario ${userId} intenta comprar: ${itemName} (Categoría: ${category})`);
+
+            // 🚨 Validar que la tienda está inicializada
             if (!storeInstance || typeof storeInstance.buyItem !== "function") {
-                throw new Error("❌ storeInstance is undefined or buyItem() does not exist.");
+                console.error("❌ Error: storeInstance no está definido o buyItem() no existe.");
+                return interaction.editReply({ 
+                    embeds: [createErrorEmbed("⚠️ No se pudo acceder a la tienda en este momento. Intenta más tarde.")] 
+                });
             }
-            // ✅ Process the purchase
-            const result = await storeInstance.buyItem(interaction.user.id, itemName);
 
-            // ✅ Use editReply() instead of reply()
+            // 🛍️ Procesar la compra
+            const result = await storeInstance.buyItem(userId, itemName);
+
+            // 📩 Enviar mensaje con el resultado de la compra
             return interaction.editReply(result.message);
+
         } catch (error) {
             console.error("❌ Error al ejecutar el comando:", error);
-            return interaction.editReply("❌ Hubo un error al procesar tu compra.");
+            return interaction.editReply({ 
+                embeds: [createErrorEmbed("❌ Hubo un error al procesar tu compra. Intenta nuevamente.")] 
+            });
         }
     }
 };

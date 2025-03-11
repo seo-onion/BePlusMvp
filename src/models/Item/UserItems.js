@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const {sequelize} = require('../../config/database'); // Asegúrate de que la configuración está bien establecida
 
-const {Users} = require('../../models/User/Users');
+const Users = require('../../models/User/Users');
 const {Items }= require('./Items');
 
 const UserItems = sequelize.define("UserItem", {

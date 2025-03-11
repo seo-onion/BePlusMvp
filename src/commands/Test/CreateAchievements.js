@@ -1,6 +1,9 @@
-const { SlashCommandBuilder } = require("discord.js");
-const {createAchievement} = require("../../services/achievement/achievementService")
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
+const { createAchievement } = require("../../services/achievement/achievementService");
+const createAlertEmbed = require("../../utils/alertEmbed");
 
+const DEV = process.env.DEV_ROLE;
+const ADMIN = process.env.ADMIN_ROLE;
 
 const logros = [
     { name: "Racha Perfecta", description: "Lograste completar 30 días consecutivos sin fallar tu hábito. ¡Eres imparable!", emoji: "🏆", points: 100 },
@@ -13,33 +16,44 @@ const logros = [
     { name: "100k Walker", description: "Has sumado más de 100,000 pasos. ¡Un verdadero caminante!", emoji: "👟🌟", points: 200 }
 ];
 
-
 module.exports = {
-  data: new SlashCommandBuilder()
-    .setName("crearlogros")
-    .setDescription("test 4"),
-  async execute(interaction) {
-    
-    try {
-        for (const logro of logros) {
-            await createAchievement(
-                {
-                    name: logro.name, 
-                    description: logro.description, 
-                    emoji: logro.emoji, 
-                    points: logro.points
-                }
-            );
-            console.log(`Logro creado: ${logro.name}`);
+    data: new SlashCommandBuilder()
+        .setName("crearlogros")
+        .setDescription("Crea logros en la base de datos.")
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+    async execute(interaction) {
+        const member = interaction.member;
+
+        // ✅ Validación de roles
+        if (!member.roles.cache.has(DEV) && !member.roles.cache.has(ADMIN)) {
+            const embed = createAlertEmbed("🚫 No tienes permisos para ejecutar este comando.");
+            return await interaction.reply({ embeds: [embed], ephemeral: true });
         }
-        console.log("Todos los logros fueron insertados correctamente.");
-    } catch (error) {
-        console.error("Error al insertar logros:", error);
-    }
-    
-    return await interaction.reply({
-      content: `hecho`,
-      flags: 64 
-    });
-  },
+
+        try {
+            for (const logro of logros) {
+                await createAchievement({
+                    name: logro.name,
+                    description: logro.description,
+                    emoji: logro.emoji,
+                    points: logro.points
+                });
+                console.log(`Logro creado: ${logro.name}`);
+            }
+
+            console.log("✅ Todos los logros fueron insertados correctamente.");
+
+            return await interaction.reply({
+                content: `✅ Todos los logros han sido creados correctamente.`,
+                ephemeral: true
+            });
+        } catch (error) {
+            console.error("❌ Error al insertar logros:", error);
+            return await interaction.reply({
+                content: "❌ Ocurrió un error al intentar crear los logros.",
+                ephemeral: true
+            });
+        }
+    },
 };
