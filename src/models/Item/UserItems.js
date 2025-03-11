@@ -1,8 +1,10 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../../config/database'); // Conexión a la base de datos
 
+
 const Users = require('../../models/User/Users'); // Importar correctamente el modelo de Usuarios
 const { Items } = require('./Items'); // Importar correctamente el modelo de Items
+
 
 const UserItems = sequelize.define("UserItem", {
     id: {
@@ -14,8 +16,10 @@ const UserItems = sequelize.define("UserItem", {
         type: DataTypes.STRING, // Debe coincidir con Users.js
         allowNull: false,
         references: {
+
             model: Users,
             key: 'userId', // Debe coincidir con Users.js
+
         },
         onDelete: 'CASCADE',
     },
@@ -35,8 +39,8 @@ const UserItems = sequelize.define("UserItem", {
 });
 
 // Definición de relaciones
-Users.belongsToMany(Items, { through: UserItems, foreignKey: 'userId' });
-Items.belongsToMany(Users, { through: UserItems, foreignKey: 'itemId' });
+User.belongsToMany(Items, { through: UserItems, foreignKey: 'userId' });
+Items.belongsToMany(User, { through: UserItems, foreignKey: 'itemId' });
 
 module.exports = UserItems;
 

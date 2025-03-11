@@ -71,8 +71,6 @@ class AchievementGetService {
         console.log("Logro no obtenido")
         return null
     }
-
-    
 }
 
 module.exports = AchievementGetService;

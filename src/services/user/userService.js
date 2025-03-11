@@ -1,11 +1,15 @@
 const User = require("../../models/User/Users");
 const Auth = require("../../models/User/Auth");
 const Profile = require("../../models/User/Profile")
+const ChannelNotificationService = require ("../notification/channelNotificationService")
 require("dotenv").config();
 const axios = require("axios")
 
 const DISCORD_WEBHOOK_URL = process.env.WEBHOOK_URL;
 const BOT_TOKEN = process.env.TOKEN;
+const GUILD_ID = process.env.GUILD_ID
+const TESTER_ROLE = process.env.TESTER_ROLE
+
 
 // Create, edit, remove, get
 
@@ -87,26 +91,26 @@ exports.assignRoleToUser = async (req) => {
 //? Patch User
 exports.editUser = async (req, res) => {
   try {
-    const { userid, age, description, name, nickname, gender, token } = req.body; 
+    const { userid, age, description, name, nickname, gender, token } = req.body;
 
-    let user = await User.findOne({ where: { userid: userid } });
+    let user = await Profile.findOne({ where: { userId: userid } });
 
     if (token !== process.env.TOKEN) {
       return res.render("formulario", { mensaje: "Security token incorrento", user: null });
     }
 
     if (user) {
+      
       await user.update({ age, description, name, nickname, gender }); // Actualiza los datos
+      console.log("Se hizo el update")
 
-      // Intentar enviar notificación a Discord con un try/catch
-      try {
-        await axios.post(DISCORD_WEBHOOK_URL, {
-          content: `✅ El usuario <@${userid}> ha sido validado exitosamente. 🎉`,
-        });
-      } catch (error) {
-        console.error("Error enviando notificación a Discord:", error.message);
-      }
+      this.assignRoleToUser({
+        guildId: GUILD_ID,
+        userId: userid,
+        roleId: TESTER_ROLE
+      })
 
+      await ChannelNotificationService.sendChannelNotification(`✅ ${name} ha sido validado exitosamente. 🎉`, `un saludo a nuestro nuevo usuario  <@${nickname}>`);
 
       return res.render("formulario", { mensaje: "Usuario editado correctamente", user });
 
@@ -127,16 +131,16 @@ exports.getAllUser = async () => {
     console.log(await User.findAll())
 
   } catch (error) {
-      console.error("❌ Error al obtener usuarios:", error.message);
+    console.error("❌ Error al obtener usuarios:", error.message);
   }
 };
 
-exports.getUserProfile = async (userId)=> {
-  try{
+exports.getUserProfile = async (userId) => {
+  try {
     const profile = await Profile.findByPk(userId);
     return profile
 
-  } catch{
+  } catch {
     console.error("No se encontró al usuario")
     return null
   }

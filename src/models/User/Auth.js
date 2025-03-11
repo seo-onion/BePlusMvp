@@ -28,8 +28,6 @@ const Auth = sequelize.define("Auth", {
       allowNull: true,
     },
   });
-  
-  module.exports = Auth;
-  
+module.exports = Auth;
 
 

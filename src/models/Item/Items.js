@@ -1,9 +1,5 @@
 const { DataTypes } =  require("sequelize");
 const { sequelize } = require("../../config/database");
-//const { dictionaryItemsFromCategory } = require("../../models/Store/loadItem");
-const itemsData = require("../../services/Store/storeItems.json");
-
-const ITEM_CATEGORIES = Object.keys(itemsData);
 
 const Items = sequelize.define("Items", {
     id: {
@@ -32,4 +28,4 @@ const Items = sequelize.define("Items", {
 
 }, { timestamps: false });
 
-module.exports = { Items, ITEM_CATEGORIES};
+module.exports = Items;

@@ -1,9 +1,10 @@
 const axios = require('axios');
 const Auth = require("../../models/User/Auth");
 const User = require("../../models/User/Users");
-const Transaction = require("../../models/Item/Transaction");
+const Transaction = require("../../models/Item/Transaction")
 const UserSteps = require("../../models/Fit/UserSteps")
 const DateHelper = require("../../utils/dateHelper")
+const {Items} = require("../../models/Item/Items")
 const { refreshGoogleToken } = require("../token/tokenService");
 const { addRockyCoins } = require("../item/economyService");
 const { Op } = require("sequelize");
@@ -145,17 +146,19 @@ exports.claimRockyCoins = async (userId) => {
         const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
         const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
+        const itemId = await Items.findOne({where: {name: "RockyCoin"}})
         const lastClaim = await Transaction.findOne({
             where: {
                 userId: userId,
                 type: "reward",
-                productId: "db98908a-466d-4681-a40a-fe8e06af9d8b",
+                productId: itemId.id,
                 createdAt: {
                     [Op.between]: [startOfDay, endOfDay]
                 }
             }
         });
 
+        
 
         if (lastClaim) {
             console.log("Recompensa ya obtenida")
@@ -166,10 +169,11 @@ exports.claimRockyCoins = async (userId) => {
 
         const newClaim = await this.getSteps({ startTimeMillis: startTimeMillis, endTimeMillis: endTimeMillis, userId: userId })
         const user = await User.findByPk(userId)
-        const rockyCoinsObtained = Math.floor(newClaim / 1000)
+        const rockyCoinsObtained = Math.floor(newClaim / 50)
         await addRockyCoins({userId: user.userId, quantity: rockyCoinsObtained})
 
         console.log("Rockycoins reclamadas correctamente")
+
         return rockyCoinsObtained;
 
     } catch (error) {

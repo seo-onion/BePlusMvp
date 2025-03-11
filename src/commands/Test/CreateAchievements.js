@@ -1,5 +1,13 @@
+
 const { SlashCommandBuilder } = require("discord.js");
 const {createAchievement} = require("../../services/achievement/achievementService")
+
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
+const { createAchievement } = require("../../services/achievement/achievementService");
+const createAlertEmbed = require("../../utils/alertEmbed");
+
+const DEV = process.env.DEV_ROLE;
+const ADMIN = process.env.ADMIN_ROLE;
 
 
 const logros = [
@@ -13,33 +21,49 @@ const logros = [
     { name: "100k Walker", description: "Has sumado más de 100,000 pasos. ¡Un verdadero caminante!", emoji: "👟🌟", points: 200 }
 ];
 
-
 module.exports = {
+
   data: new SlashCommandBuilder()
     .setName("crearlogros")
     .setDescription("test 4"),
   async execute(interaction) {
     
     try {
+        const member = interaction.member;
+        // COMPROBAR QUE TIENE EL ROL DE ADMIN
+        if (!member.roles.cache.has(TESTER_ROLE)) {
+            console.log("No Tienes los permisos para ejecutar este comando, no eres TESTER ");
+            return interaction.reply({
+                content: "⛔ No tienes permisos para ejecutar este comando.",
+                ephemeral: true
+            });
+        } else{
+            console.log("Tienes los permisos para ejecutar este comando. ERES TESTER");
+        }
         for (const logro of logros) {
             await createAchievement(
                 {
                     name: logro.name, 
                     description: logro.description, 
                     emoji: logro.emoji, 
+
                     points: logro.points
-                }
-            );
-            console.log(`Logro creado: ${logro.name}`);
+                });
+                console.log(`Logro creado: ${logro.name}`);
+            }
+
+            console.log("✅ Todos los logros fueron insertados correctamente.");
+
+            return await interaction.reply({
+                content: `✅ Todos los logros han sido creados correctamente.`,
+                ephemeral: true
+            });
+        } catch (error) {
+            console.error("❌ Error al insertar logros:", error);
+            return await interaction.reply({
+                content: "❌ Ocurrió un error al intentar crear los logros.",
+                ephemeral: true
+            });
         }
-        console.log("Todos los logros fueron insertados correctamente.");
-    } catch (error) {
-        console.error("Error al insertar logros:", error);
-    }
-    
-    return await interaction.reply({
-      content: `hecho`,
-      flags: 64 
-    });
-  },
+    },
 };
