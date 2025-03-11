@@ -1,8 +1,10 @@
 const express = require("express");
 const app = express();
 const path = require('path');
-
+require("dotenv").config();
 const {discordRedirect, discordAuth, googleRedirect, googleAuth} = require("./controller/AuthController")
+const {editUser} = require("./services/user/userService")
+
 
 
 app.set("views", path.join(__dirname, "../views"));
@@ -22,8 +24,11 @@ app.get("/api/auth/google/callback", googleAuth);
 
 app.get("/form", async (req, res) => {
     res.render("formulario", { mensaje: null, user: null });
+    
 });
 
+
+app.post("/api/auth/discord/update-user", editUser);
 
 
 

@@ -15,7 +15,7 @@ const Transaction = sequelize.define("Transaction", {
         type: DataTypes.INTEGER
     },
     type: {
-        type: DataTypes.ENUM("reward", "compra") //Types of transaction (it will be more)
+        type: DataTypes.ENUM("reward", "compra") //Types of transaction (it will be more), "compra" está en homenaje a un wbn que prefirió escribir en español
     },
 
     productId: {
@@ -31,4 +31,4 @@ const Transaction = sequelize.define("Transaction", {
 }, { timestamps: false });
 
 
-module.exports = {Transaction};
+module.exports = Transaction;
