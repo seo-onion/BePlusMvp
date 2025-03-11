@@ -8,6 +8,7 @@ const User = sequelize.define("Users", {
     userId: {
         type: DataTypes.STRING,
         primaryKey: true,
+        unique: true,
     },
     email: {
         type: DataTypes.STRING,

@@ -13,7 +13,7 @@ const UserSteps = sequelize.define("UserSteps", {
     },
     steps: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
         defaultValue: 0
     },
     date: {

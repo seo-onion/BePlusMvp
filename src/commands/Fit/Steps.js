@@ -38,8 +38,12 @@ module.exports = {
             // ⏳ Obtener el rango de tiempo según la opción seleccionada
             if (time === 'day') {
                 const { startTimeMillis, endTimeMillis } = DateHelper.getToday();
-                steps = await getSteps({ startTimeMillis, endTimeMillis, userId });
-                await registerSteps({ userId, steps });
+
+                steps = await getSteps({ startTimeMillis, endTimeMillis, userId: id });
+                console.log(steps);
+                await registerSteps({ userId: id, steps: steps });
+
+
                 timePeriod = "📅 Hoy";
             } else if (time === 'week') {
                 const { startTimeMillis, endTimeMillis } = DateHelper.getLastWeek();

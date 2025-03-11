@@ -1,8 +1,10 @@
 const { DataTypes } = require('sequelize');
-const {sequelize} = require('../../config/database'); // Asegúrate de que la configuración está bien establecida
+const { sequelize } = require('../../config/database'); // Conexión a la base de datos
 
-const User = require('../../models/User/Users');
-const Items = require('./Items');
+
+const Users = require('../../models/User/Users'); // Importar correctamente el modelo de Usuarios
+const { Items } = require('./Items'); // Importar correctamente el modelo de Items
+
 
 const UserItems = sequelize.define("UserItem", {
     id: {
@@ -11,20 +13,22 @@ const UserItems = sequelize.define("UserItem", {
         primaryKey: true,
     },
     userId: {
-        type: DataTypes.UUID,
+        type: DataTypes.STRING, // Debe coincidir con Users.js
         allowNull: false,
         references: {
-            model: User,
-            key: 'id',
+
+            model: Users,
+            key: 'userId', // Debe coincidir con Users.js
+
         },
         onDelete: 'CASCADE',
     },
     itemId: {
-        type: DataTypes.UUID,
+        type: DataTypes.UUID, // UUID está bien aquí porque Items usa UUID
         allowNull: false,
         references: {
             model: Items,
-            key: 'id',
+            key: 'id', // Debe coincidir con Items.js
         },
         onDelete: 'CASCADE',
     },
@@ -32,11 +36,11 @@ const UserItems = sequelize.define("UserItem", {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
     },
-})
-
+});
 
 // Definición de relaciones
 User.belongsToMany(Items, { through: UserItems, foreignKey: 'userId' });
 Items.belongsToMany(User, { through: UserItems, foreignKey: 'itemId' });
 
 module.exports = UserItems;
+
