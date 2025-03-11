@@ -1,9 +1,14 @@
+
+const { SlashCommandBuilder } = require("discord.js");
+const {createAchievement} = require("../../services/achievement/achievementService")
+
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 const { createAchievement } = require("../../services/achievement/achievementService");
 const createAlertEmbed = require("../../utils/alertEmbed");
 
 const DEV = process.env.DEV_ROLE;
 const ADMIN = process.env.ADMIN_ROLE;
+
 
 const logros = [
     { name: "Racha Perfecta", description: "Lograste completar 30 días consecutivos sin fallar tu hábito. ¡Eres imparable!", emoji: "🏆", points: 100 },
@@ -17,26 +22,31 @@ const logros = [
 ];
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName("crearlogros")
-        .setDescription("Crea logros en la base de datos.")
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-    async execute(interaction) {
+  data: new SlashCommandBuilder()
+    .setName("crearlogros")
+    .setDescription("test 4"),
+  async execute(interaction) {
+    
+    try {
         const member = interaction.member;
-
-        // ✅ Validación de roles
-        if (!member.roles.cache.has(DEV) && !member.roles.cache.has(ADMIN)) {
-            const embed = createAlertEmbed("🚫 No tienes permisos para ejecutar este comando.");
-            return await interaction.reply({ embeds: [embed], ephemeral: true });
+        // COMPROBAR QUE TIENE EL ROL DE ADMIN
+        if (!member.roles.cache.has(TESTER_ROLE)) {
+            console.log("No Tienes los permisos para ejecutar este comando, no eres TESTER ");
+            return interaction.reply({
+                content: "⛔ No tienes permisos para ejecutar este comando.",
+                ephemeral: true
+            });
+        } else{
+            console.log("Tienes los permisos para ejecutar este comando. ERES TESTER");
         }
+        for (const logro of logros) {
+            await createAchievement(
+                {
+                    name: logro.name, 
+                    description: logro.description, 
+                    emoji: logro.emoji, 
 
-        try {
-            for (const logro of logros) {
-                await createAchievement({
-                    name: logro.name,
-                    description: logro.description,
-                    emoji: logro.emoji,
                     points: logro.points
                 });
                 console.log(`Logro creado: ${logro.name}`);

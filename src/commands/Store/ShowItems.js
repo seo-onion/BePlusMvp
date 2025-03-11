@@ -1,6 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+
 const { Items } = require("../../models/Item/Items.js");
 const createErrorEmbed = require("../../utils/errorEmbed");
+
 
 const ITEMS_PER_PAGE = 5; // 🛍️ Define la cantidad de artículos por página
 

@@ -1,8 +1,8 @@
 const { DataTypes } = require('sequelize');
 const {sequelize} = require('../../config/database'); // Asegúrate de que la configuración está bien establecida
 
-const Users = require('../../models/User/Users');
-const {Items }= require('./Items');
+const User = require('../../models/User/Users');
+const Items = require('./Items');
 
 const UserItems = sequelize.define("UserItem", {
     id: {
@@ -14,7 +14,7 @@ const UserItems = sequelize.define("UserItem", {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-            model: Users,
+            model: User,
             key: 'id',
         },
         onDelete: 'CASCADE',
@@ -36,7 +36,7 @@ const UserItems = sequelize.define("UserItem", {
 
 
 // Definición de relaciones
-Users.belongsToMany(Items, { through: UserItems, foreignKey: 'userId' });
-Items.belongsToMany(Users, { through: UserItems, foreignKey: 'itemId' });
+User.belongsToMany(Items, { through: UserItems, foreignKey: 'userId' });
+Items.belongsToMany(User, { through: UserItems, foreignKey: 'itemId' });
 
-module.exports = {UserItems};
+module.exports = UserItems;

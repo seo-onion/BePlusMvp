@@ -17,6 +17,7 @@ module.exports = {
     }
 
     // ✅ Validación: Verificar si el usuario ya está registrado
+
     if (!member.roles.cache.has(ROLE_ID)) {
       const embed = createAlertEmbed("Ya estás registrado en Be+");
 
@@ -28,7 +29,6 @@ module.exports = {
       }
     }
 
-    // ✅ Crear el embed de bienvenida
     const embed = new EmbedBuilder()
       .setColor("#00AEEF")
       .setTitle("¡Bienvenido a Be Plus! 🎉")

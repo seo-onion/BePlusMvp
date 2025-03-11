@@ -1,3 +1,4 @@
+
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 const { Items } = require("../../models/Item/Items.js");
 const { Store } = require("../../models/Store/Store.js");
@@ -5,6 +6,7 @@ const createAlertEmbed = require("../../utils/alertEmbed");
 
 const DEV = process.env.DEV_ROLE;
 const ADMIN = process.env.ADMIN_ROLE;
+
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -35,6 +37,17 @@ module.exports = {
         }
 
         try {
+            const member = interaction.member;
+            // COMPROBAR QUE TIENE EL ROL DE ADMIN
+            if (!member.roles.cache.has(ROLE_ADMIN)) {
+                console.log("No Tienes los permisos para ejecutar este comando, no eres admin ");
+                return interaction.reply({
+                    content: "⛔ No tienes permisos para ejecutar este comando.",
+                    ephemeral: true
+                });
+            } else{
+                console.log("Tienes los permisos para ejecutar este comando. ");
+            }
             // Encuentra la Store, suponiendo que hay una sola
             let store = await Store.findOne();
             if (!store) {
