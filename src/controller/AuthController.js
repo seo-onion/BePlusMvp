@@ -4,7 +4,7 @@ require("dotenv").config();
 const { getOAuthToken } = require("../services/token/tokenService")
 const { createUser, assignRoleToUser } = require("../services/user/userService")
 const { addGoogleAuth } = require("../services/google/fitService")
-
+const PrivateChannelNotificationService = require("../services/notification/privateNotificationService")
 const GUILD_ID = process.env.GUILD_ID
 NOT_VERIFICATED_ROLE = process.env.NOT_VERIFICATED_ROLE
 VERIFICATED_ROLE = process.env.VERIFICATED_ROLE
@@ -65,9 +65,10 @@ const discordAuth = async (req, res) => {
         await assignRoleToUser({
             guildId: GUILD_ID,
             userId: id,
-            roleId: NOT_VERIFICATED_ROLE
+            roleId: VERIFICATED_ROLE
         })
 
+        PrivateChannelNotificationService.sendPrivateChannelNotification(id, "Haz sido registrado exitosamente :D   ")
 
         res.render("response", {
             success: newUser.success,
@@ -127,6 +128,7 @@ const googleAuth = async (req, res) => {
             userId: state
         })
 
+        PrivateChannelNotificationService.sendPrivateChannelNotification(id, "Vinculado exitosamente con google fit")
         res.render("response", authUser)
 
     } catch (error) {

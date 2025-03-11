@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const storeInstance = require("../../services/Store/storeService");
+const createErrorEmbed = require("../../utils/errorEmbed");
 
 // ✅ Fetch categories BEFORE defining the command
 let categoryChoices = [];
@@ -37,15 +38,26 @@ module.exports = {
                 .setRequired(true)
         ),
 
+    restricted: true, // ✅ Se restringe el comando para que solo Beta Testers lo usen
+
     async execute(interaction) {
-        await interaction.deferReply();
+        await interaction.deferReply({ ephemeral: true }); // 🔄 Deferimos la respuesta para evitar errores con editReply()
 
         try {
             const category = interaction.options.getString("category");
             const itemName = interaction.options.getString("item");
+            const userId = interaction.user.id;
+
+            console.log(`🛒 Usuario ${userId} intenta comprar: ${itemName} (Categoría: ${category})`);
+
+
+            // 🚨 Validar que la tienda está inicializada
 
             if (!storeInstance || typeof storeInstance.buyItem !== "function") {
-                throw new Error("❌ storeInstance is undefined or buyItem() does not exist.");
+                console.error("❌ Error: storeInstance no está definido o buyItem() no existe.");
+                return interaction.editReply({ 
+                    embeds: [createErrorEmbed("⚠️ No se pudo acceder a la tienda en este momento. Intenta más tarde.")] 
+                });
             }
 
             const result = await storeInstance.buyItem(interaction.user.id, itemName, category);

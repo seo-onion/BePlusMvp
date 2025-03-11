@@ -1,11 +1,15 @@
+
 const { SlashCommandBuilder } = require("discord.js");
 const {createBadges} = require("../../services/item/economyService")
 const TESTER_ROLE = process.env.TESTER_ROLE;
 
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("creardivisas")
-    .setDescription("test 3"),
+    .setDescription("Crea las divisas en el sistema de economía.")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
   async execute(interaction) {
     const member = interaction.member;
     // COMPROBAR QUE TIENE EL ROL DE ADMIN
