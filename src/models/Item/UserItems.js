@@ -2,8 +2,8 @@ const { DataTypes } = require('sequelize');
 const { sequelize } = require('../../config/database'); // Conexión a la base de datos
 
 
-const Users = require('../../models/User/Users'); // Importar correctamente el modelo de Usuarios
-const { Items } = require('./Items'); // Importar correctamente el modelo de Items
+const {Users} = require('../../models/User/Users'); // Importar correctamente el modelo de Usuarios
+const Items = require('./Items'); // Importar correctamente el modelo de Items
 
 
 const UserItems = sequelize.define("UserItem", {
@@ -39,8 +39,8 @@ const UserItems = sequelize.define("UserItem", {
 });
 
 // Definición de relaciones
-User.belongsToMany(Items, { through: UserItems, foreignKey: 'userId' });
-Items.belongsToMany(User, { through: UserItems, foreignKey: 'itemId' });
+Users.belongsToMany(Items, { through: UserItems, foreignKey: 'userId' });
+Items.belongsToMany(Users, { through: UserItems, foreignKey: 'itemId' });
 
 module.exports = UserItems;
 
