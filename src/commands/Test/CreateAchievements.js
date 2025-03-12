@@ -1,9 +1,7 @@
 
-const { SlashCommandBuilder } = require("discord.js");
-const {createAchievement} = require("../../services/achievement/achievementService")
 
+const {createAchievement} = require("../../services/achievement/achievementService")
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
-const { createAchievement } = require("../../services/achievement/achievementService");
 const createAlertEmbed = require("../../utils/alertEmbed");
 
 const DEV = process.env.DEV_ROLE;

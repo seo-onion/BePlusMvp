@@ -7,8 +7,7 @@ const TESTER_ROLE = process.env.TESTER_ROLE;
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("eliminarme")
-    .setDescription("Elimina tu usuario del sistema.")
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+    .setDescription("Elimina tu usuario del sistema."),
 
   async execute(interaction) {
     const member = interaction.member;

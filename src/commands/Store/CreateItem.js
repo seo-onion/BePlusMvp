@@ -10,7 +10,6 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName("item")
         .setDescription("Añade o actualiza un artículo en la tienda.")
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addStringOption(option =>
             option.setName("category")
                 .setDescription("Nombre de la nueva categoría o una existente.")

@@ -7,9 +7,7 @@ const TESTER_ROLE = process.env.TESTER_ROLE;
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("creardivisas")
-    .setDescription("Crea las divisas en el sistema de economía.")
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-
+    .setDescription("Crea las divisas en el sistema de economía."),
   async execute(interaction) {
     const member = interaction.member;
     // COMPROBAR QUE TIENE EL ROL DE ADMIN

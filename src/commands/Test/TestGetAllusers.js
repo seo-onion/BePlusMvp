@@ -1,5 +1,6 @@
 
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
+
 const {getAllUser} = require("../../services/user/userService")
 const TESTER_ROLE = process.env.TESTER_ROLE;
 
