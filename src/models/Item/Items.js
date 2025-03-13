@@ -1,4 +1,4 @@
-const { DataTypes } =  require("sequelize");
+const { DataTypes } = require("sequelize");
 const { sequelize } = require("../../config/database");
 
 const Items = sequelize.define("Items", {
@@ -8,10 +8,12 @@ const Items = sequelize.define("Items", {
         primaryKey: true
     },
     name: {
-        type: DataTypes.STRING
+        type: DataTypes.STRING,
+        allowNull: false
     },
     description: {
-        type: DataTypes.STRING
+        type: DataTypes.STRING,
+        allowNull: true
     },
     price: {
         type: DataTypes.INTEGER,
@@ -23,9 +25,11 @@ const Items = sequelize.define("Items", {
     },
     category: {
         type: DataTypes.STRING,
-        allowNull: false,
-    },
-
-}, { timestamps: false });
+        allowNull: false
+    }
+}, {
+    tableName: 'Items',
+    timestamps: false
+});
 
 module.exports = Items;
