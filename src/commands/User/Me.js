@@ -1,8 +1,8 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const createErrorEmbed = require("../../utils/errorEmbed");
 const { getUserProfile } = require("../../services/user/userService");
 const { getAchievementById } = require("../../services/achievement/achievementService");
-const User = require("../../models/User/Users");
+const { Users } = require("../../models/User/Users");
 const UserAchievements = require("../../models/Achievement/UserAchievements");
 
 module.exports = {
@@ -11,25 +11,25 @@ module.exports = {
     .setDescription("Muestra tu perfil y tus logros"),
 
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
-    const userId = interaction.user.id;
-
     try {
-      // Obtener el perfil del usuario
+      const userId = interaction.user.id;
+
+      // Obtener perfil del usuario
       const profile = await getUserProfile(userId);
       if (!profile) {
         const errorEmbed = createErrorEmbed("No se encontró tu perfil.");
-        return interaction.editReply({ embeds: [errorEmbed] });
+        return await interaction.editReply({ embeds: [errorEmbed] });
       }
 
-      const userRecord = await User.findByPk(userId);
+      // Obtener datos del usuario en la base de datos
+      const userRecord = await Users.findByPk(userId);
       if (!userRecord) {
-        return interaction.editReply({
+        return await interaction.editReply({
           content: "No se encontró tu perfil en la base de datos."
         });
       }
 
-      // Obtener los logros del usuario
+      // Obtener logros del usuario
       const userAchievements = await UserAchievements.findAll({
         where: { userId },
         attributes: ["achievementId"]
@@ -54,28 +54,26 @@ module.exports = {
         .setFooter({ text: "¡Sigue progresando y desbloquea más logros!" })
         .setTimestamp();
 
-      // Agregar logros al embed
-      if (achievementsDetails.length > 0) {
-        embed.addFields({
-          name: "🏅 Logros Desbloqueados",
-          value: achievementsDetails.map(a => `${a.emoji} **${a.name}**`).join("\n"),
-          inline: false
-        });
-      } else {
-        embed.addFields({
-          name: "🏅 Logros Desbloqueados",
-          value: "Aún no tienes logros. ¡Desbloquea algunos usando `/desbloquear`!",
-          inline: false
-        });
-      }
+      // Agregar logros si existen
+      embed.addFields({
+        name: "🏅 Logros Desbloqueados",
+        value: achievementsDetails.length > 0
+          ? achievementsDetails.map(a => `${a.emoji} **${a.name}**`).join("\n")
+          : "Aún no tienes logros. ¡Desbloquea algunos usando `/desbloquear`!",
+        inline: false
+      });
 
-      // Responder con el embed del perfil
-      return await interaction.editReply({ embeds: [embed] });
+      // Responder con el perfil
+      await interaction.editReply({ embeds: [embed] });
 
     } catch (error) {
       console.error("❌ Error al ejecutar el comando /yo:", error);
       const errorEmbed = createErrorEmbed("❌ Ocurrió un error inesperado.");
-      return interaction.editReply({ embeds: [errorEmbed] });
+
+      // Manejar errores correctamente
+      if (interaction.replied || interaction.deferred) {
+        await interaction.editReply({ embeds: [errorEmbed] });
+      }
     }
   },
 };

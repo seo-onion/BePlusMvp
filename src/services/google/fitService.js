@@ -1,10 +1,10 @@
 const axios = require('axios');
 const Auth = require("../../models/User/Auth");
-const User = require("../../models/User/Users");
+const {Users} = require("../../models/User/Users");
 const Transaction = require("../../models/Item/Transaction")
 const UserSteps = require("../../models/Fit/UserSteps")
 const DateHelper = require("../../utils/dateHelper")
-const {Items} = require("../../models/Item/Items")
+const Items = require("../../models/Item/Items")
 const { refreshGoogleToken } = require("../token/tokenService");
 const { addRockyCoins } = require("../item/economyService");
 const { Op } = require("sequelize");
@@ -168,7 +168,7 @@ exports.claimRockyCoins = async (userId) => {
         const { startTimeMillis, endTimeMillis } = DateHelper.getYesterday();
 
         const newClaim = await this.getSteps({ startTimeMillis: startTimeMillis, endTimeMillis: endTimeMillis, userId: userId })
-        const user = await User.findByPk(userId)
+        const user = await Users.findByPk(userId)
         const rockyCoinsObtained = Math.floor(newClaim / 50)
         await addRockyCoins({userId: user.userId, quantity: rockyCoinsObtained})
 

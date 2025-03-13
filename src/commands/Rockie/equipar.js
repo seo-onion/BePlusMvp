@@ -15,8 +15,27 @@ module.exports = {
         const userId = interaction.user.id;
         const itemName = interaction.options.getString("nombre");
 
-        const result = await equipAccessory(userId, itemName);
-        await interaction.reply(result.message);
+        try {
+            // ✅ Deferimos la interacción para evitar errores de tiempo de espera
+            if (!interaction.deferred && !interaction.replied) {
+                await interaction.deferReply({ ephemeral: true });
+            }
+
+            const result = await equipAccessory(userId, itemName);
+
+            // ✅ Enviamos la respuesta final
+            return await interaction.editReply(result.message);
+
+        } catch (error) {
+            console.error("❌ Error al equipar accesorio:", error);
+
+            const errorMessage = "❌ Hubo un error al intentar equipar el accesorio.";
+
+            if (interaction.deferred || interaction.replied) {
+                return await interaction.editReply(errorMessage);
+            } else {
+                return await interaction.reply({ content: errorMessage, ephemeral: true });
+            }
+        }
     },
 };
-

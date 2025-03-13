@@ -39,9 +39,9 @@ module.exports = {
             if (time === 'day') {
                 const { startTimeMillis, endTimeMillis } = DateHelper.getToday();
 
-                steps = await getSteps({ startTimeMillis, endTimeMillis, userId: id });
+                steps = await getSteps({ startTimeMillis, endTimeMillis, userId: userId });
                 console.log(steps);
-                await registerSteps({ userId: id, steps: steps });
+                await registerSteps({ userId: userId, steps: steps });
 
 
                 timePeriod = "📅 Hoy";

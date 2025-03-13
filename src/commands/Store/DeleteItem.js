@@ -1,12 +1,10 @@
-
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 const { Items } = require("../../models/Item/Items.js");
 const { Store } = require("../../models/Store/Store.js");
-const createAlertEmbed = require("../../utils/alertEmbed"); 
+const createAlertEmbed = require("../../utils/alertEmbed");
 
 const DEV = process.env.DEV_ROLE;
 const ADMIN = process.env.ADMIN_ROLE;
-
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -30,42 +28,50 @@ module.exports = {
 
         const member = interaction.member;
 
-        // ✅ Validación de roles: debe tener al menos uno de los dos roles
+        // ✅ Validación de roles
         if (!member.roles.cache.has(DEV) && !member.roles.cache.has(ADMIN)) {
-            const embed = createAlertEmbed("🚫 No No deberías estar probando estos comandos");
+            const embed = createAlertEmbed("🚫 No deberías estar probando estos comandos.");
             return await interaction.reply({ embeds: [embed], ephemeral: true });
         }
 
+        // ✅ Deferir la interacción para evitar errores
+        if (!interaction.deferred && !interaction.replied) {
+            await interaction.deferReply({ ephemeral: true });
+        }
+
         try {
-            const member = interaction.member;
-            // COMPROBAR QUE TIENE EL ROL DE ADMIN
-            if (!member.roles.cache.has(ROLE_ADMIN)) {
-                console.log("No Tienes los permisos para ejecutar este comando, no eres admin ");
-                return interaction.reply({
-                    content: "⛔ No tienes permisos para ejecutar este comando.",
-                    ephemeral: true
+            // Verificación del rol de admin
+            if (!member.roles.cache.has(ADMIN)) {
+                console.log("No tienes los permisos para ejecutar este comando, no eres admin.");
+                return await interaction.editReply({
+                    content: "⛔ No tienes permisos para ejecutar este comando."
                 });
-            } else{
-                console.log("Tienes los permisos para ejecutar este comando. ");
             }
-            // Encuentra la Store, suponiendo que hay una sola
+
+            // Buscar la tienda
             let store = await Store.findOne();
             if (!store) {
                 store = await Store.create({ name: "Rocky Store" });
             }
 
-            // Verifica si es que existe el item que quieres eliminar
-            let item = await Items.findOne({ where: { name: itemName, category } });
+            // Verificar si el artículo existe
+            const item = await Items.findOne({ where: { name: itemName, category } });
 
             if (item) {
                 await item.destroy();
-                return interaction.reply(`✅ En la categoría **${category}** se ha eliminado el artículo **${itemName}**.`);
+                return await interaction.editReply(`✅ En la categoría **${category}** se ha eliminado el artículo **${itemName}**.`);
             } else {
-                return interaction.reply(`❌ No se encontró el artículo **${itemName}** en la categoría **${category}**.`);
+                return await interaction.editReply(`❌ No se encontró el artículo **${itemName}** en la categoría **${category}**.`);
             }
+
         } catch (error) {
             console.error("❌ Error al eliminar el artículo:", error);
-            return interaction.reply("❌ Hubo un error al intentar eliminar el artículo.");
+
+            if (interaction.deferred || interaction.replied) {
+                return await interaction.editReply("❌ Hubo un error al intentar eliminar el artículo.");
+            } else {
+                return await interaction.reply("❌ Hubo un error al intentar eliminar el artículo.", { ephemeral: true });
+            }
         }
     }
 };

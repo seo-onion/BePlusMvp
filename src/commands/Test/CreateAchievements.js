@@ -1,12 +1,9 @@
-
-
-const {createAchievement} = require("../../services/achievement/achievementService")
+const { createAchievement } = require("../../services/achievement/achievementService");
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 const createAlertEmbed = require("../../utils/alertEmbed");
 
 const DEV = process.env.DEV_ROLE;
 const ADMIN = process.env.ADMIN_ROLE;
-
 
 const logros = [
     { name: "Racha Perfecta", description: "Lograste completar 30 días consecutivos sin fallar tu hábito. ¡Eres imparable!", emoji: "🏆", points: 100 },
@@ -20,48 +17,54 @@ const logros = [
 ];
 
 module.exports = {
+    data: new SlashCommandBuilder()
+        .setName("crearlogros")
+        .setDescription("Crea todos los logros predefinidos."),
 
-  data: new SlashCommandBuilder()
-    .setName("crearlogros")
-    .setDescription("test 4"),
-  async execute(interaction) {
-    
-    try {
+    async execute(interaction) {
         const member = interaction.member;
-        // COMPROBAR QUE TIENE EL ROL DE ADMIN
-        if (!member.roles.cache.has(TESTER_ROLE)) {
-            console.log("No Tienes los permisos para ejecutar este comando, no eres TESTER ");
-            return interaction.reply({
-                content: "⛔ No tienes permisos para ejecutar este comando.",
-                ephemeral: true
-            });
-        } else{
-            console.log("Tienes los permisos para ejecutar este comando. ERES TESTER");
-        }
-        for (const logro of logros) {
-            await createAchievement(
-                {
-                    name: logro.name, 
-                    description: logro.description, 
-                    emoji: logro.emoji, 
 
+        // ✅ Validación de roles
+        if (!member.roles.cache.has(DEV) && !member.roles.cache.has(ADMIN)) {
+            const embed = createAlertEmbed("🚫 No deberías estar ejecutando este comando.");
+            return await interaction.reply({ embeds: [embed], ephemeral: true });
+        }
+
+        // ✅ Deferir la interacción para evitar errores de tiempo de espera
+        if (!interaction.deferred && !interaction.replied) {
+            await interaction.deferReply({ ephemeral: true });
+        }
+
+        try {
+            for (const logro of logros) {
+                await createAchievement({
+                    name: logro.name,
+                    description: logro.description,
+                    emoji: logro.emoji,
                     points: logro.points
                 });
-                console.log(`Logro creado: ${logro.name}`);
+                console.log(`✅ Logro creado: ${logro.name}`);
             }
 
             console.log("✅ Todos los logros fueron insertados correctamente.");
 
-            return await interaction.reply({
-                content: `✅ Todos los logros han sido creados correctamente.`,
-                ephemeral: true
+            return await interaction.editReply({
+                content: `✅ Todos los logros han sido creados correctamente.`
             });
+
         } catch (error) {
             console.error("❌ Error al insertar logros:", error);
-            return await interaction.reply({
-                content: "❌ Ocurrió un error al intentar crear los logros.",
-                ephemeral: true
-            });
+
+            if (interaction.deferred || interaction.replied) {
+                return await interaction.editReply({
+                    content: "❌ Ocurrió un error al intentar crear los logros."
+                });
+            } else {
+                return await interaction.reply({
+                    content: "❌ Ocurrió un error al intentar crear los logros.",
+                    ephemeral: true
+                });
+            }
         }
     },
 };

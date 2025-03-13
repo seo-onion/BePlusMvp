@@ -5,13 +5,14 @@ const createErrorEmbed = require("./utils/errorEmbed");
 require("dotenv").config();
 
 const GENERAL_CHANNEL = process.env.COMMAND_CHANNEL;
+const COMMAND_CHANNEL = process.env.ADMIN_COMMAND_CHANNEL;
 const TESTER = process.env.TESTER_ROLE;
 const VERIFIED = process.env.VERIFICATED_ROLE;
 const NO_VERIFIED = process.env.NOT_VERIFICATED_ROLE;
 
-// Comandos permitidos por canal
 const channelCommandPermissions = {
-  [GENERAL_CHANNEL]: ['empezar', 'vincularmeconfit', 'reclamar', 'pasos', 'comprar', 'tienda', 'yo', 'desbloquear']
+  [GENERAL_CHANNEL]: ['empezar', 'vincularmeconfit', 'reclamar', 'pasos', 'comprar', 'tienda', 'yo', 'desbloquear', 'rockie', 'equipar'],
+  [COMMAND_CHANNEL]: ['item', 'eliminar', 'creardivisas', 'crearlogros']
 };
 
 const client = new Client({
@@ -43,19 +44,19 @@ for (const folder of commandFolders) {
     }
   }
 }
+
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isCommand()) return;
 
   const command = client.commands.get(interaction.commandName);
   const allowedCommands = channelCommandPermissions[interaction.channelId];
 
-  // ✅ Verificar si el comando está permitido en el canal actual
   if (allowedCommands && !allowedCommands.includes(interaction.commandName)) {
     const errorEmbed = createErrorEmbed(
       "🚫 **Comando No Permitido**",
       "Este comando no está permitido en este canal."
     );
-    return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+    return interaction.reply({ embeds: [errorEmbed], flags: 64 });
   }
 
   if (!command) {
@@ -66,27 +67,25 @@ client.on(Events.InteractionCreate, async (interaction) => {
   try {
     const member = interaction.member;
 
-    // ✅ Primero verificamos el rol NO_VERIFIED
     if (command.restricted && member.roles.cache.has(NO_VERIFIED)) {
       const errorEmbed = createErrorEmbed(
         "🚫 **Registro Incompleto**",
         "Debes completar el registro antes de usar este comando. Usa `/empezar` para obtener acceso."
       );
-      return await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+      return interaction.reply({ embeds: [errorEmbed], flags: 64 });
     }
 
-    // ✅ Luego validamos el rol VERIFIED (esperando confirmación de admin)
     if (command.restricted && !member.roles.cache.has(VERIFIED)) {
       const errorEmbed = createErrorEmbed(
         "🚫 **Esperando Verificación**",
         "Debes esperar a que un administrador complete tu registro."
       );
-      return await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+      return interaction.reply({ embeds: [errorEmbed], flags: 64 });
     }
 
-    // ✅ deferReply solo si no ha sido deferida antes
+    // ✅ deferReply inmediato para evitar expiración
     if (!interaction.deferred && !interaction.replied) {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: 64 });
     }
 
     await command.execute(interaction);
@@ -102,19 +101,16 @@ client.on(Events.InteractionCreate, async (interaction) => {
     if (interaction.replied || interaction.deferred) {
       return interaction.editReply({ embeds: [errorEmbed] });
     } else {
-      return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+      return interaction.reply({ embeds: [errorEmbed], flags: 64 });
     }
   }
 });
 
-// 🚨 Eliminar mensajes normales en el canal específico
 client.on(Events.MessageCreate, async (message) => {
   const targetChannelId = GENERAL_CHANNEL;
 
-  // Ignorar mensajes del bot o comandos slash
   if (message.author.bot || message.content.startsWith('/')) return;
 
-  // Eliminar mensajes en el canal específico
   if (message.channel.id === targetChannelId) {
     try {
       await message.delete();

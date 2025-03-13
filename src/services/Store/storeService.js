@@ -283,5 +283,5 @@ class StoreManager {
     }
 }
 
-const storeInstance = new StoreManager();
+const   storeInstance = new StoreManager();
 module.exports = storeInstance;

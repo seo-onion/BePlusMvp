@@ -1,6 +1,6 @@
 const Item = require("../../models/Item/Items");
 const Transaction = require("../../models/Item/Transaction")
-const User = require("../../models/User/Users")
+const {Users} = require("../../models/User/Users")
 require("dotenv").config();
 
 exports.createBadges = async () => {
@@ -42,7 +42,7 @@ exports.addRockyGems = async (req) => {
     try {
         console.log("Añadiendo rockyGems")
         const { userId, quantity } = req;
-        const user = await User.findByPk(userId);
+        const user = await Users.findByPk(userId);
 
         const oldRockyGems = user.rockyGems
         const newRockyGems = oldRockyGems + quantity
@@ -67,7 +67,7 @@ exports.addRockyCoins = async (req) => {
     try {
         console.log("Añadiendo rockyCoins")
         const { userId, quantity } = req;
-        const user = await User.findByPk(userId);
+        const user = await Users.findByPk(userId);
 
         const oldRockyCoins = user.rockyCoins
         const newRockyCoins = oldRockyCoins + quantity
