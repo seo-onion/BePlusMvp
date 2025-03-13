@@ -1,6 +1,6 @@
 const app = require("./server")
 const client = require("./bot");
-const {sequelize} = require("./config/database")
+const { sequelize } = require("./config/database")
 
 async function main() {
   try {
@@ -12,17 +12,19 @@ async function main() {
     console.log("✅ Modelos sincronizados.");
 
 
-    // Run server
-      app.listen(3000, () => {
-      console.log(`🚀 Servidor corriendo en http://localhost:3000`);
+    const PORT = process.env.PORT || 3000;
+
+    app.listen(PORT, () => {
+      console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
     });
-    
+
+
     // Run bot
     if (!client.isReady()) {
       client.login(process.env.TOKEN);
     }
 
-  } catch (error){ 
+  } catch (error) {
     console.error(error)
   }
 }
