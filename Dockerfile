@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 8080
 
 # Ejecuta primero el deploy-commands y luego inicia el bot
-CMD npm run deploy && npm start
+CMD ["npm", "start"]
