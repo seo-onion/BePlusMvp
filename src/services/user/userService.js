@@ -1,4 +1,4 @@
-const User = require("../../models/User/Users");
+const {Users} = require("../../models/User/Users");
 const Auth = require("../../models/User/Auth");
 const Profile = require("../../models/User/Profile")
 const ChannelNotificationService = require ("../notification/channelNotificationService")
@@ -24,7 +24,7 @@ exports.createUser = async (req) => {
     }
   }
 
-  let user = await User.findOne({ where: { userId: id } })
+  let user = await Users.findOne({ where: { userId: id } })
 
   if (user) {
     return {
@@ -33,7 +33,7 @@ exports.createUser = async (req) => {
     }
   }
 
-  const newUser = await User.create(
+  const newUser = await Users.create(
     {
       userId: id,
       email: email,
@@ -128,7 +128,7 @@ exports.editUser = async (req, res) => {
 exports.getAllUser = async () => {
   try {
 
-    console.log(await User.findAll())
+    console.log(await Users.findAll())
 
   } catch (error) {
     console.error("❌ Error al obtener usuarios:", error.message);
@@ -147,7 +147,7 @@ exports.getUserProfile = async (userId) => {
 }
 
 exports.deleteUser = async (id) => {
-  const user = await User.findByPk(id);
+  const user = await Users.findByPk(id);
   await user.destroy();
   console.log(`Se eliminó el usuario ${id}`)
 }
