@@ -1,4 +1,5 @@
 # Usa la imagen oficial de Node.js
+#Odio todo
 FROM node:18
 
 # Directorio de trabajo dentro del contenedor
