@@ -150,4 +150,4 @@ exports.deleteUser = async (id) => {
   const user = await Users.findByPk(id);
   await user.destroy();
   console.log(`Se eliminó el usuario ${id}`)
-}
+} 
