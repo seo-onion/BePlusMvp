@@ -7,20 +7,18 @@
     "dialect": "postgres",
     "port": 5433
   },
-  "test": {
-    "username": "postgres",
-    "password": "postgres",
-    "database": "postgres",
-    "host": "127.0.0.1",
-    "dialect": "postgres",
-    "port": 5433
-  },
   "production": {
-    "username": "postgres",
-    "password": "postgres",
-    "database": "postgres",
-    "host": "127.0.0.1",
+    "username": "${POSTGRES_USER}",
+    "password": "${POSTGRES_PASSWORD}",
+    "database": "${POSTGRES_DB}",
+    "host": "${POSTGRES_HOST}",
+    "port": "${POSTGRES_PORT}",
     "dialect": "postgres",
-    "port": 5433
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
   }
 }
