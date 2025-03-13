@@ -47,7 +47,7 @@ async function main() {
     await sequelize.sync({ alter: true });
     console.log("✅ Modelos sincronizados.");
 
-    const PORT = process.env.PORT || 8080;
+    const PORT = process.env.PORT || 10000;
 
     // Escuchar en 0.0.0.0 para Render
     app.listen(PORT, "0.0.0.0", () => {
