@@ -12,7 +12,7 @@ async function main() {
     await sequelize.sync({ alter: true });
     console.log("✅ Modelos sincronizados.");
 
-    const PORT = process.env.PORT || 3000;
+    const PORT = process.env.PORT || 8080;
 
     // ✅ Cambiado de localhost a 0.0.0.0
     app.listen(PORT, '0.0.0.0', () => {
