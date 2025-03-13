@@ -1,13 +1,12 @@
-const { EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { claimRockyCoins } = require("../../services/google/fitService");
 const alertEmbed = require("../../utils/alertEmbed");
 const createErrorEmbed = require("../../utils/errorEmbed");
 
 module.exports = {
-    data: {
-        name: "reclamar",
-        description: "Convierte tus pasos en RockyCoins",
-    },
+    data: new SlashCommandBuilder()
+        .setName("reclamar")
+        .setDescription("Convierte tus pasos en RockyCoins"),
 
     restricted: true,
 
