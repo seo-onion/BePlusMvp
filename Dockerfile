@@ -15,7 +15,7 @@ RUN npm install --production
 COPY . .
 
 # Expone el puerto en el que se ejecuta tu aplicación
-EXPOSE 10000
+EXPOSE 8080
 
 # Ejecuta primero el deploy-commands y luego inicia el bot
 CMD ["npm", "start"]
