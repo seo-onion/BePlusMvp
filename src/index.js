@@ -14,8 +14,8 @@ async function main() {
 
     const PORT = process.env.PORT || 8080;
 
-    // ✅ Cambiado de localhost a 0.0.0.0
-    app.listen(PORT, '0.0.0.0', () => {
+    // ✅ Cambiado de localhost a 0.0.0.0 para que Render lo detecte
+    app.listen(PORT, "0.0.0.0", () => {
       console.log(`🚀 Servidor corriendo en http://0.0.0.0:${PORT}`);
     });
 
