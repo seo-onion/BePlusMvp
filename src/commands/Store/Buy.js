@@ -2,7 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const storeInstance = require("../../services/Store/storeService");
 const createErrorEmbed = require("../../utils/errorEmbed");
 
-// ✅ Fetch categories BEFORE defining the command
+// Pre-fetches categories before defining the command to ensure they are available.
 let categoryChoices = [];
 
 async function loadCategories() {
@@ -19,7 +19,7 @@ async function loadCategories() {
     }
 }
 
-// ✅ Call this function when the bot starts
+// Calls the function to load categories when the bot starts.
 loadCategories();
 
 module.exports = {
@@ -30,7 +30,7 @@ module.exports = {
             option.setName("category")
                 .setDescription("Elige una categoría de artículos")
                 .setRequired(true)
-                .addChoices(...categoryChoices) // ✅ Uses preloaded choices
+                .addChoices(...categoryChoices) // Uses preloaded choices.
         )
         .addStringOption(option =>
             option.setName("item")
@@ -38,11 +38,10 @@ module.exports = {
                 .setRequired(true)
         ),
 
-        // ✅ The command is restricted so that only Beta Testers can use it
-        restricted: true,
+    restricted: true, // Restricts the command to specific users like Beta Testers.
 
     async execute(interaction) {
-        // Defer the response to avoid errors with editReply()
+        // Defers the reply to prevent timeout issues during processing.
         await interaction.deferReply({ ephemeral: true });
 
         try {
@@ -52,24 +51,24 @@ module.exports = {
 
             console.log(`🛒 Usuario ${userId} intenta comprar: ${itemName} (Categoría: ${category})`);
 
-            // 🚨 Validate if the store is instantiated.
+            // Validates if the store instance and its buyItem method are defined.
             if (!storeInstance || typeof storeInstance.buyItem !== "function") {
                 console.error("❌ Error: storeInstance no está definido o buyItem() no existe.");
-                return interaction.editReply({ 
-                    embeds: [createErrorEmbed("⚠️ No se pudo acceder a la tienda en este momento. Intenta más tarde.")] 
+                return interaction.editReply({
+                    embeds: [createErrorEmbed("⚠️ No se pudo acceder a la tienda en este momento. Intenta más tarde.")]
                 });
             }
 
-            // The result is an embed which is the response of buying an Item
+            // Attempts to process the purchase and returns the result as an embed.
             const result = await storeInstance.buyItem(interaction.user.id, itemName, category);
 
-            // If the result is not an embed, returns an error
+            // If no valid embed is returned, sends an error message.
             if (!result.embed) {
                 console.error("❌ Error: `buyItem()` did not return a valid embed.");
                 return interaction.editReply("❌ Hubo un error al procesar tu compra.");
             }
 
-            // If the result is embed it returns a reply
+            // Sends the successful purchase response.
             return interaction.editReply({ embeds: [result.embed] });
 
         } catch (error) {

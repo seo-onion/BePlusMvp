@@ -32,13 +32,13 @@ module.exports = {
 
         const member = interaction.member;
 
-        // ✅ Validate if the roles are correct (it should have one of them (ADMIN OR DEV))
+        // Validate if the roles are correct (it should have one of them (ADMIN OR DEV))
         if (!member.roles.cache.has(DEV) && !member.roles.cache.has(ROLE_ADMIN)) {
             const embed = createAlertEmbed("🚫 No deberías estar probando estos comandos.");
             return await interaction.reply({ embeds: [embed], ephemeral: true });
         }
 
-        // ✅ Define the interaction at the beginning to avoid the error
+        // Define the interaction at the beginning to avoid the error
         if (!interaction.deferred && !interaction.replied) {
             await interaction.deferReply({ ephemeral: true });
         }
@@ -68,7 +68,7 @@ module.exports = {
                 where: { name: itemName, category }
             });
 
-            // ✅ If the Item exists, uploads the price
+            // If the Item exists, uploads the price
             if (item) {
                 item.price = price;
                 await item.save();
@@ -76,7 +76,7 @@ module.exports = {
                     `✅ En la categoría **${category}** se ha actualizado el artículo **${itemName}** 
                     con un precio de ${price} RockyCoins.`);
             } else {
-                // ✅ If the Item doesn't exist, it is created.
+                // If the Item doesn't exist, it is created.
                 await Items.create({
                     name: itemName,
                     description: `Un ${category} del tipo ${itemName}`,

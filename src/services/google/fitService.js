@@ -10,7 +10,7 @@ const { addRockyCoins } = require("../item/economyService");
 const { Op } = require("sequelize");
 
 
-//? Service Auth with google fit
+// Adds Google authentication tokens for a user.
 exports.addGoogleAuth = async (req) => {
     try {
         const { token, refreshToken, userId } = req;
@@ -43,7 +43,7 @@ exports.addGoogleAuth = async (req) => {
     }
 };
 
-//? Service register the number of steps of yesterday in the BD
+// Registers or updates the number of steps for a user for the current day.
 exports.registerSteps = async (req) => {
     const { userId, steps } = req;
 
@@ -63,7 +63,7 @@ exports.registerSteps = async (req) => {
     }
 }
 
-//? Get user steps of a day
+// Retrieves the number of steps for a user on a specific day.
 exports.getDaySteps = async (req) => {
     const { userId, date } = req
 
@@ -77,7 +77,7 @@ exports.getDaySteps = async (req) => {
 }
 
 
-//? Get all steps of a user
+// Retrieves the total accumulated steps for a user.
 exports.getAccumulatedSteps = async (userId) => {
     const result = await UserSteps.sum("steps", { where: { userId } });
     if (!result) {
@@ -88,7 +88,7 @@ exports.getAccumulatedSteps = async (userId) => {
 }
 
 
-//? Get number of steps in a range of time
+// Retrieves the number of steps within a specific time range.
 exports.getSteps = async (req) => {
 
     const { startTimeMillis, endTimeMillis, userId } = req;
@@ -137,7 +137,7 @@ exports.getSteps = async (req) => {
 };
 
 
-//? claimrockyCoins with yours steps
+// Claims RockyCoins based on the steps from the previous day.
 exports.claimRockyCoins = async (userId) => {
 
     try {

@@ -1,5 +1,5 @@
 const { Client, GatewayIntentBits, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
-const createAlertEmbed = require("../../utils/alertEmbed"); 
+const createAlertEmbed = require("../../utils/alertEmbed");
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers]
@@ -8,8 +8,10 @@ const client = new Client({
 const CHANNEL_ID = process.env.PRIVATE_CHANNEL;
 
 class PrivateChannelNotificationService {
+    // Sends a private notification to a specified user in a given channel.
     static async sendPrivateChannelNotification(userId, message) {
         try {
+            // Fetch the private channel.
             const channel = await client.channels.fetch(CHANNEL_ID);
             if (!channel || !channel.isTextBased()) {
                 const errorEmbed = createAlertEmbed(`❌ Error: No se encontró el canal con ID ${CHANNEL_ID} o no es de texto.`);
@@ -17,6 +19,7 @@ class PrivateChannelNotificationService {
                 return;
             }
 
+            // Fetch the guild member by user ID.
             const member = await channel.guild.members.fetch(userId);
             if (!member) {
                 const errorEmbed = createAlertEmbed(`❌ Error: No se encontró el usuario con ID ${userId}`);
@@ -24,7 +27,7 @@ class PrivateChannelNotificationService {
                 return;
             }
 
-            // ✅ Crear embed de notificación
+            // Create the notification embed and send the message in the private channel.
             const notificationEmbed = new EmbedBuilder()
                 .setColor("#00AEEF")
                 .setTitle("📩 Nueva Notificación")
@@ -32,12 +35,11 @@ class PrivateChannelNotificationService {
                 .setFooter({ text: `Enviado para: ${member.user.tag}` })
                 .setTimestamp();
 
-            // ✅ Enviar el mensaje con el embed
             const msg = await channel.send({
                 embeds: [notificationEmbed],
             });
 
-            // ✅ Establecer permisos para ocultar el mensaje a todos menos al usuario
+            // Set channel permissions to make the message visible only to the specified user.
             await msg.channel.permissionOverwrites.create(channel.guild.roles.everyone, { ViewChannel: false });
             await msg.channel.permissionOverwrites.create(userId, { ViewChannel: true });
 
@@ -49,6 +51,7 @@ class PrivateChannelNotificationService {
     }
 }
 
+// Log the bot into Discord using the provided token.
 client.login(process.env.TOKEN);
 
 module.exports = PrivateChannelNotificationService;

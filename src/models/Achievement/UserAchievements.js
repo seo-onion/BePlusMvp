@@ -31,7 +31,6 @@ const UserAchievements = sequelize.define("UserAchievements", {
     timestamps: false
 });
 
-
 Users.belongsToMany(Achievements, { through: UserAchievements, foreignKey: "userId" });
 Achievements.belongsToMany(Users, { through: UserAchievements, foreignKey: "achievementId" });
 

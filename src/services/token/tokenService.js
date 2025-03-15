@@ -8,8 +8,7 @@ GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID
 DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET
 
-
-
+// Retrieves an OAuth token from the given URL with the specified parameters.
 exports.getOAuthToken = async (tokenUrl, params) => {
     try {
         const response = await axios.post(tokenUrl, params.toString(), {
@@ -20,10 +19,11 @@ exports.getOAuthToken = async (tokenUrl, params) => {
         console.error("Error en al obtener el token:", error.response?.data || error.message);
         throw new Error("Error en al obtener el token:", error.response?.data || error.message);
     }
-}
+};
 
+// Refreshes the Google OAuth token using the stored refresh token for the specified user.
 exports.refreshGoogleToken = async (userId) => {
-    console.log(`El token para google fit del usuario ${userId} expiró, se ejecutó refreshGoogleToken()`)
+    console.log(`El token para google fit del usuario ${userId} expiró, se ejecutó refreshGoogleToken()`);
     const auth = await Auth.findOne({ where: { userId } });
 
     if (!auth || !auth.googleRefreshToken) {
@@ -32,31 +32,33 @@ exports.refreshGoogleToken = async (userId) => {
     }
 
     try {
-        console.log("Obteniendo nuevo token")
+        console.log("Obteniendo nuevo token");
 
         const response = await axios.post("https://oauth2.googleapis.com/token", null, {
-            params: {client_id: GOOGLE_CLIENT_ID, client_secret: GOOGLE_CLIENT_SECRET, refresh_token: auth.googleRefreshToken, grant_type: "refresh_token"}
+            params: {
+                client_id: GOOGLE_CLIENT_ID,
+                client_secret: GOOGLE_CLIENT_SECRET,
+                refresh_token: auth.googleRefreshToken,
+                grant_type: "refresh_token",
+            },
         });
 
-
         const { access_token } = response.data;
-
 
         await auth.update({ googleToken: access_token });
 
         console.log("✅ Nuevo token obtenido y guardado:", access_token);
 
         return access_token;
-
-
     } catch (error) {
         console.error("Error al refrescar token de Google Fit:", error.response?.data || error.message);
         throw new Error("No se pudo actualizar el token de Google Fit");
     }
-}
+};
 
+// Refreshes the Discord OAuth token using the stored refresh token for the specified user.
 exports.refreshDiscordToken = async (userId) => {
-    console.log(`El token de discord del usuario ${userId} expiró, se ejecutó refreshDiscordToken()`)
+    console.log(`El token de discord del usuario ${userId} expiró, se ejecutó refreshDiscordToken()`);
     const auth = await Auth.findOne({ where: { userId } });
 
     if (!auth || !auth.discordRefreshToken) {
@@ -65,22 +67,27 @@ exports.refreshDiscordToken = async (userId) => {
     }
 
     try {
-        console.log("Obteniendo nuevo token")
+        console.log("Obteniendo nuevo token");
         const response = await axios.post("https://discord.com/api/oauth2/token", null, {
-            params: {client_id: DISCORD_CLIENT_ID, client_secret: DISCORD_CLIENT_SECRET, refresh_token: auth.discordRefreshToken, grant_type: "refresh_token"},
-            headers: {"Content-Type": "application/x-www-form-urlencoded"}
+            params: {
+                client_id: DISCORD_CLIENT_ID,
+                client_secret: DISCORD_CLIENT_SECRET,
+                refresh_token: auth.discordRefreshToken,
+                grant_type: "refresh_token",
+            },
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
         });
 
-        const {access_token} = response.data;
+        const { access_token } = response.data;
 
-        auth.update({token: access_token})
+        auth.update({ token: access_token });
 
-        console.log("✅ Nuevo token obtenido y guardado:", access_token)
+        console.log("✅ Nuevo token obtenido y guardado:", access_token);
         return access_token;
 
     } catch (error) {
         console.error("Error al refrescar token de Discord:", error.response?.data || error.message);
         throw new Error("No se pudo refrescar el token de Discord.");
     }
-}
+};
 
