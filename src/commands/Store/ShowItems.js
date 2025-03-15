@@ -26,6 +26,7 @@ module.exports = {
                 order: [["category", "ASC"], ["price", "ASC"]],
             });
 
+            // If the Store doesn't have items it shows a message
             if (allItems.length === 0) {
                 return await interaction.editReply("❌ No hay artículos en la tienda en este momento.");
             }

@@ -28,19 +28,19 @@ module.exports = {
 
         const member = interaction.member;
 
-        // ✅ Validación de roles
+        // ✅ Validate if the roles are correct (it should have one of them (ADMIN OR DEV))
         if (!member.roles.cache.has(DEV) && !member.roles.cache.has(ADMIN)) {
             const embed = createAlertEmbed("🚫 No deberías estar probando estos comandos.");
             return await interaction.reply({ embeds: [embed], ephemeral: true });
         }
 
-        // ✅ Deferir la interacción para evitar errores
+        // ✅ Define the interaction at the beginning to avoid the error
         if (!interaction.deferred && !interaction.replied) {
             await interaction.deferReply({ ephemeral: true });
         }
 
         try {
-            // Verificación del rol de admin
+            // Validates if the user has the ROLE_ADMIN
             if (!member.roles.cache.has(ADMIN)) {
                 console.log("No tienes los permisos para ejecutar este comando, no eres admin.");
                 return await interaction.editReply({
@@ -48,15 +48,16 @@ module.exports = {
                 });
             }
 
-            // Buscar la tienda
+            // Finds or creates the Store
             let store = await Store.findOne();
             if (!store) {
                 store = await Store.create({ name: "Rocky Store" });
             }
 
-            // Verificar si el artículo existe
+            // Finds or creates the Store
             const item = await Items.findOne({ where: { name: itemName, category } });
 
+            // If the item exists it is destroyed in the DataBase
             if (item) {
                 await item.destroy();
                 return await interaction.editReply(`✅ En la categoría **${category}** se ha eliminado el artículo **${itemName}**.`);

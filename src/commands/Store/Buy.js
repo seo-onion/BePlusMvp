@@ -38,10 +38,12 @@ module.exports = {
                 .setRequired(true)
         ),
 
-    restricted: true, // ✅ Se restringe el comando para que solo Beta Testers lo usen
+        // ✅ The command is restricted so that only Beta Testers can use it
+        restricted: true,
 
     async execute(interaction) {
-        await interaction.deferReply({ ephemeral: true }); // 🔄 Deferimos la respuesta para evitar errores con editReply()
+        // Defer the response to avoid errors with editReply()
+        await interaction.deferReply({ ephemeral: true });
 
         try {
             const category = interaction.options.getString("category");
@@ -50,9 +52,7 @@ module.exports = {
 
             console.log(`🛒 Usuario ${userId} intenta comprar: ${itemName} (Categoría: ${category})`);
 
-
-            // 🚨 Validar que la tienda está inicializada
-
+            // 🚨 Validate if the store is instantiated.
             if (!storeInstance || typeof storeInstance.buyItem !== "function") {
                 console.error("❌ Error: storeInstance no está definido o buyItem() no existe.");
                 return interaction.editReply({ 
@@ -60,13 +60,16 @@ module.exports = {
                 });
             }
 
+            // The result is an embed which is the response of buying an Item
             const result = await storeInstance.buyItem(interaction.user.id, itemName, category);
 
+            // If the result is not an embed, returns an error
             if (!result.embed) {
                 console.error("❌ Error: `buyItem()` did not return a valid embed.");
                 return interaction.editReply("❌ Hubo un error al procesar tu compra.");
             }
 
+            // If the result is embed it returns a reply
             return interaction.editReply({ embeds: [result.embed] });
 
         } catch (error) {
