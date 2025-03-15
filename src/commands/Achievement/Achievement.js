@@ -18,7 +18,7 @@ module.exports = {
       if (!interaction.deferred && !interaction.replied) {
         await interaction.deferReply({ flags: 64 });
       }
-
+      
       const userId = interaction.user.id;
       let achievementsObtained = [];
 

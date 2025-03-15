@@ -56,7 +56,7 @@ async function main() {
 
     // Ejecutar el bot de Discord
     if (!client.isReady()) {
-      client.login(process.env.TOKEN);
+      await client.login(process.env.TOKEN);
     }
 
   } catch (error) {
