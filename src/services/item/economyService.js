@@ -1,7 +1,7 @@
 const Item = require("../../models/Item/Items");
 const Transaction = require("../../models/Item/Transaction")
 const {Users} = require("../../models/User/Users")
-require("dotenv").config();
+
 
 exports.createBadges = async () => {
     await Item.create({

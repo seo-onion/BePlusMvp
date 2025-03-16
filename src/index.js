@@ -1,9 +1,16 @@
 const express = require("express");
-const path = require("path");
+const path = require('path');
+const dotenv = require('dotenv');
+// Load .env production or development
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development';
+dotenv.config({ path: path.resolve(__dirname, `../config/dotenv/${envFile}`) });
+
+// Load global environment variables
+dotenv.config({ path: path.resolve(__dirname, '../config/dotenv/.env') });
+
+
 const { sequelize } = require("./config/database");
 const client = require("./bot");
-require("dotenv").config();
-
 const app = express();
 
 const {
@@ -15,8 +22,8 @@ const {
 
 const { editUser } = require("./services/user/userService");
 
-// Configuración de vistas
-app.set("views", path.join(__dirname, "../views"));
+// Vies settings
+app.set("views", path.join(__dirname, "./views"));
 app.set("view engine", "ejs");
 
 // Middlewares
@@ -39,6 +46,8 @@ app.post("/api/auth/discord/update-user", editUser);
 // Inicialización de la aplicación
 async function main() {
   try {
+    console.log(`Environment: ${process.env.NODE_ENV}`);
+
     console.log("⏳ Conectando a la base de datos...");
     await sequelize.authenticate();
     console.log("✅ Base de datos conectada.");
@@ -47,11 +56,11 @@ async function main() {
     await sequelize.sync({ alter: true });
     console.log("✅ Modelos sincronizados.");
 
-    const PORT = process.env.PORT || 8080;
+    const PORT = process.env.DB_PORT || 3000;
+    const HOST = process.env.DB_HOST || "127.0.0.1";
 
-    // Escuchar en 0.0.0.0 para Render
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`🚀 Servidor corriendo en http://0.0.0.0:${PORT}`);
+    app.listen(PORT, HOST, () => {
+      console.log(`🚀 Servidor corriendo en http://${HOST}:${PORT}`);
     });
 
     // Ejecutar el bot de Discord

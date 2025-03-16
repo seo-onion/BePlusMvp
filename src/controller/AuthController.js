@@ -1,5 +1,4 @@
 const axios = require("axios");
-require("dotenv").config();
 
 const { getOAuthToken } = require("../services/token/tokenService")
 const { createUser, assignRoleToUser } = require("../services/user/userService")

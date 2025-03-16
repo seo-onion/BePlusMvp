@@ -1,6 +1,4 @@
-.env
-.env.development
-.env.production
+/config/dotenv/.env*
 .vscode
 node_module
 trash
