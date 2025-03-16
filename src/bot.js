@@ -53,12 +53,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
   // Check if command is allow in the channel
   if (allowedCommands && !allowedCommands.includes(interaction.commandName)) {
     const errorEmbed = createErrorEmbed(
-      "🚫 **Comando No Permitido**",
+      "Comando No Permitido",
       "Este comando no está permitido en este canal."
     );
     return interaction.reply({ embeds: [errorEmbed], flags: 64 });
   }
-
+  // Check if command is real
   if (!command) {
     console.error(`❌ No se encontró un comando para ${interaction.commandName}`);
     return;
@@ -69,23 +69,15 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     if (command.restricted && member.roles.cache.has(NO_VERIFIED)) {
       const errorEmbed = createErrorEmbed(
-        "🚫 **Registro Incompleto**",
+        "Registro Incompleto",
         "Debes completar el registro antes de usar este comando. Usa `/empezar` para obtener acceso."
       );
       return interaction.reply({ embeds: [errorEmbed], flags: 64 });
     }
 
-    if (command.restricted && !member.roles.cache.has(VERIFIED)) {
-      const errorEmbed = createErrorEmbed(
-        "🚫 **Esperando Verificación**",
-        "Debes esperar a que un administrador complete tu registro."
-      );
-      return interaction.reply({ embeds: [errorEmbed], flags: 64 });
-    }
-
-    // ✅ deferReply inmediato para evitar expiración
+    // Verified deferReply 
     if (!interaction.deferred && !interaction.replied) {
-      await interaction.deferReply({ flags: 64 });
+      await interaction.deferReply();
     }
 
     await command.execute(interaction);
@@ -93,13 +85,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
   } catch (error) {
     console.error("❌ Error al ejecutar el comando:", error);
 
-    const errorEmbed = createErrorEmbed(
-      "❌ **Error al ejecutar el comando**",
-      "Tuvimos un problema inesperado. Intenta nuevamente más tarde."
-    );
+    const errorEmbed = createErrorEmbed();
 
     if (interaction.replied || interaction.deferred) {
-      return interaction.editReply({ embeds: [errorEmbed] });
+      return interaction.editReply({ embeds: [errorEmbed], flags: 64 });
     } else {
       return interaction.reply({ embeds: [errorEmbed], flags: 64 });
     }
@@ -107,6 +96,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 
+// Listener to delete no commands messagge in commands channels 
 client.on(Events.MessageCreate, async (message) => {
   const targetChannelId = GENERAL_CHANNEL;
 
@@ -115,9 +105,8 @@ client.on(Events.MessageCreate, async (message) => {
   if (message.channel.id === targetChannelId) {
     try {
       await message.delete();
-      console.log(`🗑️ Mensaje de ${message.author.tag} eliminado en el canal.`);
     } catch (error) {
-      console.error(`❌ Error al eliminar el mensaje:`, error);
+      console.error(`Error deleting message:`, error);
     }
   }
 });
