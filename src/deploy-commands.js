@@ -3,8 +3,8 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('node:path');
 
-const TOKEN = process.env.TOKEN;
-const APPLICATION_ID = process.env.APPLICATION_ID;
+const TOKEN = process.env.DISCORD_TOKEN;
+const APPLICATION_ID = process.env.DISCORD_APPLICATION_ID;
 
 const commands = [];
 const commandsPath = path.join(__dirname, 'commands');
@@ -22,10 +22,24 @@ for (const folder of commandFolders) {
                 throw new Error(`❌ El comando "${file}" en la carpeta "${folder}" no tiene 'data' o 'toJSON()'.`);
             }
 
-            commands.push(command.data.toJSON());
+            const jsonCommand = command.data.toJSON();
+            const commandIndex = commands.length;
+
+            // 🔍 DEBUG: Mostrar el índice, nombre y si tiene opciones
+            console.log(`🧩 Comando [${commandIndex}]: ${jsonCommand.name}`);
+            if (jsonCommand.options) {
+                console.log(`📦 Opciones (${jsonCommand.options.length}):`);
+                jsonCommand.options.forEach((opt, idx) => {
+                    console.log(`   [${idx}] Nombre: ${opt.name}, Required: ${opt.required}`);
+                });
+            } else {
+                console.log("📭 Sin opciones");
+            }
+
+            commands.push(jsonCommand);
         } catch (error) {
             console.error(`❌ Error en el comando "${file}" en la carpeta "${folder}":`, error.message);
-            process.exit(1); // Detener el proceso si hay un error
+            process.exit(1);
         }
     }
 }

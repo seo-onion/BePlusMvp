@@ -19,15 +19,15 @@ module.exports = {
                     { name: "Otros", value: "otros" }
                 )
         )
-        .addStringOption(option =>
-            option.setName("subcarpeta")
-                .setDescription("Nombre de subcarpeta si aplica (ej. bases/1 para BASE1.png).")
-                .setRequired(false)
-        )
         .addAttachmentOption(option =>
             option.setName("imagen")
                 .setDescription("Adjunta la imagen en formato PNG.")
                 .setRequired(true)
+        )
+        .addStringOption(option =>
+            option.setName("subcarpeta")
+                .setDescription("Nombre de subcarpeta si aplica (ej. bases/1 para BASE1.png).")
+                .setRequired(false)
         ),
 
     /**
