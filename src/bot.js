@@ -1,14 +1,13 @@
 const fs = require("fs");
 const path = require("path");
 const { Client, Collection, GatewayIntentBits, Events } = require("discord.js");
-const createErrorEmbed = require("./utils/errorEmbed");
-require("dotenv").config();
+const createErrorEmbed = require("./utils/embed/errorEmbed");
 
-const GENERAL_CHANNEL = process.env.COMMAND_CHANNEL;
-const COMMAND_CHANNEL = process.env.ADMIN_COMMAND_CHANNEL;
-const TESTER = process.env.TESTER_ROLE;
-const VERIFIED = process.env.VERIFICATED_ROLE;
-const NO_VERIFIED = process.env.NOT_VERIFICATED_ROLE;
+const GENERAL_CHANNEL = process.env.DISCORD_COMMAND_CHANNEL;
+const COMMAND_CHANNEL = process.env.DISCORD_ADMIN_COMMAND_CHANNEL;
+const TESTER = process.env.DISCORD_TESTER_ROLE;
+const VERIFIED = process.env.DISCORD_VERIFICATED_ROLE;
+const NO_VERIFIED = process.env.DISCORD_NOT_VERIFICATED_ROLE;
 
 const channelCommandPermissions = {
   [GENERAL_CHANNEL]: ['empezar', 'vincularmeconfit', 'reclamar', 'pasos', 'comprar', 'tienda', 'yo', 'desbloquear', 'rockie', 'equipar'],
@@ -40,7 +39,7 @@ for (const folder of commandFolders) {
     if (command.data && command.execute) {
       client.commands.set(command.data.name, command);
     } else {
-      console.warn(`⚠️ Advertencia: El archivo ${file} no tiene "data" o "execute".`);
+      console.warn(`Warning: The file ${file} does not have "data" or "execute"`);
     }
   }
 }
@@ -51,6 +50,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   const command = client.commands.get(interaction.commandName);
   const allowedCommands = channelCommandPermissions[interaction.channelId];
 
+  // Check if command is allow in the channel
   if (allowedCommands && !allowedCommands.includes(interaction.commandName)) {
     const errorEmbed = createErrorEmbed(
       "🚫 **Comando No Permitido**",
@@ -105,6 +105,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
   }
 });
+
 
 client.on(Events.MessageCreate, async (message) => {
   const targetChannelId = GENERAL_CHANNEL;

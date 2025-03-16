@@ -19,13 +19,13 @@ for (const folder of commandFolders) {
             const command = require(path.join(folderPath, file));
             
             if (!command.data || typeof command.data.toJSON !== 'function') {
-                throw new Error(`❌ El comando "${file}" en la carpeta "${folder}" no tiene 'data' o 'toJSON()'.`);
+                throw new Error(`The command "${file}" in the folder "${folder}" is missing 'data' or 'toJSON()'.`);
             }
 
             commands.push(command.data.toJSON());
         } catch (error) {
-            console.error(`❌ Error en el comando "${file}" en la carpeta "${folder}":`, error.message);
-            process.exit(1); // Detener el proceso si hay un error
+            console.error(`Error in the command "${file}" in the folder "${folder}":`, error.message);
+            process.exit(1); // Stop error proccess
         }
     }
 }
@@ -34,11 +34,11 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
 
 (async () => {
     try {
-        console.log('Registrando comandos en Discord...');
+        console.log('Registering commands in Discord...');
         await rest.put(Routes.applicationCommands(APPLICATION_ID), { body: commands });
-        console.log('✅ Comandos registrados exitosamente.');
+        console.log('Commands registered successfully.');
     } catch (error) {
-        console.error('❌ Error al registrar comandos:', error);
-        process.exit(1); // Detener el proceso si hay un error en la solicitud
+        console.error('Error registering commands:', error);
+        process.exit(1); 
     }
 })();
