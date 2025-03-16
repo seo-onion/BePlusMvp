@@ -1,4 +1,5 @@
-/config/dotenv/.env*
+
+.env*
 .vscode
 node_module
 trash
