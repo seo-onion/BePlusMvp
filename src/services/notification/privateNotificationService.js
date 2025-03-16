@@ -1,5 +1,5 @@
 const { Client, GatewayIntentBits, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
-const createAlertEmbed = require("../../utils/alertEmbed"); 
+const createAlertEmbed = require("../../utils/embed/alertEmbed"); 
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers]

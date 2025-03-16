@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { claimRockyCoins } = require("../../services/google/fitService");
-const alertEmbed = require("../../utils/alertEmbed");
-const createErrorEmbed = require("../../utils/errorEmbed");
+const alertEmbed = require("../../utils/embed/alertEmbed");
+const createErrorEmbed = require("../../utils/embed/errorEmbed");
 
 module.exports = {
     data: new SlashCommandBuilder()

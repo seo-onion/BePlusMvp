@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, AttachmentBuilder, EmbedBuilder } = require("discord.js");
 const { getRockie, createRockie, renderRockie } = require("../../services/rockie/rockieService");
-const {Users} = require("../../models/User/Users");
+const Users = require("../../models/User/Users");
 
 console.log("📌 Users Model Import:", Users); // Verificar si Users está definido al inicio
 
