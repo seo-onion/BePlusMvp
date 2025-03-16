@@ -4,7 +4,8 @@ module.exports = function errorEmbed({
     title = "Error desconocido",
     description = "Hubo un problema desconocido al ejecutar el comando."
 } = {}) {
-    return new EmbedBuilder()
+    const date = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+    return new EmbedBuilder()    
         .setColor("#FF0000") 
         .setTitle(title)
         .setDescription(description)

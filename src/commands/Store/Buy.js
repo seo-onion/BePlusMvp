@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const storeInstance = require("../../services/Store/storeService");
-const createErrorEmbed = require("../../utils/errorEmbed");
+const createErrorEmbed = require("../../utils/embed/errorEmbed");
 
 // ✅ Fetch categories BEFORE defining the command
 let categoryChoices = [];

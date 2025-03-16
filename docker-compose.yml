@@ -4,11 +4,11 @@ services:
     container_name: postgres
     restart: always
     environment:
-      POSTGRES_USER: ${BD_USER}
-      POSTGRES_PASSWORD: ${BD_PASSWORD}
-      POSTGRES_DB: ${BD_POSTGRES}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_POSTGRES}
     ports:
-      - "127.0.0.1:${BD_PORT}:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

@@ -72,12 +72,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         "Registro Incompleto",
         "Debes completar el registro antes de usar este comando. Usa `/empezar` para obtener acceso."
       );
-      return interaction.reply({ embeds: [errorEmbed], flags: 64 });
-    }
-
-    // Verified deferReply 
-    if (!interaction.deferred && !interaction.replied) {
-      await interaction.deferReply();
+      return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
     }
 
     await command.execute(interaction);
@@ -85,7 +80,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   } catch (error) {
     console.error("❌ Error al ejecutar el comando:", error);
 
-    const errorEmbed = createErrorEmbed();
+    const errorEmbced = createErrorEmbed();
 
     if (interaction.replied || interaction.deferred) {
       return interaction.editReply({ embeds: [errorEmbed], flags: 64 });

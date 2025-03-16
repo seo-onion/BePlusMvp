@@ -1,6 +1,18 @@
 const axios = require('axios');
-const { Users, Auth, Profile } = require('./models');
-const ChannelNotificationService = require('./ChannelNotificationService');
+const { refreshDiscordToken } = require("../token/tokenService");
+const Sequelize = require("sequelize");
+const Users = require('../../models/User/Users');
+const Auth = require('../../models/User/Auth');
+const Profile = require('../../models/User/Profile');
+const ChannelNotificationService = require('../notification/channelNotificationService');
+
+const GENERAL_CHANNEL = process.env.DISCORD_COMMAND_CHANNEL;
+const COMMAND_CHANNEL = process.env.DISCORD_ADMIN_COMMAND_CHANNEL;
+const TESTER = process.env.DISCORD_TESTER_ROLE;
+const VERIFIED = process.env.DISCORD_VERIFICATED_ROLE;
+const NO_VERIFIED = process.env.DISCORD_NOT_VERIFICATED_ROLE;
+const GUILD_ID = process.env.DISCORD_GUILD_ID;
+const BOT_TOKEN = process.env.DISCORD_TOKEN
 
 class UserService {
 
@@ -33,62 +45,53 @@ class UserService {
 
 
   static async createUser(req) {
-    const { id, email, token, refreshToken } = req;
+    try {
+      const { userId, email, token, refreshToken } = req;
 
-    if (!id || !email || !token || !refreshToken) {
-      return {
-        success: false,
-        message: "Faltan datos requeridos",
-      };
-    }
+      if (!userId || !email || !token || !refreshToken) { return null }
 
-    let user = await Users.findOne({ where: { userId: id } });
+      const user = await this.getUser(userId);
 
-    if (user) {
-      return {
-        success: false,
-        message: "✅ El usuario ya ha sido registrado",
-      };
-    }
+      if (user) { return null }
 
-    await Users.create(
-      {
-        userId: id,
-        email: email,
-        Auth: {
-          userId: id,
-          token: token,
-          refreshToken: refreshToken,
+      const newUser = await Users.create(
+        {
+          userId: userId,
+          email: email,
+          Auth: {
+            userId: userId,
+            token: token,
+            refreshToken: refreshToken,
+          },
+          Profile: {
+            userId: userId,
+          },
         },
-        Profile: {
-          userId: id,
-        },
-      },
-      {
-        include: [Auth, Profile],
-      }
-    );
+        {
+          include: [Auth, Profile],
+        }
+      );
 
-    return {
-      success: true,
-      message: "✅ Usuario creado correctamente",
-    };
+      return newUser;
+    } catch (error) {
+      console.error("Error al crear usuario:", error.message);
+      return null;
+    }
   }
-
 
 
   static async editUser(req, res) {
     try {
       const { userid, token, ...updateFields } = req.body;
 
-      let user = await Profile.findOne({ where: { userId: userid } });
+      let user = await this.getUser(userid);
 
       if (token !== process.env.TOKEN) {
         return res.render("formulario", { mensaje: "Security token incorrecto", user: null });
       }
 
-      if (user) {
-        await user.update(updateFields);
+      if (user && user.Profile) {
+        await user.Profile.update(updateFields);
         console.log("Se hizo el update");
 
         await this.assignRoleToUser({
@@ -105,14 +108,12 @@ class UserService {
         return res.render("formulario", { mensaje: "Usuario editado correctamente", user });
       }
 
-      return res.render("formulario", { mensaje: "El usuario no existe en la base de datos", user: null });
+      return res.render("formulario", { mensaje: "El usuario no existe en la base de datos", user });
     } catch (error) {
       console.error("Error al actualizar usuario:", error);
       return res.render("formulario", { mensaje: "Error en el servidor", user: null });
     }
   }
-
-
 
   static async getUserProfile(userId) {
     try {
@@ -124,20 +125,49 @@ class UserService {
     }
   }
 
-  static async deleteUser(id) {
-    const user = await Users.findByPk(id);
-    await user.destroy();
-    console.log(`Se eliminó el usuario ${id}`);
+  static async deleteUser(identifier) {
+    try {
+      const user = await Users.findOne({
+        where: {
+          [Sequelize.Op.or]: [{ userId: identifier }, { email: identifier }],
+        },
+      });
+
+      if (!user) {
+        console.log(`No se encontró el usuario con identificador ${identifier}`);
+        return;
+      }
+
+      await user.destroy();
+      console.log(`Se eliminó el usuario ${identifier}`);
+    } catch (error) {
+      console.error("Error al eliminar usuario:", error.message);
+    }
   }
 
-
   static async assignRoleToUser(req) {
-    const { guildId, userId, roleId, BOT_TOKEN } = req;
+    const { guildId, userId, roleId } = req;
 
     try {
+      let token = BOT_TOKEN;
+      
+      try {
+        await axios.get(
+          `https://discord.com/api/guilds/${guildId}/members/${userId}`,
+          { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
+        );
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          console.log("Token expirado, intentando refrescar...");
+          token = await refreshDiscordToken(userId);
+        } else {
+          throw error;
+        }
+      }
+
       const memberResponse = await axios.get(
         `https://discord.com/api/guilds/${guildId}/members/${userId}`,
-        { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
+        { headers: { Authorization: `Bot ${token}` } }
       );
 
       const userRoles = memberResponse.data.roles;
@@ -151,7 +181,7 @@ class UserService {
         {},
         {
           headers: {
-            Authorization: `Bot ${BOT_TOKEN}`,
+            Authorization: `Bot ${token}`,
             "Content-Type": "application/json",
           },
         }
@@ -163,6 +193,7 @@ class UserService {
       throw new Error(error.response?.data || error.message);
     }
   }
+
 }
 
 module.exports = UserService;

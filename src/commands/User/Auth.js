@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const createAlertEmbed = require("../../utils/alertEmbed");
-const ROLE_ID = process.env.NOT_VERIFICATED_ROLE;
+const createAlertEmbed = require("../../utils/embed/alertEmbed");
+const NO_VERIFIED = process.env.DISCORD_NOT_VERIFICATED_ROLE;
 const DISCORD_URI = process.env.DISCORD_URI;
 
 module.exports = {
@@ -9,24 +9,9 @@ module.exports = {
     .setDescription("Vincula tu cuenta de Discord para generar una cuenta :D"),
 
   async execute(interaction) {
-    const member = interaction.member;
-
-    // Validación previa: Verificar si ya se ha respondido o diferido
-    if (!interaction.deferred && !interaction.replied) {
-      await interaction.deferReply({ ephemeral: true });
-    }
-
-    // ✅ Validación: Verificar si el usuario ya está registrado
-
-    if (!member.roles.cache.has(ROLE_ID)) {
+    if (!interaction.member.roles.cache.has(NO_VERIFIED)) {
       const embed = createAlertEmbed("Ya estás registrado en Be+");
-
-      // Editar la respuesta solo si no ha sido enviada
-      if (interaction.deferred) {
-        return await interaction.editReply({ embeds: [embed] });
-      } else {
-        return await interaction.reply({ embeds: [embed], ephemeral: true });
-      }
+      return await interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
     const embed = new EmbedBuilder()
@@ -44,7 +29,7 @@ module.exports = {
       .setFooter({ text: "¡Empieza hoy y sé la mejor versión de ti mismo!" });
 
     // ✅ Enviar la respuesta final
-    return await interaction.editReply({ embeds: [embed] });
+    return await interaction.reply({ embeds: [embed] });
 
   }
 };
