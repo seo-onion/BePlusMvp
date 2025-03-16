@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { getSteps, registerSteps } = require('../../services/google/fitService');
 const DateHelper = require("../../utils/dateHelper");
-const createErrorEmbed = require("../../utils/errorEmbed");
+const createErrorEmbed = require("../../utils/embed/errorEmbed");
 
 module.exports = {
     data: new SlashCommandBuilder()

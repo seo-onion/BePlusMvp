@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const { sequelize } = require('../../config/database'); // Conexión a la base de datos
 
 
-const {Users} = require('../../models/User/Users'); // Importar correctamente el modelo de Usuarios
+const Users = require('../../models/User/Users'); // Importar correctamente el modelo de Usuarios
 const Items = require('./Items'); // Importar correctamente el modelo de Items
 
 

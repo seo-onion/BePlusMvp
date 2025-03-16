@@ -1,8 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const createErrorEmbed = require("../../utils/errorEmbed");
+const createErrorEmbed = require("../../utils/embed/errorEmbed");
 const { getUserProfile } = require("../../services/user/userService");
 const { getAchievementById } = require("../../services/achievement/achievementService");
-const { Users } = require("../../models/User/Users");
+const Users = require("../../models/User/Users");
 const UserAchievements = require("../../models/Achievement/UserAchievements");
 
 module.exports = {
