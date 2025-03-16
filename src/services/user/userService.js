@@ -1,149 +1,198 @@
-const { Users } = require("../../models/User/Users");
-const Auth = require("../../models/User/Auth");
-const Profile = require("../../models/User/Profile");
-const ChannelNotificationService = require("../notification/channelNotificationService");
-require("dotenv").config();
-const axios = require("axios");
+const axios = require('axios');
+const { refreshDiscordToken } = require("../token/tokenService");
+const Sequelize = require("sequelize");
+const Users = require('../../models/User/Users');
+const Auth = require('../../models/User/Auth');
+const Profile = require('../../models/User/Profile');
+const ChannelNotificationService = require('../notification/channelNotificationService');
 
-const DISCORD_WEBHOOK_URL = process.env.WEBHOOK_URL;
-const BOT_TOKEN = process.env.TOKEN;
-const GUILD_ID = process.env.GUILD_ID;
-const TESTER_ROLE = process.env.TESTER_ROLE;
+const GENERAL_CHANNEL = process.env.DISCORD_COMMAND_CHANNEL;
+const COMMAND_CHANNEL = process.env.DISCORD_ADMIN_COMMAND_CHANNEL;
+const TESTER = process.env.DISCORD_TESTER_ROLE;
+const VERIFIED = process.env.DISCORD_VERIFICATED_ROLE;
+const NO_VERIFIED = process.env.DISCORD_NOT_VERIFICATED_ROLE;
+const GUILD_ID = process.env.DISCORD_GUILD_ID;
+const BOT_TOKEN = process.env.DISCORD_TOKEN
 
-// Create a new user and their associated Auth and Profile records.
-// Create, edit, remove, get
+class UserService {
 
-exports.createUser = async (req) => {
-  const { id, email, token, refreshToken } = req;
-
-  if (!id || !email || !token || !refreshToken) {
-    return {
-      success: false,
-      message: "Faltan datos requeridos ",
-    };
-  }
-
-  let user = await Users.findOne({ where: { userId: id } });
-
-  if (user) {
-    return {
-      success: false,
-      message: "✅ El usuario ya ha sido registrado",
-    };
-  }
-
-  await Users.create(
-      {
-        userId: id,
-        email: email,
-        Auth: {
-          userId: id,
-          token: token,
-          refreshToken: refreshToken,
+  static async getUser(identifier) {
+    try {
+      const user = await Users.findOne({
+        where: {
+          [Sequelize.Op.or]: [{ userId: identifier }, { email: identifier }],
+          include: [Auth, Profile]
         },
-        Profile: {
-          userId: id,
-        },
-      },
-      {
-        include: [Auth, Profile],
-      }
-  );
-
-  return {
-    success: true,
-    message: "✅ Usuario creado correctamente",
-  };
-};
-
-// Assign a role to a user in a specific Discord guild. (PUT ROLE)
-exports.assignRoleToUser = async (req) => {
-  const { guildId, userId, roleId } = req;
-
-  try {
-    const memberResponse = await axios.get(
-        `https://discord.com/api/guilds/${guildId}/members/${userId}`,
-        { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
-    );
-
-    const userRoles = memberResponse.data.roles;
-    if (userRoles.includes(roleId)) {
-      console.log(`✅ El usuario ${userId} ya tiene el rol ${roleId}.`);
-      return { success: true, message: "El usuario ya tiene el rol." };
-    }
-
-    await axios.put(
-        `https://discord.com/api/guilds/${guildId}/members/${userId}/roles/${roleId}`,
-        {},
-        { headers: { Authorization: `Bot ${BOT_TOKEN}`, "Content-Type": "application/json" } }
-    );
-
-    return { success: true, message: "Rol asignado exitosamente." };
-  } catch (error) {
-    console.error("❌ Error al asignar el rol:", error.response?.data || error.message);
-    throw new Error(error.response?.data || error.message);
-  }
-};
-
-// Edit an existing user's profile details. (PATCH USER)
-exports.editUser = async (req, res) => {
-  try {
-    const { userid, age, description, name, nickname, gender, token } = req.body;
-
-    let user = await Profile.findOne({ where: { userId: userid } });
-
-    if (token !== process.env.TOKEN) {
-      return res.render("formulario", { mensaje: "Security token incorrecto", user: null });
-    }
-
-    if (user) {
-      await user.update({ age, description, name, nickname, gender });
-      console.log("Se hizo el update");
-
-      this.assignRoleToUser({
-        guildId: GUILD_ID,
-        userId: userid,
-        roleId: TESTER_ROLE,
       });
+      return user;
+    } catch (error) {
+      console.error("Error al obtener el usuario:", error.message);
+      return null;
+    }
+  }
 
-      await ChannelNotificationService.sendChannelNotification(
-          `✅ ${name} ha sido validado exitosamente. 🎉`,
-          `Un saludo a nuestro nuevo usuario  <@${nickname}>`
+  static async getAllUser() {
+    try {
+      const users = await Users.findAll({
+        include: [Auth, Profile],
+      });
+      return users;
+    } catch (error) {
+      console.error("Error al obtener usuarios:", error.message);
+      return null;
+    }
+  }
+
+
+  static async createUser(req) {
+    try {
+      const { userId, email, token, refreshToken } = req;
+
+      if (!userId || !email || !token || !refreshToken) { return null }
+
+      const user = await this.getUser(userId);
+
+      if (user) { return null }
+
+      const newUser = await Users.create(
+        {
+          userId: userId,
+          email: email,
+          Auth: {
+            userId: userId,
+            token: token,
+            refreshToken: refreshToken,
+          },
+          Profile: {
+            userId: userId,
+          },
+        },
+        {
+          include: [Auth, Profile],
+        }
       );
 
-      return res.render("formulario", { mensaje: "Usuario editado correctamente", user });
+      return newUser;
+    } catch (error) {
+      console.error("Error al crear usuario:", error.message);
+      return null;
     }
-
-    return res.render("formulario", { mensaje: "El usuario no existe en la base de datos", user: null });
-  } catch (error) {
-    console.error("Error al actualizar usuario:", error);
-    return res.render("formulario", { mensaje: "Error en el servidor", user: null });
   }
-};
 
-// Retrieve and log all users.
-exports.getAllUser = async () => {
-  try {
-    console.log(await Users.findAll());
-  } catch (error) {
-    console.error("❌ Error al obtener usuarios:", error.message);
+
+  static async editUser(req, res) {
+    try {
+      const { userid, token, ...updateFields } = req.body;
+
+      let user = await this.getUser(userid);
+
+      if (token !== process.env.TOKEN) {
+        return res.render("formulario", { mensaje: "Security token incorrecto", user: null });
+      }
+
+      if (user && user.Profile) {
+        await user.Profile.update(updateFields);
+        console.log("Se hizo el update");
+        await this.assignRoleToUser({
+          guildId: GUILD_ID,
+          userId: userid,
+          roleId: TESTER_ROLE,
+        });
+
+        await ChannelNotificationService.sendChannelNotification(
+          `✅ ${updateFields.name || 'El usuario'} ha sido validado exitosamente. 🎉`,
+          `un saludo a nuestro nuevo usuario  <@${updateFields.nickname || userid}>`
+        );
+
+        return res.render("formulario", { mensaje: "Usuario editado correctamente", user });
+      }
+
+      return res.render("formulario", { mensaje: "El usuario no existe en la base de datos", user });
+    } catch (error) {
+      console.error("Error al actualizar usuario:", error);
+      return res.render("formulario", { mensaje: "Error en el servidor", user: null });
+    }
   }
-};
 
-// Retrieve a user's profile by their ID.
-exports.getUserProfile = async (userId) => {
-  try {
-    const profile = await Profile.findByPk(userId);
-    return profile;
-  } catch {
-    console.error("No se encontró al usuario");
-    return null;
+  static async getUserProfile(userId) {
+    try {
+      const profile = await Profile.findByPk(userId);
+      return profile;
+    } catch {
+      console.error("No se encontró al usuario");
+      return null;
+    }
   }
-};
 
-// Delete a user by their ID.
-exports.deleteUser = async (id) => {
-  const user = await Users.findByPk(id);
-  await user.destroy();
-  console.log(`Se eliminó el usuario ${id}`);
-};
+  static async deleteUser(identifier) {
+    try {
+      const user = await Users.findOne({
+        where: {
+          [Sequelize.Op.or]: [{ userId: identifier }, { email: identifier }],
+        },
+      });
+
+      if (!user) {
+        console.log(`No se encontró el usuario con identificador ${identifier}`);
+        return;
+      }
+
+      await user.destroy();
+      console.log(`Se eliminó el usuario ${identifier}`);
+    } catch (error) {
+      console.error("Error al eliminar usuario:", error.message);
+    }
+  }
+
+  static async assignRoleToUser(req) {
+    const { guildId, userId, roleId } = req;
+
+    try {
+      let token = BOT_TOKEN;
+      
+      try {
+        await axios.get(
+          `https://discord.com/api/guilds/${guildId}/members/${userId}`,
+          { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
+        );
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          console.log("Token expirado, intentando refrescar...");
+          token = await refreshDiscordToken(userId);
+        } else {
+          throw error;
+        }
+      }
+
+      const memberResponse = await axios.get(
+        `https://discord.com/api/guilds/${guildId}/members/${userId}`,
+        { headers: { Authorization: `Bot ${token}` } }
+      );
+
+      const userRoles = memberResponse.data.roles;
+      if (userRoles.includes(roleId)) {
+        console.log(`✅ El usuario ${userId} ya tiene el rol ${roleId}.`);
+        return { success: true, message: "El usuario ya tiene el rol." };
+      }
+
+      await axios.put(
+        `https://discord.com/api/guilds/${guildId}/members/${userId}/roles/${roleId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bot ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      return { success: true, message: "Rol asignado exitosamente." };
+    } catch (error) {
+      console.error("❌ Error al asignar el rol:", error.response?.data || error.message);
+      throw new Error(error.response?.data || error.message);
+    }
+  }
+
+}
+
+module.exports = UserService;

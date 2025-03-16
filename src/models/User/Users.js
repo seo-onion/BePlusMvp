@@ -37,5 +37,4 @@ Auth.belongsTo(Users, { foreignKey: "userId" });
 Users.hasOne(Profile, { foreignKey: "userId", onDelete: "CASCADE" });
 Profile.belongsTo(Users, { foreignKey: "userId" });
 
-module.exports = {Users};
-
+module.exports = Users;

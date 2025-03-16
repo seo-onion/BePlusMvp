@@ -1,6 +1,5 @@
 const axios = require("axios");
 const Auth = require("../../models/User/Auth");
-require("dotenv").config();
 
 GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;

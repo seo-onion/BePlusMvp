@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require("discord.js");
 const Items = require("../../models/Item/Items.js");
 const Store = require("../../models/Store/Store.js");
-const createAlertEmbed = require("../../utils/alertEmbed");
+const createAlertEmbed = require("../../utils/embed/alertEmbed");
 const ROLE_ADMIN = process.env.ADMIN_ROLE;
 const DEV = process.env.DEV_ROLE;
 

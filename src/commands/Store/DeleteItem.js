@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 const { Items } = require("../../models/Item/Items.js");
 const { Store } = require("../../models/Store/Store.js");
-const createAlertEmbed = require("../../utils/alertEmbed");
+const createAlertEmbed = require("../../utils/embed/alertEmbed");
 
 const DEV = process.env.DEV_ROLE;
 const ADMIN = process.env.ADMIN_ROLE;
