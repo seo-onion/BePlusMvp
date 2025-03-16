@@ -13,13 +13,12 @@ module.exports = {
     restricted: true,
 
     async execute(interaction) {
+        await interaction.deferReply();
+
         try {
-            // ✅ Excluir artículos con categoría 'badge'
             const allItems = await Items.findAll({
                 where: {
-                    category: {
-                        [Op.ne]: 'badge' // Excluir 'badge'
-                    }
+                    category: { [Op.ne]: 'badge' }
                 },
                 attributes: ["id", "name", "price", "category"],
                 raw: true,
@@ -27,23 +26,22 @@ module.exports = {
             });
 
             if (allItems.length === 0) {
-                return await interaction.editReply("❌ No hay artículos en la tienda en este momento.");
+                return await interaction.editReply("❌ No hay artículos en la tienda actualmente.");
             }
 
-            let groupedItems = {};
+            // Group by category
+            const groupedItems = {};
             allItems.forEach(item => {
-                if (!groupedItems[item.category]) {
-                    groupedItems[item.category] = [];
-                }
+                if (!groupedItems[item.category]) groupedItems[item.category] = [];
                 groupedItems[item.category].push(item);
             });
 
-            let paginatedItems = [];
-            let currentPage = 0;
-            let categories = Object.keys(groupedItems);
+            // Pagination
+            const paginatedItems = [];
+            const categories = Object.keys(groupedItems);
 
             for (const category of categories) {
-                let itemsInCategory = groupedItems[category];
+                const itemsInCategory = groupedItems[category];
                 for (let i = 0; i < itemsInCategory.length; i += ITEMS_PER_PAGE) {
                     paginatedItems.push({
                         category,
@@ -52,16 +50,16 @@ module.exports = {
                 }
             }
 
+            let currentPage = 0;
+
             const generateEmbed = (page) => {
                 const { category, items } = paginatedItems[page];
                 const embed = new EmbedBuilder()
                     .setTitle("🛒 Tienda Rocky")
-                    .setDescription("Bienvenido a la **RockyStore** 🏪\nPuedes comprar usando: `/comprar`\n")
-                    .setColor("#FFA501")
-                    .setThumbnail("https://media.discordapp.net/attachments/1331719510243282986/1345217857117618186/WhatsApp_Image_2025-02-28_at_5.27.07_AM1.jpeg")
-                    .setImage("https://media.discordapp.net/attachments/1331719510243282986/1345217857117618186/WhatsApp_Image_2025-02-28_at_5.27.07_AM1.jpeg");
+                    .setDescription("Bienvenido a la **RockyStore** 🏪\nPuedes comprar usando: `/comprar`")
+                    .setColor("#FFA501");
 
-                let formattedItems = items.map(item => `${item.name.padEnd(15)} ${item.price} 🪙`).join("\n");
+                const formattedItems = items.map(item => `${item.name.padEnd(15)} ${item.price} 🪙`).join("\n");
 
                 embed.addFields({
                     name: `📌 ${category.charAt(0).toUpperCase() + category.slice(1)}`,
@@ -93,18 +91,15 @@ module.exports = {
 
             const collector = message.createMessageComponentCollector({ time: 120000 });
 
-            collector.on("collect", async (buttonInteraction) => {
-                if (buttonInteraction.user.id !== interaction.user.id) {
-                    return await buttonInteraction.reply({ content: "❌ No puedes usar estos botones.", ephemeral: true });
+            collector.on("collect", async (btn) => {
+                if (btn.user.id !== interaction.user.id) {
+                    return await btn.reply({ content: "❌ No puedes usar estos botones.", ephemeral: true });
                 }
 
-                if (buttonInteraction.customId === "prev_page" && currentPage > 0) {
-                    currentPage--;
-                } else if (buttonInteraction.customId === "next_page" && currentPage < paginatedItems.length - 1) {
-                    currentPage++;
-                }
+                if (btn.customId === "prev_page" && currentPage > 0) currentPage--;
+                else if (btn.customId === "next_page" && currentPage < paginatedItems.length - 1) currentPage++;
 
-                await buttonInteraction.update({
+                await btn.update({
                     embeds: [generateEmbed(currentPage)],
                     components: [generateButtons(currentPage)],
                 });
@@ -115,15 +110,10 @@ module.exports = {
             });
 
         } catch (error) {
-            console.error("❌ Error al obtener los artículos de la tienda:", error);
-
+            console.error("❌ Error en el comando /tienda:", error);
             const errorEmbed = createErrorEmbed("❌ Hubo un error al obtener los artículos. Intenta más tarde.");
-
-            if (interaction.replied || interaction.deferred) {
-                await interaction.editReply({ embeds: [errorEmbed] });
-            } else {
-                await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
-            }
+            return interaction.editReply({ embeds: [errorEmbed] });
         }
-    },
+    }
 };
+
