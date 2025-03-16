@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "deploy": "node src/deploy-commands.js"
+    "deploy": "node src/deploy-commands.js",
+    "test": "jest",
+    "docs": "jsdoc -d docs --configure jsDocConfig.json"
   },
   "author": "Seodos",
   "license": "MIT",
@@ -30,6 +32,7 @@
   },
   "devDependencies": {
     "eslint": "^9.21.0",
+    "jest": "^29.7.0",
     "nodemon": "^3.1.9"
   }
 }

@@ -9,7 +9,6 @@ const { refreshGoogleToken } = require("../token/tokenService");
 const { addRockyCoins } = require("../item/economyService");
 const { Op } = require("sequelize");
 
-
 //? Service Auth with google fit
 exports.addGoogleAuth = async (req) => {
     try {
