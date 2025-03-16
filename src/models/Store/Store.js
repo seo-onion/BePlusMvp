@@ -15,7 +15,6 @@ const Store = sequelize.define("Store", {
     }
 }, { timestamps: false });
 
-
 Store.hasMany(Items, { foreignKey: "storeId", onDelete: "CASCADE" });
 Items.belongsTo(Store, { foreignKey: "storeId" });
 

@@ -3,17 +3,20 @@ const path = require("path");
 const { Client, Collection, GatewayIntentBits, Events } = require("discord.js");
 const createErrorEmbed = require("./utils/embed/errorEmbed");
 
+// Load environment variables for channel and role IDs.
 const GENERAL_CHANNEL = process.env.DISCORD_COMMAND_CHANNEL;
 const COMMAND_CHANNEL = process.env.DISCORD_ADMIN_COMMAND_CHANNEL;
 const TESTER = process.env.DISCORD_TESTER_ROLE;
 const VERIFIED = process.env.DISCORD_VERIFICATED_ROLE;
 const NO_VERIFIED = process.env.DISCORD_NOT_VERIFICATED_ROLE;
 
+// Define permissions for each channel specifying allowed commands.
 const channelCommandPermissions = {
   [GENERAL_CHANNEL]: ['empezar', 'vincularmeconfit', 'reclamar', 'pasos', 'comprar', 'tienda', 'yo', 'desbloquear', 'rockie', 'equipar'],
   [COMMAND_CHANNEL]: ['item', 'eliminar', 'creardivisas', 'crearlogros']
 };
 
+// Initialize Discord client with necessary intents.
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -25,6 +28,7 @@ const client = new Client({
 
 client.commands = new Collection();
 
+// Dynamically load command files from subdirectories.
 const commandsPath = path.join(__dirname, "commands");
 const commandFolders = fs.readdirSync(commandsPath);
 
@@ -67,6 +71,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   try {
     const member = interaction.member;
 
+    // Check if user has completed registration.
     if (command.restricted && member.roles.cache.has(NO_VERIFIED)) {
       const errorEmbed = createErrorEmbed(
         "Registro Incompleto",
@@ -82,6 +87,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     const errorEmbced = createErrorEmbed();
 
+    // Respond with an error message if execution fails.
     if (interaction.replied || interaction.deferred) {
       return interaction.editReply({ embeds: [errorEmbed], flags: 64 });
     } else {
@@ -95,8 +101,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
 client.on(Events.MessageCreate, async (message) => {
   const targetChannelId = GENERAL_CHANNEL;
 
+  // Ignore bot messages and commands.
   if (message.author.bot || message.content.startsWith('/')) return;
 
+  // Automatically delete non-command messages in the general channel.
   if (message.channel.id === targetChannelId) {
     try {
       await message.delete();
@@ -106,6 +114,7 @@ client.on(Events.MessageCreate, async (message) => {
   }
 });
 
+// Start the bot if this is the main module.
 if (require.main === module) {
   client.login(process.env.TOKEN);
 }

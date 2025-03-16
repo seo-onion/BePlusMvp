@@ -28,35 +28,36 @@ module.exports = {
 
         const member = interaction.member;
 
-        // ✅ Validación de roles
+        // Validate if the member has the required roles (ADMIN or DEV)
         if (!member.roles.cache.has(DEV) && !member.roles.cache.has(ADMIN)) {
             const embed = createAlertEmbed("🚫 No deberías estar probando estos comandos.");
             return await interaction.reply({ embeds: [embed], ephemeral: true });
         }
 
-        // ✅ Deferir la interacción para evitar errores
+        // Defer the interaction to avoid expiration errors
         if (!interaction.deferred && !interaction.replied) {
             await interaction.deferReply({ ephemeral: true });
         }
 
         try {
-            // Verificación del rol de admin
+            // Validate if the member has the ADMIN role
             if (!member.roles.cache.has(ADMIN)) {
-                console.log("No tienes los permisos para ejecutar este comando, no eres admin.");
+                console.log("You don't have permission to execute this command, you are not an admin.");
                 return await interaction.editReply({
                     content: "⛔ No tienes permisos para ejecutar este comando."
                 });
             }
 
-            // Buscar la tienda
+            // Find or create the Store
             let store = await Store.findOne();
             if (!store) {
                 store = await Store.create({ name: "Rocky Store" });
             }
 
-            // Verificar si el artículo existe
+            // Find the item in the specified category
             const item = await Items.findOne({ where: { name: itemName, category } });
 
+            // Delete the item if it exists
             if (item) {
                 await item.destroy();
                 return await interaction.editReply(`✅ En la categoría **${category}** se ha eliminado el artículo **${itemName}**.`);
@@ -65,8 +66,9 @@ module.exports = {
             }
 
         } catch (error) {
-            console.error("❌ Error al eliminar el artículo:", error);
+            console.error("❌ Error deleting the item:", error);
 
+            // Handle error response depending on interaction state
             if (interaction.deferred || interaction.replied) {
                 return await interaction.editReply("❌ Hubo un error al intentar eliminar el artículo.");
             } else {

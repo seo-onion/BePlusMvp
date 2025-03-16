@@ -78,6 +78,7 @@ class GoogleFitService {
 
             const auth = await Auth.findOne({ where: { userId: userId } });
 
+
             if (!auth) {
                 return { success: false, message: "El usuario no existe" };
             }

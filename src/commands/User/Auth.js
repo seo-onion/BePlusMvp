@@ -5,8 +5,8 @@ const DISCORD_URI = process.env.DISCORD_URI;
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName("empezar")
-    .setDescription("Vincula tu cuenta de Discord para generar una cuenta :D"),
+      .setName("empezar")
+      .setDescription("Vincula tu cuenta de Discord para generar una cuenta :D"),
 
   async execute(interaction) {
     if (!interaction.member.roles.cache.has(NO_VERIFIED)) {
@@ -14,6 +14,7 @@ module.exports = {
       return await interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
+    // Create the welcome embed with instructions and authentication link.
     const embed = new EmbedBuilder()
       .setColor("#00AEEF")
       .setTitle("¡Bienvenido a Be Plus! 🎉")
@@ -30,6 +31,5 @@ module.exports = {
 
     // ✅ Enviar la respuesta final
     return await interaction.reply({ embeds: [embed] });
-
   }
 };

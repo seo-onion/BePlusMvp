@@ -6,18 +6,18 @@ module.exports = {
         .setName("rankearme")
         .setDescription("Revisa tus Rocky Gems"),
 
-    restricted: true, // ✅ Se restringe el comando para que solo Beta Testers lo usen
+    restricted: true, // Restricts this command for specific users (like Beta Testers).
 
     async execute(interaction) { 
-        await interaction.deferReply({ ephemeral: true }); // 🔄 Deferimos la respuesta para evitar errores con editReply()
+        await interaction.deferReply({ ephemeral: true }); // Defers the reply to avoid issues with editReply()
 
         const userId = interaction.user.id;
 
         try {
-            // 📌 Obtener el ranking del usuario
+            // Retrieves the user's ranking from the service.
             const rank = await ranking(userId);
 
-            // 📩 Responder con el mensaje obtenido del servicio
+            // Sends the obtained message as a reply.
             return await interaction.editReply({
                 content: rank.message,
             });

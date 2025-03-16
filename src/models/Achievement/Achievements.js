@@ -19,9 +19,6 @@ const Achievements = sequelize.define("Achievements", {
     point: {
         type: DataTypes.INTEGER
     }
-    
-
 }, { timestamps: false });
-
 
 module.exports = Achievements;

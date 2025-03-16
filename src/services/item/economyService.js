@@ -31,7 +31,7 @@ class EconomyService {
                 type,
                 productId,
             });
-
+          
             console.log(`✅ Transacción creada con éxito`);
             return {
                 success: true,

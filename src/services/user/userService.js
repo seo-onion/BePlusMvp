@@ -93,7 +93,6 @@ class UserService {
       if (user && user.Profile) {
         await user.Profile.update(updateFields);
         console.log("Se hizo el update");
-
         await this.assignRoleToUser({
           guildId: GUILD_ID,
           userId: userid,

@@ -5,6 +5,7 @@ const createAlertEmbed = require("../../utils/embed/alertEmbed");
 const DEV = process.env.DEV_ROLE;
 const ADMIN = process.env.ADMIN_ROLE;
 
+// Predefined achievements with their descriptions, emojis, and point values.
 const logros = [
     { name: "Racha Perfecta", description: "Lograste completar 30 días consecutivos sin fallar tu hábito. ¡Eres imparable!", emoji: "🏆", points: 100 },
     { name: "Primeros 7 Días", description: "Completaste tu primera semana. ¡Buen comienzo!", emoji: "🥇", points: 50 },
@@ -24,18 +25,19 @@ module.exports = {
     async execute(interaction) {
         const member = interaction.member;
 
-        // ✅ Validación de roles
+        // Checks if the user has the required DEV or ADMIN role.
         if (!member.roles.cache.has(DEV) && !member.roles.cache.has(ADMIN)) {
             const embed = createAlertEmbed("🚫 No deberías estar ejecutando este comando.");
             return await interaction.reply({ embeds: [embed], ephemeral: true });
         }
 
-        // ✅ Deferir la interacción para evitar errores de tiempo de espera
+        // Defers the reply to prevent timeout errors while processing achievements.
         if (!interaction.deferred && !interaction.replied) {
             await interaction.deferReply({ ephemeral: true });
         }
 
         try {
+            // Iterates over each predefined achievement and creates it.
             for (const logro of logros) {
                 await createAchievement({
                     name: logro.name,

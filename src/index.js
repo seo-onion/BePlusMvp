@@ -14,6 +14,7 @@ const { execSync } = require("child_process");
 const client = require("./bot");
 const app = express();
 
+// Import authentication and user service controllers.
 const {
   discordRedirect,
   discordAuth,
@@ -23,26 +24,29 @@ const {
 
 const { editUser } = require("./services/user/userService");
 
-// Vies settings
+// View settings
 app.set("views", path.join(__dirname, "./views"));
 app.set("view engine", "ejs");
 
-// Middlewares
+// Middleware for parsing incoming request bodies.
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Rutas
+// Define authentication routes for Discord and Google.
 app.get("/api/auth/discord", discordRedirect);
 app.get("/api/auth/discord/callback", discordAuth);
 
 app.get("/api/auth/google", googleRedirect);
 app.get("/api/auth/google/callback", googleAuth);
 
+// Route to render the user form.
 app.get("/form", async (req, res) => {
   res.render("formulario", { mensaje: null, user: null });
 });
 
+// Route to handle user data updates from Discord.
 app.post("/api/auth/discord/update-user", editUser);
+
 
 // Execute deploy-commands before to start the server
 async function deployCommands() {
@@ -56,7 +60,7 @@ async function deployCommands() {
   }
 }
 
-// Inicialización de la aplicación
+// Main function to initialize database, server, and Discord bot.
 async function main() {
   try {
     //Execute before to start server
@@ -75,6 +79,7 @@ async function main() {
     const PORT = process.env.PORT || 3000;
     const HOST = process.env.DB_HOST || "127.0.0.1";
 
+    // Start the server and listen on all network interfaces for Render at port 0.0.0.0.
     app.listen(PORT, HOST, () => {
       console.log(`🚀 Servidor corriendo en http://${HOST}:${PORT}`);
     });
@@ -83,7 +88,6 @@ async function main() {
     if (!client.isReady()) {
       await client.login(process.env.TOKEN);
     }
-
   } catch (error) {
     console.error("❌ Error en la aplicación:", error);
   }
