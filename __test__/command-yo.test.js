@@ -1,11 +1,11 @@
-const { it, describe} = require("node:test");
+const { it, describe, before} = require("node:test");
 const { execute } = require("../src/commands/User/Me.js");
 const { getUserProfile } = require("../src/services/user/userService.js");
 const  createErrorEmbed  = require("../src/utils/embed/errorEmbed.js");
 const {EmbedBuilder} = require("discord.js");
 const { getAchievementById } = require("../src/services/achievement/achievementService.js");
-const Users = require("../src/models/User/Users");
-const UserAchievements = require("../src/models/Achievement/UserAchievements");
+const Users = require("../src/models/User/Users.js");
+const UserAchievements = require("../src/models/Achievement/UserAchievements.js");
 
 //Mocks
 jest.mock("../src/services/user/userService.js", () => ({
@@ -29,10 +29,13 @@ jest.mock("../src/services/achievement/achievementService.js", () => ({
 //Comments test:
  // We should use before each to reset interaction every time a test run, but for some reason doesn't work.
 
-//Commands test:
-// 1- Command /yo 
+//Command /yo test:
 describe("Comando /yo", () => {
   let interaction;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   //Test 1: Error Test
   test("Debe responder con un error si no se encuentra el perfil", async () => {
