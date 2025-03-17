@@ -2,11 +2,11 @@ const Items = require("../../models/Item/Items");
 const Store = require("../../models/Store/Store");
 const User = require("../../models/User/Users.js");
 const UserItems = require("../../models/Item/UserItems");
-const Transaction = require("../../models/Item/Transaction");
 const { EmbedBuilder } = require("discord.js");
 const createErrorEmbed = require("../../utils/embed/errorEmbed");
 const alertEmbedList = require("../../utils/embed/alertEmbedList");
 const ListObjectsFormat = require("../../utils/ListObjects");
+const EconomyService = require("../../services/item/economyService.js");
 
 class StoreManager {
     // It uses Singleton to create a single Store
@@ -18,9 +18,9 @@ class StoreManager {
         return StoreManager.instance;
     }
 
-    // ✅ Get or create the store once (caching mechanism)
+    // Get or create the store once (caching mechanism)
     async getStore() {
-        // ✅ Return cached store if available
+        // Return cached store if available
         if (this.store) return this.store;
 
         // Finds or creates a Store
@@ -48,32 +48,32 @@ class StoreManager {
         }
     }
 
-    // ✅ Get all items
+    // Get all items
     async getItems() {
         const store = await this.getStore();
         return await Items.findAll({ where: { storeId: store.id } });
     }
 
-    // ✅ Get items by category
+    // Get items by category
     async getItemsByCategory(category) {
         const store = await this.getStore();
         return await Items.findAll({ where: { category, storeId: store.id } });
     }
 
-    // ✅ Get a single item by category and name
+    // Get a single item by category and name
     async getItemByCategoryAndName(category, itemName) {
         const store = await this.getStore();
 
         return await Items.findOne({
             where: {
-                category: category, // ✅ `category` is already a string
-                storeId: store.id, // ✅ No need to convert `storeId`
+                category: category, // `category` is already a string
+                storeId: store.id, // No need to convert `storeId`
                 name: itemName
             }
         });
     }
 
-    // ✅ Buy an item with RockyCoins
+    // Buy an item with RockyCoins
     async buyItem(userId, itemName, category) {
         // Gets the Store
         const store = await this.getStore();
@@ -84,23 +84,20 @@ class StoreManager {
         });
         console.log("🛒 Item encontrado en DB:", item ? item.dataValues : "❌ No encontrado");
 
-        // ✅ Check if the category of the Item exists
+        // Check if the category of the Item exists
         if (!item) {
             const categoryExists = await Items.findOne({
                 where: { category },
                 raw: true
             });
 
-            // ✅ If the category exists it Fetch all items in the category
+            // If the category exists it Fetch all items in the category
             if (categoryExists) {
                 const categoryItems = await Items.findAll({
                     where: { category },
                     attributes: ["name", "price"],
                     raw: true
                 });
-
-                // ✅ Format category items as a list
-                const formattedCategoryItems = ListObjectsFormat(categoryItems,"❌ No hay artículos en esta categoría.");
 
                 return {
                     success: false,
@@ -109,7 +106,7 @@ class StoreManager {
                                         están los artículos disponibles en esa categoría:`,
                         [{
                             name: `📂 Artículos en ${category}`,
-                            value: formattedCategoryItems
+                            value: ListObjectsFormat(categoryItems,"❌ No hay artículos en esta categoría."),
                         }]
                     ),
                 };
@@ -117,7 +114,7 @@ class StoreManager {
                 // If the category does not exist Fetch all available categories
                 const categories = await this.getCategories();
 
-                // ✅ Format categories as a list
+                // Format categories as a list
                 const formattedCategories = categories.length > 0
                     ? `\`\`\`yaml\n${categories.map(c => `- ${c}`).join("\n")}\n\`\`\``
                     : "❌ No hay categorías disponibles.";
@@ -136,7 +133,7 @@ class StoreManager {
             }
         }
 
-        console.log("✅ Item encontrado:", item.name);
+        console.log("Item encontrado:", item.name);
 
         const user = await User.findByPk(userId);
 
@@ -153,30 +150,27 @@ class StoreManager {
 
         // If the price of the Item is greater than the User's RockyCoins
         if (user.rockyCoins < item.price) {
-            // ✅ Fetch all available store items
+            // Fetch all available store items
             const allStoreItems = await Items.findAll({
                 where: { storeId: store.id , category},
                 attributes: ["id", "name", "price"],
                 raw: true
             });
 
-            // ✅ Get all items the user owns
+            // Get all items the user owns
             const userOwnedItems = await UserItems.findAll({
                 where: { userId: userId },
                 attributes: ["itemId"],
                 raw: true
             });
 
-            // ✅ Convert owned items into an array of IDs
+            // Convert owned items into an array of IDs
             const ownedItemIds = userOwnedItems.map(ui => ui.itemId);
 
-            // ✅ Filter only items the user can afford AND doesn't own
+            // Filter only items the user can afford AND doesn't own
             const affordableUnownedItems = allStoreItems.filter(i =>
                 i.price <= user.rockyCoins && !ownedItemIds.includes(i.id)
             );
-
-            // ✅ Format the list
-            const formattedAffordableItems = ListObjectsFormat(affordableUnownedItems, "❌ No puedes comprar ningún artículo con tu saldo actual.");
 
             return {
                 success: false,
@@ -185,7 +179,7 @@ class StoreManager {
                     `Necesitas **${item.price}** RockyCoins para comprar **${itemName}**.  
                         Actualmente tienes **${user.rockyCoins}** RockyCoins.  
                         Te faltan **${item.price - user.rockyCoins}** RockyCoins.`,
-                    [{value: formattedAffordableItems}]),
+                    [{value: ListObjectsFormat(affordableUnownedItems, "❌ No puedes comprar ningún artículo con tu saldo actual.")}]),
             };
         }
 
@@ -194,7 +188,7 @@ class StoreManager {
 
         // If the user has Items
         if (existingPurchase) {
-            // ✅ Fetch all items in the same category
+            // Fetch all items in the same category
             const otherItems = await Items.findAll({
                 where: { category: category, storeId: store.id },
                 attributes: ["id", "name", "price"],
@@ -203,7 +197,7 @@ class StoreManager {
             // 🔹 Get all items the user owns
             const userOwnedItems = await UserItems.findAll({
                 where: { userId: userId },
-                attributes: ["itemId"], // ✅ Only need itemId to compare
+                attributes: ["itemId"], // Only need itemId to compare
                 raw: true
             });
             // 🔹 Convert owned items into an array of IDs
@@ -214,16 +208,8 @@ class StoreManager {
             const ownedItems = otherItems.filter(i => ownedItemIds.includes(i.id));
             const unownedItems = otherItems.filter(i => !ownedItemIds.includes(i.id));
 
-            console.log("✅ Artículos disponibles para sugerir:", unownedItems);
-            console.log("✅ Artículos ya comprados:", ownedItems);
-
-            // ✅ Format the available items
-            const formattedUnownedItems= ListObjectsFormat(
-                unownedItems, "❌ No hay otros accesorios disponibles en esta categoría.\n" +
-            "Seguramente ya hayas comprado todos los items disponibles.");
-
-            // ✅ Format the owned items
-            const formattedOwnedItems= ListObjectsFormat(ownedItems,"No tienes otros accesorios en esta categoría.")
+            console.log("Artículos disponibles para sugerir:", unownedItems);
+            console.log("Artículos ya comprados:", ownedItems);
 
             return {
                 success: false,
@@ -232,12 +218,14 @@ class StoreManager {
                     [
                         {
                             name: "🎭 Otros Accesorios Disponibles",
-                            value: formattedUnownedItems,
+                            value: ListObjectsFormat(
+                                unownedItems, "❌ No hay otros accesorios disponibles en esta categoría.\n" +
+                                "Seguramente ya hayas comprado todos los items disponibles."),
                             inline: true
                         },
                         {
                             name: "🛑 Accesorios que ya posees",
-                            value: formattedOwnedItems,
+                            value: ListObjectsFormat(ownedItems,"No tienes otros accesorios en esta categoría."),
                             inline: true
                         }
                     ]
@@ -252,12 +240,7 @@ class StoreManager {
         await UserItems.create({ userId, itemId: item.id });
 
         // Creates a Transaction withe ProductID and the price of the product
-        await Transaction.create({
-            userId,
-            amount: item.price,
-            type: "compra",
-            productId: item.id
-        });
+        await EconomyService.createTransaction(userId, item.price, "compra", item.id);
 
         return {
             success: true,

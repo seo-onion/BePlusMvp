@@ -18,13 +18,12 @@ class UserService {
 
   static async getUser(identifier) {
     try {
-      const user = await Users.findOne({
+      return await Users.findOne({
         where: {
-          [Sequelize.Op.or]: [{ userId: identifier }, { email: identifier }],
+          [Sequelize.Op.or]: [{userId: identifier}, {email: identifier}],
           include: [Auth, Profile]
         },
       });
-      return user;
     } catch (error) {
       console.error("Error al obtener el usuario:", error.message);
       return null;
@@ -33,16 +32,14 @@ class UserService {
 
   static async getAllUser() {
     try {
-      const users = await Users.findAll({
+      return await Users.findAll({
         include: [Auth, Profile],
       });
-      return users;
     } catch (error) {
       console.error("Error al obtener usuarios:", error.message);
       return null;
     }
   }
-
 
   static async createUser(req) {
     try {
@@ -78,7 +75,6 @@ class UserService {
       return null;
     }
   }
-
 
   static async editUser(req, res) {
     try {
