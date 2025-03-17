@@ -1,39 +1,69 @@
 const { describe} = require("node:test");
 const { getRockie, createRockie, renderRockie } = require("../src/services/rockie/rockieService");
+const UserService = require("../src/services/user/userService");
 const Users = require("../src/models/User/Users");
+const Rockie = require("../src/models/Rockie/Rockie");
 const {execute} = require("../src/commands/Rockie/rockie");
 
-//Mocks
-jest.mock("../src/models/User/Users", () => ({
-    findByPk: jest.fn(),
-}));
-jest.mock("../src/services/rockie/rockieService", () => ({
-    getRockie: jest.fn(),
-    createRockie: jest.fn(),
-    renderRockie: jest.fn(),
-}));
+//External Functions:
+async function deleteRockie(userId) {
+    const rockie = await getRockie(userId);
+    if (!rockie) return null;
+    await rockie.destroy();
+}
 
+// Connect to the DB
+const { sequelize } = require("../src/config/database");
+beforeAll(async () => {
+    await sequelize.authenticate();
+    await sequelize.sync({ alter: true });
 
-//Commands /rockie test:
-describe("Comando /rockie", () => {
-    let interaction;
+});
 
-    //Test 1: Error Test
-    test("Debe crear un nuevo rockie si el usuario no tiene uno",async ()=>{
-        interaction = {
-            commandName: "yo",
-            user: { id: "123456789" },
-            editReply: jest.fn(),
-            replied: false,
-            deferred: false,
-          };
-        
-        getRockie.mockResolvedValue(null);
+afterAll(async () => {
+    await sequelize.close(); // Cerrar la conexión a la BD al finalizar los tests
+});
+
+describe("Pruebas con base de datos", () => {
+    let testUser;
+    let testRockie;
     
-        await execute(interaction);
 
-        expect(getRockie).toHaveBeenCalledWith("123456789");
-        expect(createRockie).toHaveBeenCalled();
-        expect(interaction.editReply).toHaveBeenCalledWith("❌ No se pudo generar la imagen de tu Rockie.");
+    beforeEach(async () => {
+        // Crear usuario de prueba
+        testUser = await UserService.createUser({
+            userId: "test_user_123",
+            email: "test@example.com",
+            token: "abc123",
+            refreshToken: "refresh456",
+        });
+
+        // Crear rockie asociado
+        testRockie = await createRockie({
+            userId: "test_user_123",
+            username: "RockieTest"
+        });
+    });
+
+    afterEach(async () => {
+        // Eliminar datos después de cada test
+        await UserService.deleteUser("test_user_123");
+        await deleteRockie("test_user_123");
+    });
+
+    test("Debe encontrar al usuario en la base de datos", async () => {
+        const user = await UserService.getUser("test_user_123");
+        expect(user).not.toBeNull();
+        console.log(user);
+        expect(user.email).toBe("test@example.com");
+        expect(user.rockyCoins).toBe(500);
+    });
+
+    test("Debe encontrar el Rockie asociado al usuario", async () => {
+        const rockie = await getRockie("test_user_123");
+        console.log(rockie);
+        expect(rockie).not.toBeNull();
+        expect(rockie.name).toBe("RockieTest");
+        expect(rockie.level).toBe(5);
     });
 });
