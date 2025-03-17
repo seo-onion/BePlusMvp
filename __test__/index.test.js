@@ -26,13 +26,16 @@ jest.mock("../src/services/achievement/achievementService.js", () => ({
     getAchievementById: jest.fn(),
   }));
 
+//Comments test:
+ // We should use before each to reset interaction every time a test run, but for some reason doesn't work.
 
-
-//Comands test:
-    //Comand /yo 
+//Commands test:
+// 1- Command /yo 
 describe("Comando /yo", () => {
   let interaction;
 
+  //Test 1: Error Test
+  test("Debe responder con un error si no se encuentra el perfil", async () => {
     interaction = {
       commandName: "yo",
       user: { id: "123456789" },
@@ -41,8 +44,6 @@ describe("Comando /yo", () => {
       deferred: false,
     };
 
-  //Test 1: Error Test
-  test("Debe responder con un error si no se encuentra el perfil", async () => {
     getUserProfile.mockResolvedValue(null);
     createErrorEmbed.mockReturnValue({ title: "Error", description: "No se encontró tu perfil." });
 
@@ -53,8 +54,15 @@ describe("Comando /yo", () => {
     expect(interaction.editReply).toHaveBeenCalledWith({ embeds: [{ title: "Error", description: "No se encontró tu perfil." }] });
   });
 
-  //Test 2: Right Answer Test // the test will fail because the function works with the models and the database
+  //Test 2: Right Answer Test // the test should fail because the function works with the models and the database but we are mocking the data.
   test("Debe devolver la información del usuario cuando existe", async () => {
+    interaction = {
+      commandName: "yo",
+      user: { id: "123456789" },
+      editReply: jest.fn(),
+      replied: false,
+      deferred: false,
+    };
 
     //Should be with a real user in the database
     const mockProfile = {
@@ -70,14 +78,9 @@ describe("Comando /yo", () => {
       rockyGems: 50,
     };
 
-    //should be with real achievements id in the database
+    //should be with real achievements in the database
     const mockAchievements = [];
     const mockAchievementDetails = [];
-
-    //debug console.log
-    console.log(getUserProfile);
-    console.log(getAchievementById);
-
 
     getUserProfile.mockResolvedValue(mockProfile);
     Users.findByPk.mockResolvedValue(mockUserRecord);
@@ -90,18 +93,20 @@ describe("Comando /yo", () => {
       embeds: expect.any(Array),
     });
 
+    console.log(interaction.editReply.mock.calls[0][0]);
+
     const embed = interaction.editReply.mock.calls[0][0].embeds[0];
     expect(embed).toBeInstanceOf(EmbedBuilder);
-    expect(embed.data.title).toContain("Perfil de UsuarioEjemplo");
+    expect(embed.data.title).toContain("Perfil de Usuario");
     expect(embed.data.fields).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ name: "👤 Nombre", value: "UsuarioEjemplo" }),
-        expect.objectContaining({ name: "🏷️ Apodo", value: "Ejemplo123" }),
-        expect.objectContaining({ name: "📅 Edad", value: "25 años" }),
-        expect.objectContaining({ name: "⚧️ Género", value: "Masculino" }),
-        expect.objectContaining({ name: "🪙 RockyCoins", value: "100 RockyCoins" }),
-        expect.objectContaining({ name: "💎 RockyGems", value: "50 RockyGems" }),
-        expect.objectContaining({ name: "🏅 Logros Desbloqueados", value: "Aún no tienes logros. ¡Desbloquea algunos usando `/desbloquear`!" }),
+        expect.objectContaining({inline: true, name: "👤 Nombre", value: "UsuarioEjemplo" }),
+        expect.objectContaining({inline: true, name: "🏷️ Apodo", value: "Ejemplo123" }),
+        expect.objectContaining({inline: true, name: "📅 Edad", value: "20 años" }),
+        expect.objectContaining({inline: true, name: "⚧️ Género", value: "Masculino" }),
+        expect.objectContaining({inline: true, name: "🪙 RockyCoins", value: "100 RockyCoins" }),
+        expect.objectContaining({inline: true, name: "💎 RockyGems", value: "50 RockyGems" }),
+        expect.objectContaining({inline: false, name: "🏅 Logros Desbloqueados", value: "Aún no tienes logros. ¡Desbloquea algunos usando `/desbloquear`!" }),
       ])
     );
   });
