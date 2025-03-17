@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require("discord.js");
 const fetch = require("node-fetch");
-const { uploadFileToS3 } = require("../../services/aws/s3Service");
+const s3Service = require("../../services/aws/s3Service");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -30,10 +30,6 @@ module.exports = {
                 .setRequired(false)
         ),
 
-    /**
-     * Upload any Rockie image (expression or asset) to AWS S3.
-     * @param {ChatInputCommandInteraction} interaction 
-     */
     async execute(interaction) {
         await interaction.deferReply({ ephemeral: true });
 
@@ -41,8 +37,9 @@ module.exports = {
         const subcarpeta = interaction.options.getString("subcarpeta") || "";
         const imagen = interaction.options.getAttachment("imagen");
 
-        // Validate PNG
-        if (!imagen || !imagen.url.endsWith(".png")) {
+        // ✅ Validar PNG usando URL limpia sin parámetros
+        const urlSinParametros = imagen.url.split("?")[0];
+        if (!urlSinParametros.endsWith(".png")) {
             return interaction.editReply("❌ Solo se permiten imágenes en formato PNG.");
         }
 
@@ -53,13 +50,15 @@ module.exports = {
             }
 
             const buffer = await response.buffer();
-            const fileName = imagen.name; // Keep original file name
+            const fileName = imagen.name;
 
-            // Build full S3 path
             const basePath = tipo === "ojos" || tipo === "bocas" ? tipo : `assets/${tipo}`;
-            const fullPath = subcarpeta ? `${basePath}/${subcarpeta}/${fileName}` : `${basePath}/${fileName}`;
+            const fullPath = subcarpeta
+                ? `${basePath}/${subcarpeta}/${fileName}`
+                : `${basePath}/${fileName}`;
 
-            const imageUrl = await uploadFileToS3(buffer, fullPath);
+            // ✅ CORREGIDO: uso correcto de s3Service
+            const imageUrl = await s3Service.uploadFileToS3(buffer, fullPath);
 
             if (imageUrl) {
                 return interaction.editReply(`✅ Imagen subida correctamente: ${imageUrl}`);

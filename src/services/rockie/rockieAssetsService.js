@@ -1,5 +1,5 @@
 // 📌 Service for managing Rockie's expressions (eyes and mouths) using AWS S3
-const { listFilesInS3, uploadFileToS3 } = require("../aws/s3Service");
+const s3Service = require("../aws/s3Service");
 const path = require("path");
 
 // 📂 Folder constants for organizing expressions in the S3 bucket
@@ -12,8 +12,8 @@ class RockieAssetsService {
      * @returns {Promise<{ eyes: string[], mouths: string[] }>} Object with arrays of file names.
      */
     async getAvailableExpressions() {
-        const eyes = await listFilesInS3(S3_OJOS_FOLDER);
-        const mouths = await listFilesInS3(S3_BOCAS_FOLDER);
+        const eyes = await s3Service.listFilesInS3(S3_OJOS_FOLDER);
+        const mouths = await s3Service.listFilesInS3(S3_BOCAS_FOLDER);
         return { eyes, mouths };
     }
 
@@ -27,7 +27,7 @@ class RockieAssetsService {
     async uploadExpression(buffer, type, fileName) {
         const folder = type === "ojos" ? S3_OJOS_FOLDER : S3_BOCAS_FOLDER;
         const filePath = path.join(folder, fileName);
-        const uploadedUrl = await uploadFileToS3(buffer, filePath);
+        const uploadedUrl = await s3Service.uploadFileToS3(buffer, filePath);
         return uploadedUrl; // ✅ Return public URL
     }
 

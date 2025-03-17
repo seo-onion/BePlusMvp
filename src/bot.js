@@ -83,11 +83,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
       return interaction.reply({ embeds: [errorEmbed], flags: 64 });
     }
 
-    // ✅ deferReply inmediato para evitar expiración
-    if (!interaction.deferred && !interaction.replied) {
-      await interaction.deferReply({ flags: 64 });
-    }
-
     await command.execute(interaction);
 
   } catch (error) {
