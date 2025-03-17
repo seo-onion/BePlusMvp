@@ -1,4 +1,3 @@
-
 const Items = require("../../models/Item/Items");
 const Store = require("../../models/Store/Store");
 const User = require("../../models/User/Users.js");
@@ -7,28 +6,32 @@ const Transaction = require("../../models/Item/Transaction");
 const { EmbedBuilder } = require("discord.js");
 
 class StoreManager {
+    // It uses Singleton to create a single Store
     constructor() {
         if (!StoreManager.instance) {
             StoreManager.instance = this;
-            this.store = null; // ✅ Cache the store instance
+            this.store = null;
         }
         return StoreManager.instance;
     }
 
     // ✅ Get or create the store once (caching mechanism)
     async getStore() {
-        if (this.store) return this.store; // ✅ Return cached store if available
+        // ✅ Return cached store if available
+        if (this.store) return this.store;
 
+        // Finds or creates a Store
         let store = await Store.findOne();
         if (!store) {
             store = await Store.create({ name: "Rocky Store" });
         }
 
-        this.store = store; // ✅ Cache the store instance
+        this.store = store;
         return store;
     }
 
     async getCategories(){
+        // Tries to return all the categories from the Items Table
         try{
             const categories = await Items.findAll({
                 attributes: ['category'],
@@ -41,7 +44,6 @@ class StoreManager {
             return [];
         }
     }
-
 
     // ✅ Get all items
     async getItems() {
@@ -69,25 +71,25 @@ class StoreManager {
     }
 
     // ✅ Buy an item with RockyCoins
-
     async buyItem(userId, itemName, category) {
+        // Gets the Store
         const store = await this.getStore();
-        console.log(`🔍 Buscando en la tienda con ID: ${store.id}`);
 
+        // Finds the Item by the category and the name set by the User
         const item = await Items.findOne({
             where: { name: itemName, storeId: store.id, category: category }
         });
         console.log("🛒 Item encontrado en DB:", item ? item.dataValues : "❌ No encontrado");
 
+        // ✅ Check if the category of the Item exists
         if (!item) {
-            // ✅ Check if the category exists
             const categoryExists = await Items.findOne({
                 where: { category },
                 raw: true
             });
 
+            // ✅ If the category exists it Fetch all items in the category
             if (categoryExists) {
-                // ✅ Fetch all items in the category
                 const categoryItems = await Items.findAll({
                     where: { category },
                     attributes: ["name", "price"],
@@ -114,7 +116,7 @@ class StoreManager {
                         .setTimestamp()
                 };
             } else {
-                // ✅ Fetch all available categories
+                // If the category does not exist Fetch all available categories
                 const categories = await this.getCategories();
 
                 // ✅ Format categories as a list
@@ -142,6 +144,7 @@ class StoreManager {
 
         const user = await User.findByPk(userId);
 
+        // If the User doesn't exist return an error message
         if (!user) {
             return {
                 success: false,
@@ -157,6 +160,7 @@ class StoreManager {
         console.log(`🔹 Usuario tiene ${user.rockyCoins} RockyCoins.`);
         console.log(`🔹 El precio del item es ${item.price} RockyCoins.`);
 
+        // If the price of the Item is greater than the User's RockyCoins
         if (user.rockyCoins < item.price) {
             // ✅ Fetch all available store items
             const allStoreItems = await Items.findAll({
@@ -179,6 +183,7 @@ class StoreManager {
             const affordableUnownedItems = allStoreItems.filter(i =>
                 i.price <= user.rockyCoins && !ownedItemIds.includes(i.id)
             );
+
             // ✅ Format the list
             const formattedAffordableItems = affordableUnownedItems.length > 0
                 ? `\`\`\`css\n${affordableUnownedItems.map(i => `• ${i.name.padEnd(10)} ${i.price} 🪙`).join("\n")}\n\`\`\``
@@ -202,7 +207,10 @@ class StoreManager {
             };
         }
 
+        // Finds all the items that the User has
         const existingPurchase = await UserItems.findOne({ where: { userId, itemId: item.id } });
+
+        // If the user has Items
         if (existingPurchase) {
             // ✅ Fetch all items in the same category
             const otherItems = await Items.findAll({
@@ -228,13 +236,14 @@ class StoreManager {
             console.log("✅ Artículos ya comprados:", ownedItems);
 
             const padEndNumber = 15;
+
             // ✅ Format the available items
             const formattedUnownedItems = unownedItems.length > 0
                 ? `\`\`\`css\n${unownedItems.map(i => `• ${i.name.padEnd(padEndNumber)} ${i.price} 🪙`).join("\n")}\n\`\`\``
                 : "❌ No hay otros accesorios disponibles en esta categoría.\n" +
                 "Seguramente ya hayas comprado todos los items disponibles.";
 
-            // ✅ Format the owned items in gray
+            // ✅ Format the owned items
             const formattedOwnedItems = ownedItems.length > 0
                 ? `\`\`\`css\n${ownedItems.map(i => `• ${i.name.padEnd(padEndNumber)} ${i.price} 🪙`).join("\n")}\n\`\`\``
                 : "No tienes otros accesorios en esta categoría.";
@@ -253,11 +262,14 @@ class StoreManager {
                     .setTimestamp()
             };
         }
+        // It uploads the rockyCoins of the User and saves it in the DB
         user.rockyCoins -= item.price;
         await user.save();
 
+        // Creates a relation UserItems (The User has one more item)
         await UserItems.create({ userId, itemId: item.id });
 
+        // Creates a Transaction withe ProductID and the price of the product
         await Transaction.create({
             userId,
             amount: item.price,
@@ -283,5 +295,5 @@ class StoreManager {
     }
 }
 
-const   storeInstance = new StoreManager();
+const storeInstance = new StoreManager();
 module.exports = storeInstance;

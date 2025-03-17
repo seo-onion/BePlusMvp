@@ -2,19 +2,19 @@ const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const AchievementGetService = require("../../services/achievement/achievementGetService");
 const { getUserAchievementById, getAchievementByName } = require("../../services/achievement/achievementService");
 const { addRockyGems } = require("../../services/item/economyService");
-const alertEmbed = require("../../utils/alertEmbed");
-const createErrorEmbed = require("../../utils/errorEmbed");
+const alertEmbed = require("../../utils/embed/alertEmbed");
+const createErrorEmbed = require("../../utils/embed/errorEmbed");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("desbloquear")
     .setDescription("Desbloquea un logro en el sistema de recompensas"),
 
-  restricted: true, // ✅ Se restringe este comando para que solo Beta Testers lo usen
+  restricted: true, // Restricts this command for specific users (like Beta Testers).
 
   async execute(interaction) {
     try {
-      // ✅ Deferimos la respuesta solo si no ha sido deferida o respondida
+      // Defers the reply to prevent timeout issues during processing.
       if (!interaction.deferred && !interaction.replied) {
         await interaction.deferReply({ flags: 64 });
       }
@@ -22,7 +22,7 @@ module.exports = {
       const userId = interaction.user.id;
       let achievementsObtained = [];
 
-      // 📜 Lista de logros disponibles y su método de desbloqueo
+      // List of available achievements and their unlocking method.
       const achievements = [
         { name: "Primer Paso", emoji: "👣", method: () => AchievementGetService.firstStep(userId) },
         { name: "10k Club", emoji: "♂️🏃‍♂️", method: () => AchievementGetService.tenK(userId) },
@@ -35,7 +35,7 @@ module.exports = {
           const achievementData = await getAchievementByName(achievement.name);
           const achievementId = achievementData.id;
 
-          // 📌 Verificar si el usuario ya tiene el logro
+          // Checks if the user already has the achievement.
           const existingAchievement = await getUserAchievementById({ userId, achievementId });
 
           if (!existingAchievement) {
@@ -48,7 +48,7 @@ module.exports = {
                 emoji: achievement.emoji,
               });
 
-              // 💎 Agregar recompensas (Rocky Gems) al usuario
+              // Adds Rocky Gems to the user as a reward for unlocking the achievement.
               await addRockyGems({ userId, quantity: unlockedAchievement.point });
 
               console.log(`✅ Logro desbloqueado: ${unlockedAchievement.name}`);
@@ -61,21 +61,21 @@ module.exports = {
         }
       }
 
-      // 🚫 Si no se desbloqueó ningún logro, mostrar una alerta amigable
+      // If no achievements were unlocked, send an alert message.
       if (achievementsObtained.length === 0) {
         const alert = alertEmbed("🚀 No has desbloqueado ningún logro nuevo. ¡Sigue esforzándote!");
         return await interaction.editReply({ embeds: [alert] });
       }
 
-      // 🏆 Crear un embed con los logros desbloqueados
+      // Creates an embed displaying the newly unlocked achievements.
       const embed = new EmbedBuilder()
-        .setColor("#FFD700") // 🎨 Color dorado para representar logros
+        .setColor("#FFD700") // Gold color representing achievements.
         .setTitle("🏅 ¡Nuevos Logros Desbloqueados!")
         .setDescription("Has logrado grandes avances y desbloqueaste los siguientes logros:")
         .setThumbnail("https://i.imgur.com/Yk4p2Ox.png") // 🖼 Imagen representativa de logros
         .setTimestamp();
 
-      // 📌 Agregar cada logro como un campo en el embed
+      // Adds each unlocked achievement to the embed.
       achievementsObtained.forEach(ach => {
         embed.addFields({
           name: `${ach.emoji} ${ach.name}`,

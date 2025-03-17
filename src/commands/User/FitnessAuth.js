@@ -7,20 +7,20 @@ module.exports = {
         .setName("vincularmeconfit")
         .setDescription("Vincula tu cuenta de Discord con la aplicación de Google Fit"),
 
-    restricted: true, // ✅ Se restringe el comando para que solo Beta Testers lo usen
+    restricted: true, // Restrict the command for Beta Testers only.
 
     async execute(interaction) {
         try {
-            // ✅ Deferir solo si no ha sido respondido o deferido
+            // Defer the reply only if it hasn't been deferred or replied to.
             if (!interaction.deferred && !interaction.replied) {
                 await interaction.deferReply({ flags: 64 });
             }
 
             const userId = interaction.user.id;
 
-            // 🚨 Verificar si la variable de entorno está definida
+            // Check if the GOOGLE_URI environment variable is defined.
             if (!URL) {
-                console.error("❌ ERROR: La variable de entorno GOOGLE_URI no está definida.");
+                console.error("❌ ERROR: The GOOGLE_URI environment variable is not defined.");
                 return await interaction.editReply({
                     content: "⚠️ Error del sistema: No se ha configurado correctamente la URL de Google Fit.",
                 });
@@ -28,9 +28,9 @@ module.exports = {
 
             const authUrl = `${URL}?id=${userId}`;
 
-            // 🖼️ Crear el embed de vinculación con Google Fit
+            // Create the embed for linking with Google Fit.
             const embed = new EmbedBuilder()
-                .setColor("#34A853") // 🎨 Verde representativo de Google Fit
+                .setColor("#34A853") // Green color representing Google Fit.
                 .setTitle("📊 ¡Vincula tu cuenta con Google Fit!")
                 .setDescription(
                     "Be Plus ahora puede sincronizarse con **Google Fit** para medir tu actividad física. 🏃‍♂️\n\n" +
@@ -46,13 +46,13 @@ module.exports = {
                 )
                 .setFooter({ text: "¡Empieza a moverte y gana recompensas!" });
 
-            // 📩 Editar la respuesta final con el embed
+            // Final response: Edit the reply with the embed.
             return await interaction.editReply({ embeds: [embed] });
 
         } catch (error) {
-            console.error("❌ Error al ejecutar el comando /vincularmeconfit:", error);
+            console.error("❌ Error executing the /vincularmeconfit command:", error);
 
-            // ✅ Manejo correcto de errores
+            // Proper error handling based on interaction state.
             if (interaction.deferred || interaction.replied) {
                 return await interaction.editReply({
                     content: "❌ Ocurrió un error inesperado al procesar tu solicitud.",

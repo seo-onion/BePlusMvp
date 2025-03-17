@@ -1,89 +1,94 @@
 const Item = require("../../models/Item/Items");
-const Transaction = require("../../models/Item/Transaction")
-const {Users} = require("../../models/User/Users")
+const Transaction = require("../../models/Item/Transaction");
+const Users = require("../../models/User/Users");
 
+class EconomyService {
 
-exports.createBadges = async () => {
-    await Item.create({
-        name: "RockyCoin",
-        description: "Moneda virtual para comprar items.",
-        price: 1,
-        category: "badge"
-    });
-
-    await Item.create({
-        name: "RockyGem",
-        description: "Moneda virtual para acceder a descuentos y promociones.",
-        price: 1,
-        category: "badge"
-    });
-}
-
-exports.createTransaction = async (req) => {
-    const { userId, amount, type, productId } = req
-    console.log("Creando transaccion")
-    try {
-        const transaction = await Transaction.create({
-            userId,
-            amount,
-            type,
-            productId
+    static async createBadges() {
+        await Item.create({
+            name: "RockyCoin",
+            description: "Moneda virtual para comprar items.",
+            price: 1,
+            category: "badge",
         });
 
-        console.log(`✅ Transacción creada con exito`);
-        return { success: true, message: `Transacción creada: ${transaction.id} | Usuario: ${userId} | Monto: ${amount}`, transaction };
-    } catch (error) {
-        console.error("❌ Error al crear la transacción:", error);
-        return { success: false, message: "Error al crear la transacción." };
+        await Item.create({
+            name: "RockyGem",
+            description: "Moneda virtual para acceder a descuentos y promociones.",
+            price: 1,
+            category: "badge",
+        });
+    }
+
+    static async createTransaction(req) {
+        const { userId, amount, type, productId } = req;
+        console.log("Creando transacción");
+
+        try {
+            const transaction = await Transaction.create({
+                userId,
+                amount,
+                type,
+                productId,
+            });
+          
+            console.log(`✅ Transacción creada con éxito`);
+            return {
+                success: true,
+                message: `Transacción creada: ${transaction.id} | Usuario: ${userId} | Monto: ${amount}`,
+                transaction,
+            };
+        } catch (error) {
+            console.error("❌ Error al crear la transacción:", error);
+            return { success: false, message: "Error al crear la transacción." };
+        }
+    }
+
+    static async addRockyGems(req) {
+        try {
+            console.log("Añadiendo rockyGems");
+            const { userId, quantity } = req;
+            const user = await Users.findByPk(userId);
+
+            const newRockyGems = user.rockyGems + quantity;
+            await user.update({ rockyGems: newRockyGems });
+
+            await this.createTransaction({
+                userId: userId,
+                amount: quantity,
+                type: "reward",
+                productId: "5e617361-e1b6-4c2e-9597-f1d915fcdbe1",
+            });
+
+            return true;
+        } catch (error) {
+            console.error("❌ Error al añadir RockyGems:", error);
+            return false;
+        }
+    }
+
+    static async addRockyCoins(req) {
+        try {
+            console.log("Añadiendo rockyCoins");
+            const { userId, quantity } = req;
+            const user = await Users.findByPk(userId);
+
+            const newRockyCoins = user.rockyCoins + quantity;
+            await user.update({ rockyCoins: newRockyCoins });
+
+            await this.createTransaction({
+                userId: userId,
+                amount: quantity,
+                type: "reward",
+                productId: "db98908a-466d-4681-a40a-fe8e06af9d8b",
+            });
+
+            return true;
+        } catch (error) {
+            console.error("❌ Error al añadir RockyCoins:", error);
+            return false;
+        }
     }
 }
 
-exports.addRockyGems = async (req) => {
-    try {
-        console.log("Añadiendo rockyGems")
-        const { userId, quantity } = req;
-        const user = await Users.findByPk(userId);
-
-        const oldRockyGems = user.rockyGems
-        const newRockyGems = oldRockyGems + quantity
-        user.update({
-            rockyGems: newRockyGems
-        })
-
-        await this.createTransaction({
-            userId: userId,
-            amount: quantity,
-            type: "reward",
-            productId: "5e617361-e1b6-4c2e-9597-f1d915fcdbe1"
-        })
-
-        return true
-    } catch {
-        return false
-    }
-}
-
-exports.addRockyCoins = async (req) => {
-    try {
-        console.log("Añadiendo rockyCoins")
-        const { userId, quantity } = req;
-        const user = await Users.findByPk(userId);
-
-        const oldRockyCoins = user.rockyCoins
-        const newRockyCoins = oldRockyCoins + quantity
-        user.update({
-            rockyCoins: newRockyCoins
-        })
-
-        await this.createTransaction({
-            userId: userId,
-            amount: quantity,
-            type: "reward",
-            productId: "db98908a-466d-4681-a40a-fe8e06af9d8b"
-        })
-
-        return true
-    } catch {
-        return false
-    }
-}
+module.exports = EconomyService;

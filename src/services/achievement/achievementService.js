@@ -1,55 +1,58 @@
-const Achievements = require("../../models/Achievement/Achievements")
-const UserAchievements = require("../../models/Achievement/UserAchievements")
+const Achievements = require("../../models/Achievement/Achievements");
+const UserAchievements = require("../../models/Achievement/UserAchievements");
 
-exports.createAchievement = async (req) => {
-    const { name, description, emoji, points } = req;
-    return await Achievements.create({
-        name: name,
-        description: description,
-        emoji: emoji,
-        point: points
-    });
-}
-
-exports.getAllAchievements = async () => {
-    return await Achievements.findAll();
-}
-
-exports.getAchievementById = async (id) => {
-    return await Achievements.findByPk(id);
-}
-
-exports.getAchievementByName = async (name) => {
-    try{
-        return await Achievements.findOne({ where: { name: name } });
-    } catch {
-        return null
+// Creates a new achievement record in the database.
+class AchievementService {
+    static async createAchievement(req) {
+        const { name, description, emoji, points } = req;
+        return await Achievements.create({
+            name: name,
+            description: description,
+            emoji: emoji,
+            point: points,
+        });
     }
-}
 
-exports.getUserAchievementById = async (req) => {
-    const { userId, achievementId } = req;
-
-    try {
-        const userAchievement = await UserAchievements.findOne({
-            where: {
-                userId: userId,
-                achievementId: achievementId
-            }
-        })
-        return userAchievement
-    } catch {
-        return null
+    static async getAllAchievements() {
+        return await Achievements.findAll();
     }
-}
 
-exports.getAllUserAchievementById = async (userId) => {
-    const userAchievements = await UserAchievements.findAll({
-        where: {
-            userId: userId
+    static async getAchievementById(id) {
+        return await Achievements.findByPk(id);
+    }
+
+    static async getAchievementByName(name) {
+        try {
+            return await Achievements.findOne({ where: { name: name } });
+        } catch {
+            return null;
         }
-    });
+    }
 
-    console.log("User achievements:", JSON.stringify(userAchievements, null, 2)); 
-    return userAchievements;
-};
+    static async getUserAchievementById(req) {
+        const { userId, achievementId } = req;
+
+        try {
+            const userAchievement = await UserAchievements.findOne({
+                where: {
+                    userId: userId,
+                    achievementId: achievementId,
+                },
+            });
+            return userAchievement;
+        } catch {
+            return null;
+        }
+    }
+
+    static async getAllUserAchievementById(userId) {
+        const userAchievements = await UserAchievements.findAll({
+            where: { userId: userId },
+        });
+
+        console.log("User achievements:", JSON.stringify(userAchievements, null, 2));
+        return userAchievements;
+    }
+}
+
+module.exports = AchievementService;

@@ -1,15 +1,15 @@
 {
   "development": {
-    "username": "${POSTGRES_USER}",
-    "password": "${POSTGRES_PASSWORD}",
-    "database": "${POSTGRES_DB}",
-    "host": "${POSTGRES_HOST}",
-    "port": "${POSTGRES_PORT}",
+    "username": "${DB_USER}",
+    "password": "${DB_PASSWORD}",
+    "database": "${DB_POSTGRES}",
+    "host": "${DB_HOST}",
+    "port": "${DB_PORT}",
     "dialect": "postgres",
     "logging": false
   },
   "production": {
-    "use_env_variable": "DATABASE_URL",
+    "use_env_variable": "DB_URL",
     "dialect": "postgres",
     "dialectOptions": {
       "ssl": {

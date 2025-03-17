@@ -16,14 +16,15 @@ module.exports = {
         const itemName = interaction.options.getString("nombre");
 
         try {
-            // ✅ Deferimos la interacción para evitar errores de tiempo de espera
+            // Defers the interaction to prevent timeout issues during processing.
             if (!interaction.deferred && !interaction.replied) {
                 await interaction.deferReply({ ephemeral: true });
             }
 
+            // Attempts to equip the accessory and retrieves the result message.
             const result = await equipAccessory(userId, itemName);
 
-            // ✅ Enviamos la respuesta final
+            // Sends the final response to the user.
             return await interaction.editReply(result.message);
 
         } catch (error) {
@@ -31,6 +32,7 @@ module.exports = {
 
             const errorMessage = "❌ Hubo un error al intentar equipar el accesorio.";
 
+            // Sends the final response to the user.
             if (interaction.deferred || interaction.replied) {
                 return await interaction.editReply(errorMessage);
             } else {

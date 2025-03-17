@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { getSteps, registerSteps } = require('../../services/google/fitService');
 const DateHelper = require("../../utils/dateHelper");
-const createErrorEmbed = require("../../utils/errorEmbed");
+const createErrorEmbed = require("../../utils/embed/errorEmbed");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -18,11 +18,11 @@ module.exports = {
                 )
         ),
 
-    restricted: true, // ✅ Se restringe el comando para que solo Beta Testers lo usen
+    restricted: true, // Restricts this command for specific users (like Beta Testers).
 
     async execute(interaction) {
         try {
-            // ✅ Defer la respuesta solo si no ha sido deferida o respondida
+            // Defers the reply to avoid timeout issues during processing.
             if (!interaction.deferred && !interaction.replied) {
                 await interaction.deferReply({ flags: 64 });
             }
@@ -35,7 +35,7 @@ module.exports = {
             let steps;
             let timePeriod;
 
-            // ⏳ Obtener el rango de tiempo según la opción seleccionada
+            // Determines the time range based on the selected option.
             if (time === 'day') {
                 const { startTimeMillis, endTimeMillis } = DateHelper.getToday();
 
@@ -55,13 +55,13 @@ module.exports = {
                 timePeriod = "📅 Último Mes";
             }
 
-            // 🚨 Si no se pudieron obtener los pasos, mostrar error
+            // If no steps could be retrieved, show an error message.
             if (!steps) {
                 const errorEmbed = createErrorEmbed("⚠️ No se ha podido recuperar el número de pasos. Inténtalo más tarde.");
                 return await interaction.editReply({ embeds: [errorEmbed] });
             }
 
-            // 🎨 Crear el embed con la información de pasos
+            // Creates an embed displaying the user's steps information.
             const embed = new EmbedBuilder()
                 .setColor("#00FF00") // 🎨 Verde llamativo
                 .setTitle("🚶‍♂️ Registro de Pasos")
@@ -79,7 +79,7 @@ module.exports = {
 
             const errorEmbed = createErrorEmbed("⚠️ Ocurrió un error inesperado. Intenta nuevamente más tarde.");
 
-            // ✅ Verificar si la interacción ya fue deferida o respondida
+            // Checks if the interaction has been deferred or replied to avoid duplicate responses.
             if (interaction.deferred || interaction.replied) {
                 return await interaction.editReply({ embeds: [errorEmbed] });
             } else {
