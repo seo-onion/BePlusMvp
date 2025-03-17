@@ -1,4 +1,3 @@
-const express = require("express");
 const path = require('path');
 const dotenv = require('dotenv');
 // Load .env production or development
@@ -9,7 +8,9 @@ dotenv.config({ path: path.resolve(__dirname, `../config/dotenv/${envFile}`) });
 dotenv.config({ path: path.resolve(__dirname, '../config/dotenv/.env') });
 
 
+const express = require("express");
 const { sequelize } = require("./config/database");
+const { execSync } = require("child_process");
 const client = require("./bot");
 const app = express();
 
@@ -43,9 +44,24 @@ app.get("/form", async (req, res) => {
 
 app.post("/api/auth/discord/update-user", editUser);
 
+// Execute deploy-commands before to start the server
+async function deployCommands() {
+  try {
+    console.log("🚀 Ejecutando despliegue de comandos en Discord...");
+    execSync('node src/deploy-commands.js', { stdio: 'inherit' });
+    console.log("✅ Comandos registrados exitosamente.");
+  } catch (error) {
+    console.error("❌ Error al ejecutar deploy-commands.js:", error.message);
+    process.exit(1); // Salir si hay error en el despliegue
+  }
+}
+
 // Inicialización de la aplicación
 async function main() {
   try {
+    //Execute before to start server
+    await deployCommands();
+
     console.log(`Environment: ${process.env.NODE_ENV}`);
 
     console.log("⏳ Conectando a la base de datos...");
@@ -56,14 +72,14 @@ async function main() {
     await sequelize.sync({ alter: true });
     console.log("✅ Modelos sincronizados.");
 
-    const PORT = process.env.DB_PORT || 3000;
+    const PORT = process.env.PORT || 3000;
     const HOST = process.env.DB_HOST || "127.0.0.1";
 
     app.listen(PORT, HOST, () => {
       console.log(`🚀 Servidor corriendo en http://${HOST}:${PORT}`);
     });
 
-    // Ejecutar el bot de Discord
+    // Deploy discord bot
     if (!client.isReady()) {
       await client.login(process.env.TOKEN);
     }
