@@ -15,6 +15,7 @@ module.exports = {
         console.log(`📌 Ejecutando /rockie para el usuario: ${username} (${userId})`);
 
         try {
+            await interaction.deferReply();
             // Attempts to retrieve the user's Rockie, or creates one if it doesn't exist.
             let rockie = await getRockie(userId);
             if (!rockie) {

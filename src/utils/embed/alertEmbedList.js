@@ -28,6 +28,6 @@ module.exports = function alertEmbedList(
         .setImage("https://media.discordapp.net/attachments/1333263880566210561/1350712349753086022/ADAPTABLE_2.png?ex=67d7bc67&is=67d66ae7&hm=6e3e2c1bc23a34c6a501cc64300b7def7be7dd6733d8c0ab8dd1bc331883ebb2&=&format=webp&quality=lossless&width=250&height=250")
         .addFields(fields)
         .setTimestamp()
-        .setFooter({ text: "Tienda Rocky • Verifica el nombre del artículo." });
+        .setFooter({ text: "Tienda Rocky • Bienvenido a la tienda Rocky." });
 
 };

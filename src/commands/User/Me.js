@@ -12,8 +12,8 @@ module.exports = {
 
   async execute(interaction) {
     try {
+      await interaction.deferReply();
       const userId = interaction.user.id;
-      await interaction.deferReply(); // Asynchronic function
 
       // Obtener perfil del usuario
       const profile = await getUserProfile(userId);

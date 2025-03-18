@@ -15,6 +15,7 @@ module.exports = {
 
     async execute(interaction) {
         try {
+            await interaction.deferReply();
             const allItems = await Items.findAll({
                 where: {
                     category: {

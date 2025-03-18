@@ -6,6 +6,7 @@ const { EmbedBuilder } = require("discord.js");
 const createErrorEmbed = require("../../utils/embed/errorEmbed");
 const alertEmbedList = require("../../utils/embed/alertEmbedList");
 const ListObjectsFormat = require("../../utils/ListObjects");
+const successEmbed = require("../../utils/embed/successEmbed");
 const EconomyService = require("../../services/item/economyService.js");
 
 class StoreManager {
@@ -179,7 +180,12 @@ class StoreManager {
                     `Necesitas **${item.price}** RockyCoins para comprar **${itemName}**.  
                         Actualmente tienes **${user.rockyCoins}** RockyCoins.  
                         Te faltan **${item.price - user.rockyCoins}** RockyCoins.`,
-                    [{value: ListObjectsFormat(affordableUnownedItems, "❌ No puedes comprar ningún artículo con tu saldo actual.")}]),
+                    [
+                        {
+                            name: " 🎭 Pero puedes comprar estos items",
+                            value: ListObjectsFormat(affordableUnownedItems, "❌ No puedes comprar ningún artículo con tu saldo actual.")
+                        }
+                    ]),
             };
         }
 
@@ -244,17 +250,11 @@ class StoreManager {
 
         return {
             success: true,
-            embed: new EmbedBuilder()
-                .setColor("#00FF00")
-                .setTitle("✅ Compra Exitosa")
-                .setDescription(`Has comprado de la categoría **${item.category}** el item **${item.name}** \n por **${item.price}** RockyCoins! 🎉`)
-                .addFields(
-                    { name: "🔠 Categoría", value: `**${category}**`, inline: true },
-                    { name: "🛒 Artículo", value: `**${itemName}**`, inline: true },
-                    { name: "💰 Precio", value: `**${item.price}** RockyCoins`, inline: true },
-
-                )
-                .setTimestamp()
+            embed: successEmbed({
+                item, // Se pasa el objeto completo, con todas sus propiedades
+                category: item.category, // Se pasa la categoría explícitamente
+                itemName: item.name, // Se pasa el nombre explícitamente
+            }),
         };
     }
 }

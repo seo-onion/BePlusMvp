@@ -35,6 +35,7 @@ module.exports = {
         // Validate if the roles are correct (it should have one of them (ADMIN OR DEV))
         if (!member.roles.cache.has(DEV) && !member.roles.cache.has(ROLE_ADMIN)) {
             const embed = createAlertEmbed("🚫 No deberías estar probando estos comandos.");
+            console.log("Entre aqui");
             return await interaction.reply({ embeds: [embed], ephemeral: true });
         }
 
