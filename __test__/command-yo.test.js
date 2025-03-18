@@ -2,55 +2,66 @@ const { it, describe, before} = require("node:test");
 const { execute } = require("../src/commands/User/Me.js");
 const { getUserProfile } = require("../src/services/user/userService.js");
 const  createErrorEmbed  = require("../src/utils/embed/errorEmbed.js");
+const Auth = require("../src/models/User/Auth.js");
+const { Op } = require("sequelize");
 const {EmbedBuilder} = require("discord.js");
 const { getAchievementById } = require("../src/services/achievement/achievementService.js");
 const Users = require("../src/models/User/Users.js");
 const UserAchievements = require("../src/models/Achievement/UserAchievements.js");
+const Profile = require("../src/models/User/Profile.js");
 
-//Mocks
-jest.mock("../src/services/user/userService.js", () => ({
-    getUserProfile: jest.fn(),
-  }));
-jest.mock("../src/utils/embed/errorEmbed.js",()=> jest.fn());
-jest.mock("../src/models/Achievement/UserAchievements.js", () => ({
-    findAll: jest.fn(),
-  }));
-jest.mock("../src/models/User/Users", () => ({
-    findByPk: jest.fn(),
-  }));
-jest.mock("../src/models/Achievement/UserAchievements.js", () => ({
-    findAll: jest.fn(),
-  }));
+// Connect to the DB
+const { sequelize } = require("../src/config/database");
 
-jest.mock("../src/services/achievement/achievementService.js", () => ({
-    getAchievementById: jest.fn(),
-  }));
+beforeAll(async () => {
+    await sequelize.authenticate();
+    await sequelize.sync({ alter: true });
 
-//Comments test:
- // We should use before each to reset interaction every time a test run, but for some reason doesn't work.
+});
+
+afterAll(async () => {
+    await sequelize.close(); // Close BD connection
+});
 
 //Command /yo test:
+
 describe("Comando /yo", () => {
   let interaction;
 
   //Test 1: Error Test
   test("Debe responder con un error si no se encuentra el perfil", async () => {
+
     interaction = {
       commandName: "yo",
-      user: { id: "123456789" },
+      user: { id: "123", email: "123e@gmail.com"},
+      deferReply: jest.fn(),
       editReply: jest.fn(),
       replied: false,
       deferred: false,
     };
 
-    getUserProfile.mockResolvedValue(null);
-    createErrorEmbed.mockReturnValue({ title: "Error", description: "No se encontró tu perfil." });
+    const user = await Users.findOne({
+      where: {
+          [Op.or]: [{ userId: interaction.user.id }, { email: interaction.user.email }],
+          include: [ Auth , Profile]
+        },
+    });
+
+    expect(user).toBeNull();
 
     await execute(interaction);
 
-    expect(getUserProfile).toHaveBeenCalledWith("123456789");
-    expect(createErrorEmbed).toHaveBeenCalledWith("No se encontró tu perfil.");
-    expect(interaction.editReply).toHaveBeenCalledWith({ embeds: [{ title: "Error", description: "No se encontró tu perfil." }] });
+    expect(interaction.deferReply).toHaveBeenCalled();
+  
+    expect(interaction.editReply).toHaveBeenCalledWith(
+      expect.objectContaining({
+        embeds: [expect.objectContaining({
+          title: expect.stringContaining("Error"),
+          description: expect.stringContaining("No se encontró tu perfil"),
+        })]
+      })
+    );
+
   });
 
   //Test 2: Right Answer Test // the test should fail because the function works with the models and the database but we are mocking the data.
@@ -58,6 +69,7 @@ describe("Comando /yo", () => {
     interaction = {
       commandName: "yo",
       user: { id: "123456789" },
+      deferReply: jest.fn(),
       editReply: jest.fn(),
       replied: false,
       deferred: false,

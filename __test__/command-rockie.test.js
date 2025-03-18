@@ -15,7 +15,7 @@ async function deleteRockie(userId) {
 
 // Connect to the DB
 const { sequelize } = require("../src/config/database");
-const rockie = require("../src/commands/Rockie/rockie");
+
 beforeAll(async () => {
     await sequelize.authenticate();
     await sequelize.sync({ alter: true });
@@ -23,7 +23,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-    await sequelize.close(); // Cerrar la conexión a la BD al finalizar los tests
+    await sequelize.close(); // Close BD connection
 });
 
 describe("Pruebas con base de datos", () => {
