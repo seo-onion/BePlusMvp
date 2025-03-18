@@ -73,26 +73,27 @@ client.on(Events.InteractionCreate, async (interaction) => {
     const member = interaction.member;
 
     // Check if user has completed registration.
-    /*
+
     if (command.restricted && member.roles.cache.has(NO_VERIFIED)) {
       const errorEmbed = createErrorEmbed(
         "Registro Incompleto",
         "Debes completar el registro antes de usar este comando. Usa `/empezar` para obtener acceso."
       );
       return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
-    }*/
+    }
+    /*
     if (command.restricted  && !(await verification(member, NO_VERIFIED, "Registro Incompleto",
         "Debes completar el registro antes de usar este comando. Usa `/empezar` para obtener acceso.",
         interaction, NO_VERIFIED, createErrorEmbed))){
       return;
-    }
+    }*/
 
     await command.execute(interaction);
 
   } catch (error) {
     console.error("❌ Error al ejecutar el comando:", error);
 
-    const errorEmbced = createErrorEmbed();
+    const errorEmbed = createErrorEmbed();
 
     // Respond with an error message if execution fails.
     if (interaction.replied || interaction.deferred) {
