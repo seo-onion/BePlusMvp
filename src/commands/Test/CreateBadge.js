@@ -12,8 +12,14 @@ module.exports = {
         const member = interaction.member;
 
         // Role validation: Checks if the user has the required TESTER role to execute the command.
-        if (await verification(member, TESTER_ROLE, "🚫 No deberías estar probando estos comandos.", interaction, rol, createAlertEmbed, createErrorEmbed)){
-            return; // Stops execution if verification fails
+        if (!member.roles.cache.has(TESTER_ROLE)) {
+            console.log("You don't have permission to execute this command, you are not a TESTER.");
+            return await interaction.reply({
+                content: "⛔ No tienes permisos para ejecutar este comando.",
+                ephemeral: true
+            });
+        } else {
+            console.log("You have permission to execute this command. You are a TESTER.");
         }
 
         // Interaction defer: Defers the reply to avoid timeout issues.

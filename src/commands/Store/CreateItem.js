@@ -4,6 +4,7 @@ const Store = require("../../models/Store/Store.js");
 const createAlertEmbed = require("../../utils/embed/alertEmbed");
 const ROLE_ADMIN = process.env.ADMIN_ROLE;
 const DEV = process.env.DEV_ROLE;
+const ItemService = require("../../services/item/ItemService");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -69,24 +70,20 @@ module.exports = {
                 where: { name: itemName, category }
             });
 
-            // If the Item exists, uploads the price
+            // If the Item exists, updates the price
             if (item) {
-                item.price = price;
-                await item.save();
+                await ItemService.updateItemPrice(item.id, price);
                 return await interaction.editReply(
                     `✅ En la categoría **${category}** se ha actualizado el artículo **${itemName}** 
                     con un precio de ${price} RockyCoins.`);
             } else {
                 // If the Item doesn't exist, it is created.
-                await Items.create({
+                await ItemService.createItem({
                     name: itemName,
-                    description: `Un ${category} del tipo ${itemName}`,
                     price,
                     category,
                     storeId: store.id,
-                    badge: "coin",
                 });
-
                 return await interaction.editReply(
                     `✅ En la categoría **${category}** se ha cargado el artículo
                      **${itemName}** con un precio de ${price} RockyCoins.`);

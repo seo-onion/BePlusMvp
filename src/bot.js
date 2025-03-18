@@ -93,7 +93,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   } catch (error) {
     console.error("❌ Error al ejecutar el comando:", error);
 
-    const errorEmbed = createErrorEmbed();
+    const errorEmbed = createErrorEmbed("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "sadddddddddddddddddddddddddd");
 
     // Respond with an error message if execution fails.
     if (interaction.replied || interaction.deferred) {

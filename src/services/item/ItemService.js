@@ -12,7 +12,7 @@ class ItemService {
         try {
             return await Items.findOne({
                 where: {
-                    [Sequelize.Op.or]: [{id: identifier}, {name: identifier}],
+                    id: identifier, // Usamos el parámetro correctamente
                 },
             });
         } catch (error) {
@@ -34,15 +34,21 @@ class ItemService {
     // ✅ Create an Item
     static async createItem(itemData) {
         try {
-            const item = await Items.create(itemData);
 
-            // Notification Example (Optional)
-            await ChannelNotificationService.sendChannelNotification(
-                `🎉 Nuevo ítem creado: **${item.name}**`,
-                `Detalles del ítem:\n- Precio: ${item.price}\n- Categoría: ${item.category}`
-            );
+            // FALTA ARREGLAR LO DE LA LOGICA DEL STORE
+            const { name, price, category, storeId } = itemData;
+            if (!name || !price || !category || storeId ) {
+                throw new Error("Faltan datos requeridos para crear el item.");
+            }
 
-            return item;
+            return await Items.create({
+                name,
+                description: `Un ${category} del tipo ${name}`,
+                price,
+                category,
+                storeId,
+                badge: "coin",
+            });
         } catch (error) {
             console.error("❌ Error al crear el ítem:", error.message);
             return null;
@@ -50,23 +56,20 @@ class ItemService {
     }
 
     // ✅ Update an Item
-    static async updateItem(id, updateData) {
+    static async updateItemPrice(id, price) {
         try {
-            const item = await this.getItem(id);
-            if (!item) {
+            const item = await Items.update(
+                { price }, // Se actualiza solo el campo `price`
+                { where: { id } } // Se filtra por ID
+            );
+
+            if (!item[0]) { // `update` devuelve un array con el número de filas afectadas
                 console.error(`❌ No se encontró el ítem con ID: ${id}`);
                 return null;
             }
 
-            await item.update(updateData);
+            return item; // Retorna el resultado de la actualización
 
-            // Notification Example (Optional)
-            await ChannelNotificationService.sendChannelNotification(
-                `📝 Ítem actualizado: **${item.name}**`,
-                `Se actualizó con éxito el ítem: ${item.name}`
-            );
-
-            return item;
         } catch (error) {
             console.error("❌ Error al actualizar el ítem:", error.message);
             return null;
@@ -74,29 +77,24 @@ class ItemService {
     }
 
     // ✅ Delete an Item
-    static async deleteItem(identifier) {
+    static async deleteItem(identifier, interaction, category, itemName) {
         try {
+            await interaction.deferReply();
             const item = await this.getItem(identifier);
             if (!item) {
-                console.error(`❌ No se encontró el ítem con identificador: ${identifier}`);
-                return null;
+                return await interaction.editReply(`❌ No se encontró el artículo **${itemName}** en la categoría **${category}**.`);
             }
 
             await item.destroy();
 
-            // Notification Example (Optional)
-            await ChannelNotificationService.sendChannelNotification(
-                `❌ Ítem eliminado: **${item.name}**`,
-                `El ítem con nombre ${item.name} fue eliminado correctamente.`
-            );
-
             console.log(`✅ Ítem eliminado: ${identifier}`);
-            return true;
+            return await interaction.editReply(`✅ En la categoría **${category}**, el artículo **${itemName}** ha sido eliminado correctamente.`);
         } catch (error) {
             console.error("❌ Error al eliminar el ítem:", error.message);
-            return false;
+            return await interaction.editReply(`❌ Ocurrió un error al intentar eliminar el artículo **${itemName}** en la categoría **${category}**.`);
         }
     }
+
 
     // ✅ Assign Role to User (Example Function, if relevant)
     static async assignRoleToUser(req) {
@@ -119,6 +117,30 @@ class ItemService {
             throw new Error(error.response?.data || error.message);
         }
     }
+    static async getAllItemsByCategory(category, store, attributes = ["id", "name", "price"]) {
+        if (!category || !store?.id) {
+            console.error("❌ Error: Falta la categoría o el ID de la tienda.");
+            return null;
+        }
+
+        try {
+            const items = await Items.findAll({
+                where: { category, storeId: store.id },
+                attributes: attributes,
+                raw: true
+            });
+
+            if (items.length === 0) {
+                console.log(`⚠️ Advertencia: No se encontraron ítems en la categoría "${category}" para la tienda con ID ${store.id}`);
+                return [];
+            }
+            return items;
+        } catch (error) {
+            console.error("❌ Error al obtener los ítems por categoría:", error.message);
+            return null;
+        }
+    }
+
 }
 
 module.exports = ItemService;

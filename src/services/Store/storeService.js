@@ -2,12 +2,13 @@ const Items = require("../../models/Item/Items");
 const Store = require("../../models/Store/Store");
 const User = require("../../models/User/Users.js");
 const UserItems = require("../../models/Item/UserItems");
-const { EmbedBuilder } = require("discord.js");
 const createErrorEmbed = require("../../utils/embed/errorEmbed");
 const alertEmbedList = require("../../utils/embed/alertEmbedList");
 const ListObjectsFormat = require("../../utils/ListObjects");
 const successEmbed = require("../../utils/embed/successEmbed");
 const EconomyService = require("../../services/item/economyService.js");
+const userItemsService = require("../../services/user/userItemsService");
+const ItemService = require("../../services/item/ItemService");
 
 class StoreManager {
     // It uses Singleton to create a single Store
@@ -80,9 +81,7 @@ class StoreManager {
         const store = await this.getStore();
 
         // Finds the Item by the category and the name set by the User
-        const item = await Items.findOne({
-            where: { name: itemName, storeId: store.id, category: category }
-        });
+        const item = await this.getItemByCategoryAndName(category,itemName);
         console.log("🛒 Item encontrado en DB:", item ? item.dataValues : "❌ No encontrado");
 
         // Check if the category of the Item exists
@@ -94,11 +93,7 @@ class StoreManager {
 
             // If the category exists it Fetch all items in the category
             if (categoryExists) {
-                const categoryItems = await Items.findAll({
-                    where: { category },
-                    attributes: ["name", "price"],
-                    raw: true
-                });
+                const categoryItems = await ItemService.getAllItemsByCategory(category,store,["name", "price"]) || [];
 
                 return {
                     success: false,
@@ -152,18 +147,10 @@ class StoreManager {
         // If the price of the Item is greater than the User's RockyCoins
         if (user.rockyCoins < item.price) {
             // Fetch all available store items
-            const allStoreItems = await Items.findAll({
-                where: { storeId: store.id , category},
-                attributes: ["id", "name", "price"],
-                raw: true
-            });
+            const allStoreItems = await ItemService.getAllItemsByCategory(category,store);
 
-            // Get all items the user owns
-            const userOwnedItems = await UserItems.findAll({
-                where: { userId: userId },
-                attributes: ["itemId"],
-                raw: true
-            });
+            // 🔹 Get all items the user owns
+            const userOwnedItems = await userItemsService.getAllItemsByUser(userId);
 
             // Convert owned items into an array of IDs
             const ownedItemIds = userOwnedItems.map(ui => ui.itemId);
@@ -195,17 +182,11 @@ class StoreManager {
         // If the user has Items
         if (existingPurchase) {
             // Fetch all items in the same category
-            const otherItems = await Items.findAll({
-                where: { category: category, storeId: store.id },
-                attributes: ["id", "name", "price"],
-                raw: true
-            });
+            const otherItems = await ItemService.getAllItemsByCategory(category,store);
+
             // 🔹 Get all items the user owns
-            const userOwnedItems = await UserItems.findAll({
-                where: { userId: userId },
-                attributes: ["itemId"], // Only need itemId to compare
-                raw: true
-            });
+            const userOwnedItems = await userItemsService.getAllItemsByUser(userId);
+
             // 🔹 Convert owned items into an array of IDs
             const ownedItemIds = userOwnedItems.map(ui => ui.itemId);
             console.log("🔍 IDs de artículos que posee el usuario:", ownedItemIds);
@@ -243,7 +224,7 @@ class StoreManager {
         await user.save();
 
         // Creates a relation UserItems (The User has one more item)
-        await UserItems.create({ userId, itemId: item.id });
+        await userItemsService.createUserItems(userId,item.id);
 
         // Creates a Transaction withe ProductID and the price of the product
         await EconomyService.createTransaction(userId, item.price, "compra", item.id);
@@ -251,9 +232,9 @@ class StoreManager {
         return {
             success: true,
             embed: successEmbed({
-                item, // Se pasa el objeto completo, con todas sus propiedades
-                category: item.category, // Se pasa la categoría explícitamente
-                itemName: item.name, // Se pasa el nombre explícitamente
+                item,
+                category: item.category,
+                itemName: item.name,
             }),
         };
     }
