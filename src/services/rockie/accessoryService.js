@@ -133,6 +133,27 @@ class AccessoryService {
 
         return { success: true, message: "✅ Atributos de Rockie actualizados correctamente." };
     }
+  /**
+   * Obtiene todos los accesorios que el usuario ha comprado con detalles del ítem.
+   * @param {string} userId
+   * @returns {Promise<Array>} Lista de objetos { name, category, price }
+   */
+  async getUserItemsWithDetails(userId) {
+    const userItems = await UserItems.findAll({
+      where: { userId },
+      include: [{ model: Items, as: 'Item', attributes: ['name', 'category', 'price'] }],
+      raw: true,
+      nest: true,
+    });
+
+
+    // Mapear a un formato sencillo
+    return userItems.map((ui) => ({
+      name: ui.Item.name,
+      category: ui.Item.category,
+      price: ui.Item.price,
+    }));
+  }
 }
 
 // 📌 Singleton Export

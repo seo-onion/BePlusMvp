@@ -1,44 +1,43 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../../config/database'); // Conexión a la base de datos
+const { sequelize } = require('../../config/database');
 
-
-const {Users} = require('../../models/User/Users'); // Importar correctamente el modelo de Usuarios
-const Items = require('./Items'); // Importar correctamente el modelo de Items
-
+const Items = require('./Items');
+const { Users } = require('../../models/User/Users');
 
 const UserItems = sequelize.define("UserItem", {
-    id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        primaryKey: true,
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true,
+  },
+  userId: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    references: {
+      model: Users,
+      key: 'userId',
     },
-    userId: {
-        type: DataTypes.STRING, // Debe coincidir con Users.js
-        allowNull: false,
-        references: {
-
-            model: Users,
-            key: 'userId', // Debe coincidir con Users.js
-
-        },
-        onDelete: 'CASCADE',
+    onDelete: 'CASCADE',
+  },
+  itemId: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: Items,
+      key: 'id',
     },
-    itemId: {
-        type: DataTypes.UUID, // UUID está bien aquí porque Items usa UUID
-        allowNull: false,
-        references: {
-            model: Items,
-            key: 'id', // Debe coincidir con Items.js
-        },
-        onDelete: 'CASCADE',
-    },
-    createdAt: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-    },
+    onDelete: 'CASCADE',
+  },
+  createdAt: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
+  },
 });
 
-// Definición de relaciones
+// 📌 Relaciones para consultas con include()
+UserItems.belongsTo(Items, { foreignKey: 'itemId', as: 'Item' }); // ✅ Esto habilita include: [{ model: Items, as: 'Item' }]
+Items.hasMany(UserItems, { foreignKey: 'itemId' }); // (Opcional, pero recomendable si accedes desde Items)
+
 Users.belongsToMany(Items, { through: UserItems, foreignKey: 'userId' });
 Items.belongsToMany(Users, { through: UserItems, foreignKey: 'itemId' });
 

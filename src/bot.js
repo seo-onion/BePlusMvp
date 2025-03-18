@@ -50,6 +50,18 @@ for (const folder of commandFolders) {
 
 // 📌 Ejecutar comandos
 client.on(Events.InteractionCreate, async (interaction) => {
+  if (interaction.isAutocomplete()) {
+    const command = client.commands.get(interaction.commandName);
+    if (!command || !command.autocomplete) return;
+
+    try {
+      await command.autocomplete(interaction);
+    } catch (error) {
+      console.error("❌ Error en autocomplete:", error);
+    }
+    return; // ⬅️ Importante para evitar que siga a comandos si era autocomplete
+  }
+
   if (!interaction.isCommand()) return;
 
   const command = client.commands.get(interaction.commandName);

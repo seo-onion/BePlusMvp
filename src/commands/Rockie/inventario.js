@@ -1,6 +1,6 @@
 // 📌 src/commands/Rockie/inventario.js
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } = require("discord.js");
-const { getUserItemsWithDetails } = require("../../services/rockie/accessoryService");
+const accessoryService = require("../../services/rockie/accessoryService");
 const { renderRockie } = require("../../services/rockie/renderRockieService");
 
 const ITEMS_PER_PAGE = 5;
@@ -15,7 +15,7 @@ module.exports = {
         await interaction.deferReply({ ephemeral: true });
 
         try {
-            const userItems = await getUserItemsWithDetails(userId);
+            const userItems = await accessoryService.getUserItemsWithDetails(userId);
 
             if (!userItems.length) {
                 return interaction.editReply("❌ No tienes accesorios en tu inventario.");

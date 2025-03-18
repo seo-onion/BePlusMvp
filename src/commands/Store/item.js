@@ -3,6 +3,7 @@ const { SlashCommandBuilder } = require("discord.js");
 const Items = require("../../models/Item/Items");
 const Store = require("../../models/Store/Store");
 const createAlertEmbed = require("../../utils/alertEmbed");
+const s3Service = require("../../services/aws/s3Service"); // ✅ S3 service importado para listar archivos
 
 const ROLE_ADMIN = process.env.ADMIN_ROLE;
 const DEV = process.env.DEV_ROLE;
@@ -28,9 +29,37 @@ module.exports = {
         )
         .addStringOption(option =>
             option.setName("imagen_url")
-                .setDescription("URL de la imagen del artículo (opcional).")
+                .setDescription("URL de la imagen del artículo (autocomplete disponible).")
                 .setRequired(false)
+                .setAutocomplete(true)
         ),
+
+    // ✅ Autocompletado para imagen_url basado en archivos de S3
+async autocomplete(interaction) {
+    try {
+        console.log("🚀 Autocomplete activado...");
+        const focusedOption = interaction.options.getFocused(true);
+        console.log("🎯 Campo:", focusedOption.name, "| Valor:", focusedOption.value);
+
+        if (focusedOption.name === "imagen_url") {
+            const choices = await s3Service.listFilesInS3("sombreros/");
+            console.log("📁 Archivos de sombreros:", choices);
+
+            const filtered = choices.filter(choice => choice.toLowerCase().includes(focusedOption.value.toLowerCase()));
+            const urls = filtered.slice(0, 25).map(file => ({
+                name: file,
+                value: s3Service.getFileUrl(file, "sombreros/")
+            }));
+
+            console.log("🔗 Respuesta:", urls);
+            await interaction.respond(urls);
+        }
+    } catch (error) {
+        console.error("❌ Error en autocomplete:", error);
+    }
+}
+
+,
 
     /**
      * Creates or updates an item in the Rockie Store.
