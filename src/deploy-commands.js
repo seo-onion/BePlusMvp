@@ -23,6 +23,7 @@ for (const folder of commandFolders) {
     for (const file of commandFiles) {
         try {
             const command = require(path.join(folderPath, file));
+
             // Validate if the command has the required 'data' and 'toJSON' method.
             if (!command.data || typeof command.data.toJSON !== 'function') {
                 throw new Error(`The command "${file}" in the folder "${folder}" is missing 'data' or 'toJSON()'.`);

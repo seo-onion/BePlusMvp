@@ -9,6 +9,7 @@ dotenv.config({ path: path.resolve(__dirname, '../config/dotenv/.env') });
 
 
 const express = require("express");
+const express = require("express");
 const { sequelize } = require("./config/database");
 const { execSync } = require("child_process");
 const client = require("./bot");
@@ -47,6 +48,18 @@ app.get("/form", async (req, res) => {
 // Route to handle user data updates from Discord.
 app.post("/api/auth/discord/update-user", editUser);
 
+// Execute deploy-commands before to start the server
+async function deployCommands() {
+  try {
+    console.log("🚀 Ejecutando despliegue de comandos en Discord...");
+    execSync('node src/deploy-commands.js', { stdio: 'inherit' });
+    console.log("✅ Comandos registrados exitosamente.");
+  } catch (error) {
+    console.error("❌ Error al ejecutar deploy-commands.js:", error.message);
+    process.exit(1); // Salir si hay error en el despliegue
+  }
+}
+
 
 // Execute deploy-commands before to start the server
 async function deployCommands() {
@@ -63,6 +76,9 @@ async function deployCommands() {
 // Main function to initialize database, server, and Discord bot.
 async function main() {
   try {
+    //Execute before to start server
+    await deployCommands();
+
     //Execute before to start server
     await deployCommands();
 
