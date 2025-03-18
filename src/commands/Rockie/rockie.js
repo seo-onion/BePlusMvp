@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, AttachmentBuilder, EmbedBuilder } = require("discord.js");
 const rockieService = require("../../services/rockie/rockieService");
-const Users = require("../../models/User/Users");
+const {Users} = require("../../models/User/Users");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -8,7 +8,7 @@ module.exports = {
         .setDescription("Muestra tu Rockie. Si no tienes uno, se creará automáticamente."),
 
     /**
-     * Executes the /rockie command: shows the user's Rockie and its stats.
+     * Ejecuta el comando /rockie.
      * @param {import("discord.js").ChatInputCommandInteraction} interaction
      */
     async execute(interaction) {
@@ -18,7 +18,10 @@ module.exports = {
         console.log(`📌 Ejecutando /rockie para el usuario: ${username} (${userId})`);
 
         try {
-            // Retrieve or create the Rockie
+            // ✅ Defiere la respuesta para evitar timeouts
+            await interaction.deferReply({ ephemeral: true });
+
+            // Buscar o crear Rockie
             let rockie = await rockieService.getRockie(userId);
             if (!rockie) {
                 console.log(`🔹 No se encontró Rockie para ${username}. Creando uno nuevo...`);
@@ -27,27 +30,28 @@ module.exports = {
                 console.log(`✅ Rockie encontrado: ${rockie.name} (Nivel ${rockie.level})`);
             }
 
-            // Render the Rockie image dynamically
-            const rockieImageBuffer = await rockieService.renderRockie(userId);
+            // Renderizar imagen de Rockie (con logging de URLs)
+            const rockieImageBuffer = await rockieService.renderRockie(userId, {
+                debug: true // 🚨 Para imprimir URLs
+            });
+
             if (!rockieImageBuffer) {
                 console.error("❌ No se pudo generar la imagen de Rockie.");
-                return await interaction.reply({
-                    content: "❌ No se pudo generar la imagen de tu Rockie.",
-                    ephemeral: true
+                return await interaction.editReply({
+                    content: "❌ No se pudo generar la imagen de tu Rockie."
                 });
             }
 
-            // Fetch user stats (RockieCoins & RockieGems)
+            // Obtener datos del usuario
             const user = await Users.findByPk(userId);
             if (!user) {
                 console.error("❌ No se encontró al usuario en la base de datos.");
-                return await interaction.reply({
-                    content: "❌ No se encontró información de tu cuenta.",
-                    ephemeral: true
+                return await interaction.editReply({
+                    content: "❌ No se encontró información de tu cuenta."
                 });
             }
 
-            // Build the embed with Rockie info
+            // Embed con datos de Rockie
             const embed = new EmbedBuilder()
                 .setTitle(`🐻 Tu Rockie - ${rockie.name}`)
                 .setDescription(`Aquí está tu Rockie con su información actual:`)
@@ -58,18 +62,18 @@ module.exports = {
                 )
                 .setColor("#3498db");
 
-            // Attach Rockie image
             const attachment = new AttachmentBuilder(rockieImageBuffer, { name: "rockie.png" });
 
-            // Reply with embed and image
-            await interaction.reply({ embeds: [embed], files: [attachment] });
+            // ✅ Editar la respuesta diferida
+            await interaction.editReply({ embeds: [embed], files: [attachment] });
 
         } catch (error) {
             console.error("❌ Error ejecutando /rockie:", error);
 
             const errorMsg = "❌ Hubo un error al mostrar tu Rockie. Inténtalo más tarde.";
-            if (interaction.deferred || interaction.replied) {
-                await interaction.editReply(errorMsg);
+
+            if (interaction.deferred) {
+                await interaction.editReply({ content: errorMsg });
             } else {
                 await interaction.reply({ content: errorMsg, ephemeral: true });
             }

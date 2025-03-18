@@ -1,87 +1,117 @@
-// 📌 AWS S3 Service for uploading and listing Rockie assets
 const AWS = require("aws-sdk");
 require("dotenv").config();
 
-const requiredEnvVars = ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_REGION", "AWS_BUCKET_NAME"];
-for (const varName of requiredEnvVars) {
-    if (!process.env[varName]) {
-        throw new Error(`❌ Missing required environment variable: ${varName}`);
-    }
-}
+const BUCKET_NAME = process.env.AWS_BUCKET_NAME;
+const REGION = process.env.AWS_REGION;
 
-// ✅ Initialize AWS S3 Client (singleton)
+// ✅ Construir URL pública dinámica del bucket
+const BUCKET_BASE_URL = `https://${BUCKET_NAME}.s3.${REGION}.amazonaws.com`;
+
 class S3Service {
     constructor() {
         if (!S3Service.instance) {
             this.s3 = new AWS.S3({
                 accessKeyId: process.env.AWS_ACCESS_KEY_ID,
                 secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-                region: process.env.AWS_REGION,
+                region: REGION
             });
-
-            this.bucketName = process.env.AWS_BUCKET_NAME;
-            this.baseBucketUrl = `https://${this.bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com`;
             S3Service.instance = this;
         }
         return S3Service.instance;
     }
 
-    /**
-     * Uploads a PNG file to S3 (overwrites if it exists).
-     * @param {Buffer} fileBuffer - File content.
-     * @param {string} filePath - Full path in bucket (e.g., 'ojos/1.png').
-     * @returns {Promise<string|null>} Public URL or null if failed.
-     */
+    // 📤 Subir archivo PNG
     async uploadFileToS3(fileBuffer, filePath) {
         const params = {
-            Bucket: this.bucketName,
+            Bucket: BUCKET_NAME,
             Key: filePath,
             Body: fileBuffer,
             ContentType: "image/png",
-            // ACL removed due to error: AccessControlListNotSupported
         };
 
         try {
-            const uploadResult = await this.s3.upload(params).promise();
-            return this.getFileUrl(filePath);
+            const result = await this.s3.upload(params).promise();
+            return result.Location; // ✅ URL pública
         } catch (error) {
-            console.error("❌ Error uploading file to S3:", error);
+            console.error("❌ Error al subir archivo a S3:", error);
             return null;
         }
     }
 
-    /**
-     * Lists files in a given folder in the S3 bucket.
-     * @param {string} folder - e.g., 'ojos/' or 'bases/1/'
-     * @returns {Promise<string[]>} Array of file names.
-     */
+    // 📂 Listar archivos dentro de un folder
     async listFilesInS3(folder) {
         const params = {
-            Bucket: this.bucketName,
-            Prefix: folder,
+            Bucket: BUCKET_NAME,
+            Prefix: folder
         };
 
         try {
             const data = await this.s3.listObjectsV2(params).promise();
             return data.Contents
-                .filter(item => item.Key !== folder)
+                .filter(item => item.Key !== folder) // Excluir carpeta raíz
                 .map(item => item.Key.replace(folder, ""));
         } catch (error) {
-            console.error("❌ Error listing files in S3:", error);
+            console.error("❌ Error al listar archivos de S3:", error);
             return [];
         }
     }
 
-    /**
-     * Generates full public URL of a file in S3.
-     * @param {string} filePath - Full path in bucket (e.g., 'ojos/1.png').
-     * @returns {string} Full URL.
-     */
-    getFileUrl(filePath) {
-        return `${this.baseBucketUrl}/${filePath}`;
+    // 🔗 Obtener URL pública de archivo
+    getFileUrl(fileName, folder = "") {
+        const path = folder ? `${folder}${fileName}` : fileName;
+        return `${BUCKET_BASE_URL}/${path}`;
+    }
+
+    // ✅ Verificar existencia de archivo
+    async fileExistsInS3(filePath) {
+        const params = {
+            Bucket: BUCKET_NAME,
+            Key: filePath,
+        };
+
+        try {
+            await this.s3.headObject(params).promise();
+            return true; // ✅ Existe
+        } catch (err) {
+            if (err.code === 'NotFound') return false;
+            console.error("❌ Error verificando archivo en S3:", err);
+            return false;
+        }
+    }
+
+    // 🧾 Obtener archivo como Buffer
+    async getFileBuffer(filePath) {
+        const params = {
+            Bucket: BUCKET_NAME,
+            Key: filePath
+        };
+
+        try {
+            const data = await this.s3.getObject(params).promise();
+            return data.Body; // ✅ Devuelve el buffer
+        } catch (error) {
+            console.error("❌ Error obteniendo archivo de S3:", error);
+            return null;
+        }
+    }
+
+    // 🗑️ Eliminar archivo
+    async deleteFileFromS3(filePath) {
+        const params = {
+            Bucket: BUCKET_NAME,
+            Key: filePath,
+        };
+
+        try {
+            await this.s3.deleteObject(params).promise();
+            console.log(`🗑️ Archivo eliminado: ${filePath}`);
+            return true;
+        } catch (error) {
+            console.error("❌ Error al eliminar archivo en S3:", error);
+            return false;
+        }
     }
 }
 
-// ✅ Export singleton
 module.exports = new S3Service();
 
