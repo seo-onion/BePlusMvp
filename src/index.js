@@ -8,7 +8,6 @@ dotenv.config({ path: path.resolve(__dirname, `../config/dotenv/${envFile}`) });
 dotenv.config({ path: path.resolve(__dirname, '../config/dotenv/.env') });
 
 const express = require("express");
-const express = require("express");
 const { sequelize } = require("./config/database");
 const { execSync } = require("child_process");
 const client = require("./bot");
