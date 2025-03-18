@@ -57,9 +57,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   // Check if command is allow in the channel
   if (allowedCommands && !allowedCommands.includes(interaction.commandName)) {
-    const errorEmbed = createErrorEmbed(
-      "Comando No Permitido",
-      "Este comando no está permitido en este canal."
+    const errorEmbed = createErrorEmbed({
+          title: "Comando No Permitido",
+          description: "Este comando no está permitido en este canal."
+        }
     );
     return interaction.reply({ embeds: [errorEmbed], flags: 64 });
   }
@@ -75,9 +76,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
     // Check if user has completed registration.
 
     if (command.restricted && member.roles.cache.has(NO_VERIFIED)) {
-      const errorEmbed = createErrorEmbed(
-        "Registro Incompleto",
-        "Debes completar el registro antes de usar este comando. Usa `/empezar` para obtener acceso."
+      const errorEmbed = createErrorEmbed({
+            title: "Registro Incompleto",
+            description: "Debes completar el registro antes de usar este comando. Usa `/empezar` para obtener acceso.",
+      }
+
       );
       return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
     }

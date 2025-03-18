@@ -57,7 +57,9 @@ module.exports = {
 
             // If no steps could be retrieved, show an error message.
             if (!steps) {
-                const errorEmbed = createErrorEmbed("⚠️ No se ha podido recuperar el número de pasos. Inténtalo más tarde.");
+                const errorEmbed = createErrorEmbed({
+                    title: "⚠️ No se ha podido recuperar el número de pasos. Inténtalo más tarde."
+                });
                 return await interaction.editReply({ embeds: [errorEmbed] });
             }
 
@@ -77,7 +79,9 @@ module.exports = {
         } catch (error) {
             console.error("❌ Error al obtener los pasos:", error);
 
-            const errorEmbed = createErrorEmbed("⚠️ Ocurrió un error inesperado. Intenta nuevamente más tarde.");
+            const errorEmbed = createErrorEmbed({
+                title: "⚠️ Ocurrió un error inesperado. Intenta nuevamente más tarde."
+            });
 
             // Checks if the interaction has been deferred or replied to avoid duplicate responses.
             if (interaction.deferred || interaction.replied) {

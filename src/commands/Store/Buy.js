@@ -55,7 +55,9 @@ module.exports = {
             if (!storeInstance || typeof storeInstance.buyItem !== "function") {
                 console.error("❌ Error: storeInstance no está definido o buyItem() no existe.");
                 return interaction.editReply({
-                    embeds: [createErrorEmbed("⚠️ No se pudo acceder a la tienda en este momento. Intenta más tarde.")]
+                    embeds: [createErrorEmbed({
+                        title: "⚠️ No se pudo acceder a la tienda en este momento. Intenta más tarde."
+                    })]
                 });
             }
 

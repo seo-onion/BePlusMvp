@@ -12,13 +12,14 @@ const ItemService = require("../../services/item/ItemService");
 
 class StoreManager {
     // It uses Singleton to create a single Store
+    /*
     constructor() {
         if (!StoreManager.instance) {
             StoreManager.instance = this;
             this.store = null;
         }
         return StoreManager.instance;
-    }
+    }*/
 
     // Get or create the store once (caching mechanism)
     async getStore() {
@@ -137,7 +138,9 @@ class StoreManager {
         if (!user) {
             return {
                 success: false,
-                embed: createErrorEmbed("❌ Usuario No Encontrado. No se pudo encontrar tu perfil en la base de datos."),
+                embed: createErrorEmbed({
+                    title: "❌ Usuario No Encontrado. No se pudo encontrar tu perfil en la base de datos.",
+                }),
             };
         }
 

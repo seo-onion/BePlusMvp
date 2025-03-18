@@ -124,7 +124,9 @@ module.exports = {
         } catch (error) {
             console.error("❌ Error al obtener los artículos de la tienda:", error);
 
-            const errorEmbed = createErrorEmbed("❌ Hubo un error al obtener los artículos. Intenta más tarde.");
+            const errorEmbed = createErrorEmbed({
+                title: "❌ Hubo un error al obtener los artículos. Intenta más tarde.",
+            });
 
             if (interaction.replied || interaction.deferred) {
                 await interaction.editReply({ embeds: [errorEmbed] });

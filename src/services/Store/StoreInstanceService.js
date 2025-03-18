@@ -82,7 +82,9 @@ class StoreService {
         if (!user) {
             return {
                 success: false,
-                embed: createErrorEmbed("❌ Usuario No Encontrado. No se pudo encontrar tu perfil en la base de datos."),
+                embed: createErrorEmbed({
+                    title: "❌ Usuario No Encontrado. No se pudo encontrar tu perfil en la base de datos."
+                }),
             };
         }
 

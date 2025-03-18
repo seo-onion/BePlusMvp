@@ -18,7 +18,7 @@ module.exports = {
       // Obtener perfil del usuario
       const profile = await getUserProfile(userId);
       if (!profile) {
-        const errorEmbed = createErrorEmbed("No se encontró tu perfil.");
+        const errorEmbed = createErrorEmbed({title:"No se encontró tu perfil."});
         return await interaction.editReply({ embeds: [errorEmbed] });
       }
 
@@ -69,7 +69,9 @@ module.exports = {
 
     } catch (error) {
       console.error("❌ Error al ejecutar el comando /yo:", error);
-      const errorEmbed = createErrorEmbed("❌ Ocurrió un error inesperado.");
+      const errorEmbed = createErrorEmbed({
+        title: "❌ Ocurrió un error inesperado al cargar tus pertenencias"
+      });
 
       // Manejar errores correctamente
       if (interaction.replied || interaction.deferred) {
