@@ -21,7 +21,7 @@ const {
   googleAuth,
 } = require("./controller/AuthController");
 
-const { editUser } = require("./services/user/userService");
+const { editUser } = require("./services/usear/userService");
 
 // View settings
 app.set("views", path.join(__dirname, "./views"));
@@ -46,56 +46,39 @@ app.get("/form", async (req, res) => {
 // Route to handle user data updates from Discord.
 app.post("/api/auth/discord/update-user", editUser);
 
-// Execute deploy-commands before to start the server
+// Execute deploy-commands before starting the server
 async function deployCommands() {
   try {
-    console.log("🚀 Ejecutando despliegue de comandos en Discord...");
+    console.log("Executing command deployment in Discord...");
     execSync('node src/deploy-commands.js', { stdio: 'inherit' });
-    console.log("✅ Comandos registrados exitosamente.");
+    console.log("Commands registered successfully.");
   } catch (error) {
-    console.error("❌ Error al ejecutar deploy-commands.js:", error.message);
-    process.exit(1); // Salir si hay error en el despliegue
+    console.error("Error executing deploy-commands.js:", error.message);
+    process.exit(1); // Exit if there is an error in the deployment
   }
 }
 
-
-// Execute deploy-commands before to start the server
-async function deployCommands() {
-  try {
-    console.log("🚀 Ejecutando despliegue de comandos en Discord...");
-    execSync('node src/deploy-commands.js', { stdio: 'inherit' });
-    console.log("✅ Comandos registrados exitosamente.");
-  } catch (error) {
-    console.error("❌ Error al ejecutar deploy-commands.js:", error.message);
-    process.exit(1); // Salir si hay error en el despliegue
-  }
-}
 
 // Main function to initialize database, server, and Discord bot.
 async function main() {
   try {
-    //Execute before to start server
-    await deployCommands();
-
-    //Execute before to start server
+    // Execute before starting the server
     await deployCommands();
 
     console.log(`Environment: ${process.env.NODE_ENV}`);
 
-    console.log("⏳ Conectando a la base de datos...");
     await sequelize.authenticate();
-    console.log("✅ Base de datos conectada.");
+    console.log("Connected database.");
 
-    console.log("⏳ Sincronizando modelos...");
     await sequelize.sync({ alter: true });
-    console.log("✅ Modelos sincronizados.");
+    console.log("Synchronized models.");
 
     const PORT = process.env.PORT || 3000;
     const HOST = process.env.DB_HOST || "127.0.0.1";
 
     // Start the server and listen on all network interfaces for Render at port 0.0.0.0.
     app.listen(PORT, HOST, () => {
-      console.log(`🚀 Servidor corriendo en http://${HOST}:${PORT}`);
+      console.log(`Server running in http://${HOST}:${PORT}`);
     });
 
     // Deploy discord bot
@@ -103,7 +86,7 @@ async function main() {
       await client.login(process.env.TOKEN);
     }
   } catch (error) {
-    console.error("❌ Error en la aplicación:", error);
+    console.error("Error to execute: ", error);
   }
 }
 

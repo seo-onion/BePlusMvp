@@ -66,7 +66,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
   // Check if command is real
   if (!command) {
-    console.error(`❌ No se encontró un comando para ${interaction.commandName}`);
+    console.error(`No command found for ${interaction.commandName}`);
     return;
   }
 
@@ -84,17 +84,17 @@ client.on(Events.InteractionCreate, async (interaction) => {
       );
       return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
     }
-    /*
-    if (command.restricted  && !(await verification(member, NO_VERIFIED, "Registro Incompleto",
-        "Debes completar el registro antes de usar este comando. Usa `/empezar` para obtener acceso.",
-        interaction, NO_VERIFIED, createErrorEmbed))){
-      return;
-    }*/
+    
+    // if (command.restricted  && !(await verification(member, NO_VERIFIED, "Registro Incompleto",
+    //     "Debes completar el registro antes de usar este comando. Usa `/empezar` para obtener acceso.",
+    //     interaction, NO_VERIFIED, createErrorEmbed))){
+    //   return;
+    // }
 
     await command.execute(interaction);
 
   } catch (error) {
-    console.error("❌ Error al ejecutar el comando:", error);
+    console.error("Error executing command: ", error);
 
     const errorEmbed = createErrorEmbed();
 
