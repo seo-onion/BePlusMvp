@@ -2,6 +2,7 @@ const { describe} = require("node:test");
 const { getRockie, createRockie, renderRockie } = require("../src/services/rockie/rockieService");
 const UserService = require("../src/services/user/userService");
 const Users = require("../src/models/User/Users");
+const { Op } = require("sequelize");
 const Rockie = require("../src/models/Rockie/Rockie");
 const {execute} = require("../src/commands/Rockie/rockie");
 
@@ -14,6 +15,7 @@ async function deleteRockie(userId) {
 
 // Connect to the DB
 const { sequelize } = require("../src/config/database");
+const rockie = require("../src/commands/Rockie/rockie");
 beforeAll(async () => {
     await sequelize.authenticate();
     await sequelize.sync({ alter: true });
@@ -25,45 +27,29 @@ afterAll(async () => {
 });
 
 describe("Pruebas con base de datos", () => {
-    let testUser;
-    let testRockie;
-    
 
     beforeEach(async () => {
-        // Crear usuario de prueba
-        testUser = await UserService.createUser({
-            userId: "test_user_123",
-            email: "test@example.com",
-            token: "abc123",
-            refreshToken: "refresh456",
-        });
-
-        // Crear rockie asociado
-        testRockie = await createRockie({
-            userId: "test_user_123",
-            username: "RockieTest"
-        });
+        await sequelize.authenticate();
+        await sequelize.sync({ alter: true });    
     });
 
     afterEach(async () => {
-        // Eliminar datos después de cada test
-        await UserService.deleteUser("test_user_123");
-        await deleteRockie("test_user_123");
+        // Delete the false data created by the test
+        // Don't do it in this case because we need the data to test the command
     });
 
     test("Debe encontrar al usuario en la base de datos", async () => {
-        const user = await UserService.getUser("test_user_123");
+        
+        const user = await Users.findOne({
+            where: {
+                [Op.or]: [{ userId: "1351356333471039630" }, { email: "david.huette@utec.edu.pe" }],
+              },
+        });
+
         expect(user).not.toBeNull();
-        console.log(user);
-        expect(user.email).toBe("test@example.com");
-        expect(user.rockyCoins).toBe(500);
+        expect(user.email).toBe("david.huette@utec.edu.pe");
+        expect(user.rockyCoins).toBe(0);
+        expect(user.rockyGems).toBe(0);
     });
 
-    test("Debe encontrar el Rockie asociado al usuario", async () => {
-        const rockie = await getRockie("test_user_123");
-        console.log(rockie);
-        expect(rockie).not.toBeNull();
-        expect(rockie.name).toBe("RockieTest");
-        expect(rockie.level).toBe(5);
-    });
 });

@@ -1,35 +1,44 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const createErrorEmbed = require("../../utils/embed/errorEmbed");
-const { getUserProfile } = require("../../services/user/userService");
+const UserService = require("../../services/user/userService");
 const { getAchievementById } = require("../../services/achievement/achievementService");
-const Users = require("../../models/User/Users");
 const UserAchievements = require("../../models/Achievement/UserAchievements");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("yo")
     .setDescription("Muestra tu perfil y tus logros"),
+    restricted: true,
 
   async execute(interaction) {
     try {
+      await interaction.deferReply(); //  Prevent command timeout while processing the response
+
       const userId = interaction.user.id;
 
-      // Obtener perfil del usuario
-      const profile = await getUserProfile(userId);
-      if (!profile) {
-        const errorEmbed = createErrorEmbed("No se encontró tu perfil.");
+      //  Retrieve user data
+      const userData = await UserService.getUser(userId);
+      if (!userData) {
+        const errorEmbed = createErrorEmbed({
+          title: "No se encontró tu perfil",
+          description: "Parece que aún no tienes un perfil registrado en el sistema."
+        });
         return await interaction.editReply({ embeds: [errorEmbed] });
       }
 
-      // Obtener datos del usuario en la base de datos
-      const userRecord = await Users.findByPk(userId);
-      if (!userRecord) {
-        return await interaction.editReply({
-          content: "No se encontró tu perfil en la base de datos."
+      const user = userData.toJSON(); 
+      const profile = user.Profile;
+
+      //  Check if the user has a profile
+      if (!profile) {
+        const errorEmbed = createErrorEmbed({
+          title: "Perfil no encontrado",
+          description: "Tu perfil no contiene información suficiente. Intenta actualizarlo."
         });
+        return await interaction.editReply({ embeds: [errorEmbed] });
       }
 
-      // Obtener logros del usuario
+      //  Retrieve user achievements
       const userAchievements = await UserAchievements.findAll({
         where: { userId },
         attributes: ["achievementId"]
@@ -38,7 +47,7 @@ module.exports = {
       const achievementIds = userAchievements.map(a => a.achievementId);
       const achievementsDetails = await Promise.all(achievementIds.map(getAchievementById));
 
-      // Crear el embed del perfil
+      //  Create the profile embed
       const embed = new EmbedBuilder()
         .setColor("#00BFFF")
         .setTitle(`📜 Perfil de ${profile.name || profile.nickname || "Usuario"}`)
@@ -48,13 +57,13 @@ module.exports = {
           { name: "🏷️ Apodo", value: profile.nickname || "No especificado", inline: true },
           { name: "📅 Edad", value: profile.age ? `${profile.age} años` : "No especificado", inline: true },
           { name: "⚧️ Género", value: profile.gender ? profile.gender.replace(/_/g, " ") : "No especificado", inline: true },
-          { name: "🪙 RockyCoins", value: userRecord.rockyCoins ? `${userRecord.rockyCoins} RockyCoins` : "No especificado", inline: true },
-          { name: "💎 RockyGems", value: userRecord.rockyGems ? `${userRecord.rockyGems} RockyGems` : "No especificado", inline: true }
+          { name: "🪙 RockyCoins", value: user.rockyCoins ? `${user.rockyCoins} RockyCoins` : "0 RockyCoins", inline: true },
+          { name: "💎 RockyGems", value: user.rockyGems ? `${user.rockyGems} RockyGems` : "0 RockyGems", inline: true }
         )
         .setFooter({ text: "¡Sigue progresando y desbloquea más logros!" })
         .setTimestamp();
 
-      // Agregar logros si existen
+      // Add user achievements
       embed.addFields({
         name: "🏅 Logros Desbloqueados",
         value: achievementsDetails.length > 0
@@ -63,14 +72,17 @@ module.exports = {
         inline: false
       });
 
-      // Responder con el perfil
+      // Send the final embed
       await interaction.editReply({ embeds: [embed] });
 
     } catch (error) {
-      console.error("❌ Error al ejecutar el comando /yo:", error);
-      const errorEmbed = createErrorEmbed("❌ Ocurrió un error inesperado.");
+      console.error("❌ Error executing /yo command:", error);
+      const errorEmbed = createErrorEmbed({
+        title: "❌ Ocurrió un error inesperado",
+        description: "Hubo un problema al obtener tu perfil. Inténtalo de nuevo más tarde."
+      });
 
-      // Manejar errores correctamente
+      //  Handle errors properly
       if (interaction.replied || interaction.deferred) {
         await interaction.editReply({ embeds: [errorEmbed] });
       }

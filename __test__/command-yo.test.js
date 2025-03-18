@@ -33,10 +33,6 @@ jest.mock("../src/services/achievement/achievementService.js", () => ({
 describe("Comando /yo", () => {
   let interaction;
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   //Test 1: Error Test
   test("Debe responder con un error si no se encuentra el perfil", async () => {
     interaction = {
