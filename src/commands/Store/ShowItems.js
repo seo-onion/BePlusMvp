@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 const { Op } = require("sequelize");
 const Items = require("../../models/Item/Items.js");
 const createErrorEmbed = require("../../utils/embed/errorEmbed");
+const ListObjectFormat = require("../../utils/ListObjects");
 
 const ITEMS_PER_PAGE = 5; // Maximum number of items to show per page.
 
@@ -64,11 +65,9 @@ module.exports = {
                     .setThumbnail("https://media.discordapp.net/attachments/1331719510243282986/1345217857117618186/WhatsApp_Image_2025-02-28_at_5.27.07_AM1.jpeg")
                     .setImage("https://media.discordapp.net/attachments/1331719510243282986/1345217857117618186/WhatsApp_Image_2025-02-28_at_5.27.07_AM1.jpeg");
 
-                let formattedItems = items.map(item => `${item.name.padEnd(15)} ${item.price} 🪙`).join("\n");
-
                 embed.addFields({
                     name: `📌 ${category.charAt(0).toUpperCase() + category.slice(1)}`,
-                    value: `\`\`\`css\n${formattedItems}\n\`\`\``,
+                    value: ListObjectFormat(items,"❌ No hay items en la tienda"),
                 });
 
                 return embed;
@@ -125,7 +124,9 @@ module.exports = {
         } catch (error) {
             console.error("❌ Error al obtener los artículos de la tienda:", error);
 
-            const errorEmbed = createErrorEmbed("❌ Hubo un error al obtener los artículos. Intenta más tarde.");
+            const errorEmbed = createErrorEmbed({
+                title: "❌ Hubo un error al obtener los artículos. Intenta más tarde.",
+            });
 
             if (interaction.replied || interaction.deferred) {
                 await interaction.editReply({ embeds: [errorEmbed] });

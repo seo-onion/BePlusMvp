@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require("discord.js");
 const { deleteUser } = require("../../services/user/userService");
+const verification = require("../../utils/verification");
 const TESTER_ROLE = process.env.TESTER_ROLE;
 
 module.exports = {
@@ -11,14 +12,8 @@ module.exports = {
     const member = interaction.member;
 
     // Role validation: Checks if the user has the required TESTER role to execute the command.
-    if (!member.roles.cache.has(TESTER_ROLE)) {
-      console.log("You don't have permission to execute this command, you are not a TESTER.");
-      return interaction.reply({
-        content: "⛔ No tienes permisos para ejecutar este comando.",
-        ephemeral: true
-      });
-    } else {
-      console.log("You have permission to execute this command. You are a TESTER.");
+    if (await verification(member, TESTER_ROLE, "⛔ No tienes permisos para ejecutar este comando.", interaction, rol, createAlertEmbed, createErrorEmbed)){
+      return; // Stops execution if verification fails
     }
 
     const userId = interaction.user.id;

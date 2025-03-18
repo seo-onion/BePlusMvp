@@ -2,7 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 const { Items } = require("../../models/Item/Items.js");
 const { Store } = require("../../models/Store/Store.js");
 const createAlertEmbed = require("../../utils/embed/alertEmbed");
-
+const ItemService = require("../../services/item/ItemService");
 const DEV = process.env.DEV_ROLE;
 const ADMIN = process.env.ADMIN_ROLE;
 
@@ -58,12 +58,15 @@ module.exports = {
             const item = await Items.findOne({ where: { name: itemName, category } });
 
             // Delete the item if it exists
+            /*
             if (item) {
-                await item.destroy();
+                await ItemService.deleteItem(item.id);
                 return await interaction.editReply(`✅ En la categoría **${category}** se ha eliminado el artículo **${itemName}**.`);
             } else {
                 return await interaction.editReply(`❌ No se encontró el artículo **${itemName}** en la categoría **${category}**.`);
-            }
+            }*/
+            await ItemService.deleteItem(item.id, interaction, category, itemName);
+
 
         } catch (error) {
             console.error("❌ Error deleting the item:", error);

@@ -88,7 +88,10 @@ module.exports = {
 
     } catch (error) {
       console.error("❌ Error al ejecutar el comando:", error);
-      const errorEmbed = createErrorEmbed("⚠️ Ocurrió un error inesperado al procesar tus logros.");
+      const errorEmbed = createErrorEmbed(
+          {
+        title: "⚠️ Ocurrió un error inesperado al procesar tus logros.",
+      });
 
       if (interaction.deferred || interaction.replied) {
         return await interaction.editReply({ embeds: [errorEmbed] });

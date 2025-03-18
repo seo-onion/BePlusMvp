@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require("discord.js");
 const { createBadges } = require("../../services/item/economyService");
 const TESTER_ROLE = process.env.TESTER_ROLE;
+const verification = require("../../utils/verification")
 
 module.exports = {
     data: new SlashCommandBuilder()

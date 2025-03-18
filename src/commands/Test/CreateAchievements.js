@@ -33,7 +33,7 @@ module.exports = {
 
         // Defers the reply to prevent timeout errors while processing achievements.
         if (!interaction.deferred && !interaction.replied) {
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferRepy({ ephemeral: true });
         }
 
         try {

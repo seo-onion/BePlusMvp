@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const { Client, Collection, GatewayIntentBits, Events } = require("discord.js");
 const createErrorEmbed = require("./utils/embed/errorEmbed");
+const verification = require("./utils/verification");
 
 // Load environment variables for channel and role IDs.
 const GENERAL_CHANNEL = process.env.DISCORD_COMMAND_CHANNEL;
@@ -56,9 +57,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   // Check if command is allow in the channel
   if (allowedCommands && !allowedCommands.includes(interaction.commandName)) {
-    const errorEmbed = createErrorEmbed(
-      "Comando No Permitido",
-      "Este comando no está permitido en este canal."
+    const errorEmbed = createErrorEmbed({
+          title: "Comando No Permitido",
+          description: "Este comando no está permitido en este canal."
+        }
     );
     return interaction.reply({ embeds: [errorEmbed], flags: 64 });
   }
@@ -72,13 +74,22 @@ client.on(Events.InteractionCreate, async (interaction) => {
     const member = interaction.member;
 
     // Check if user has completed registration.
+
     if (command.restricted && member.roles.cache.has(NO_VERIFIED)) {
-      const errorEmbed = createErrorEmbed(
-        "Registro Incompleto",
-        "Debes completar el registro antes de usar este comando. Usa `/empezar` para obtener acceso."
+      const errorEmbed = createErrorEmbed({
+            title: "Registro Incompleto",
+            description: "Debes completar el registro antes de usar este comando. Usa `/empezar` para obtener acceso.",
+      }
+
       );
       return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
     }
+    /*
+    if (command.restricted  && !(await verification(member, NO_VERIFIED, "Registro Incompleto",
+        "Debes completar el registro antes de usar este comando. Usa `/empezar` para obtener acceso.",
+        interaction, NO_VERIFIED, createErrorEmbed))){
+      return;
+    }*/
 
     await command.execute(interaction);
 
