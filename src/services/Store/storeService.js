@@ -1,6 +1,7 @@
+const { EmbedBuilder } = require("discord.js");
 const Items = require("../../models/Item/Items");
 const Store = require("../../models/Store/Store");
-const User = require("../../models/User/Users.js");
+const User = require("../../models/User/Users");
 const UserItems = require("../../models/Item/UserItems");
 const createErrorEmbed = require("../../utils/embed/errorEmbed");
 const alertEmbedList = require("../../utils/embed/alertEmbedList");
@@ -16,7 +17,11 @@ class StoreManager {
     constructor() {
         if (!StoreManager.instance) {
             StoreManager.instance = this;
+<<<<<<< HEAD
             this.store = null;
+=======
+            this.store = null; // 🔹 Cache for store instance
+>>>>>>> origin/feature/aws-rockie-integracion
         }
         return StoreManager.instance;
     }*/
@@ -28,9 +33,7 @@ class StoreManager {
 
         // Finds or creates a Store
         let store = await Store.findOne();
-        if (!store) {
-            store = await Store.create({ name: "Rocky Store" });
-        }
+        if (!store) store = await Store.create({ name: "Rocky Store" });
 
         this.store = store;
         return store;
@@ -43,10 +46,10 @@ class StoreManager {
                 attributes: ['category'],
                 group: ['category'],
                 raw: true
-            })
+            });
             return categories.map(cat => cat.category) || [];
-        } catch(error){
-            console.log("❌ Error fetching categories from database:", error);
+        } catch (error) {
+            console.error("❌ Error al obtener categorías:", error);
             return [];
         }
     }
@@ -66,7 +69,6 @@ class StoreManager {
     // Get a single item by category and name
     async getItemByCategoryAndName(category, itemName) {
         const store = await this.getStore();
-
         return await Items.findOne({
             where: {
                 category: category, // `category` is already a string
@@ -194,7 +196,7 @@ class StoreManager {
             const ownedItemIds = userOwnedItems.map(ui => ui.itemId);
             console.log("🔍 IDs de artículos que posee el usuario:", ownedItemIds);
 
-            // 🔹 Separate owned and unowned items
+            const ownedItemIds = userOwnedItems.map(ui => ui.itemId);
             const ownedItems = otherItems.filter(i => ownedItemIds.includes(i.id));
             const unownedItems = otherItems.filter(i => !ownedItemIds.includes(i.id));
 

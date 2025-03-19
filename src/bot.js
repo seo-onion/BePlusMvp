@@ -37,7 +37,7 @@ for (const folder of commandFolders) {
   const folderPath = path.join(commandsPath, folder);
   if (!fs.lstatSync(folderPath).isDirectory()) continue;
 
-  const commandFiles = fs.readdirSync(folderPath).filter((file) => file.endsWith(".js"));
+  const commandFiles = fs.readdirSync(folderPath).filter(file => file.endsWith(".js"));
 
   for (const file of commandFiles) {
     const command = require(path.join(folderPath, file));
@@ -49,7 +49,20 @@ for (const folder of commandFolders) {
   }
 }
 
+// 📌 Ejecutar comandos
 client.on(Events.InteractionCreate, async (interaction) => {
+  if (interaction.isAutocomplete()) {
+    const command = client.commands.get(interaction.commandName);
+    if (!command || !command.autocomplete) return;
+
+    try {
+      await command.autocomplete(interaction);
+    } catch (error) {
+      console.error("❌ Error en autocomplete:", error);
+    }
+    return; // ⬅️ Importante para evitar que siga a comandos si era autocomplete
+  }
+
   if (!interaction.isCommand()) return;
 
   const command = client.commands.get(interaction.commandName);
@@ -62,7 +75,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
           description: "Este comando no está permitido en este canal."
         }
     );
-    return interaction.reply({ embeds: [errorEmbed], flags: 64 });
+    return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
   }
   // Check if command is real
   if (!command) {
@@ -99,14 +112,15 @@ client.on(Events.InteractionCreate, async (interaction) => {
     const errorEmbed = createErrorEmbed();
 
     // Respond with an error message if execution fails.
-    if (interaction.replied || interaction.deferred) {
-      return interaction.editReply({ embeds: [errorEmbed], flags: 64 });
+    if (interaction.deferred) {
+      return interaction.editReply({ embeds: [errorEmbed] });
+    } else if (interaction.replied) {
+      return interaction.followUp({ embeds: [errorEmbed], ephemeral: true });
     } else {
-      return interaction.reply({ embeds: [errorEmbed], flags: 64 });
+      return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
     }
   }
 });
-
 
 // Listener to delete no commands messagge in commands channels 
 client.on(Events.MessageCreate, async (message) => {

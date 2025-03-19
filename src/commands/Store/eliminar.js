@@ -9,7 +9,7 @@ const ADMIN = process.env.ADMIN_ROLE;
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("eliminar")
-        .setDescription("Elimina un artículo en la tienda.")
+        .setDescription("Elimina un artículo de la tienda Rocky.")
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addStringOption(option =>
             option.setName("category")
@@ -23,9 +23,10 @@ module.exports = {
         ),
 
     async execute(interaction) {
+        await interaction.deferReply({ ephemeral: true });
+
         const category = interaction.options.getString("category").toLowerCase();
         const itemName = interaction.options.getString("item");
-
         const member = interaction.member;
 
         // Validate if the member has the required roles (ADMIN or DEV)
@@ -50,9 +51,7 @@ module.exports = {
 
             // Find or create the Store
             let store = await Store.findOne();
-            if (!store) {
-                store = await Store.create({ name: "Rocky Store" });
-            }
+            if (!store) store = await Store.create({ name: "Rocky Store" });
 
             // Find the item in the specified category
             const item = await Items.findOne({ where: { name: itemName, category } });
@@ -68,6 +67,9 @@ module.exports = {
             await ItemService.deleteItem(item.id, interaction, category, itemName);
 
 
+            await item.destroy();
+            return await interaction.editReply(`✅ Artículo **${itemName}** eliminado de la categoría **${category}**.`);
+
         } catch (error) {
             console.error("❌ Error deleting the item:", error);
 
@@ -80,3 +82,4 @@ module.exports = {
         }
     }
 };
+
