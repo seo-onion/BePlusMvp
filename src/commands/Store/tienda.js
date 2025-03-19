@@ -4,46 +4,41 @@ const Items = require("../../models/Item/Items.js");
 const createErrorEmbed = require("../../utils/embed/errorEmbed");
 const ListObjectFormat = require("../../utils/ListObjects");
 
-const ITEMS_PER_PAGE = 5; // Maximum number of items to show per page.
+const ITEMS_PER_PAGE = 5;
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("tienda")
         .setDescription("Muestra todos los artículos disponibles en la tienda Rocky."),
 
-    restricted: true, // Restricts the command to specific users or conditions.
+    restricted: true,
 
     async execute(interaction) {
         await interaction.deferReply();
 
         try {
-            await interaction.deferReply();
             const allItems = await Items.findAll({
                 where: {
                     category: {
-                        [Op.ne]: 'badge' // Excludes items categorized as 'badge'.
+                        [Op.ne]: 'badge'
                     }
                 },
                 attributes: ["id", "name", "price", "category"],
                 raw: true,
-                order: [["category", "ASC"], ["price", "ASC"]], // Sorts items by category and price.
+                order: [["category", "ASC"], ["price", "ASC"]],
             });
 
-            // Sends an alert if no items are found in the store.
             if (allItems.length === 0) {
                 return await interaction.editReply("❌ No hay artículos en la tienda actualmente.");
             }
 
-            // Groups items by category.
             let groupedItems = {};
             allItems.forEach(item => {
                 if (!groupedItems[item.category]) groupedItems[item.category] = [];
                 groupedItems[item.category].push(item);
             });
 
-            // Splits items into paginated groups based on ITEMS_PER_PAGE .
             let paginatedItems = [];
-            let currentPage = 0;
             let categories = Object.keys(groupedItems);
 
             for (const category of categories) {
@@ -56,8 +51,6 @@ module.exports = {
                 }
             }
 
-            // Generates an embed for the current page.
-
             let currentPage = 0;
 
             const generateEmbed = (page) => {
@@ -67,17 +60,14 @@ module.exports = {
                     .setDescription("Bienvenido a la **RockyStore** 🏪\nPuedes comprar usando: `/comprar`")
                     .setColor("#FFA501");
 
-                const formattedItems = items.map(item => `${item.name.padEnd(15)} ${item.price} 🪙`).join("\n");
-
                 embed.addFields({
                     name: `📌 ${category.charAt(0).toUpperCase() + category.slice(1)}`,
-                    value: ListObjectFormat(items,"❌ No hay items en la tienda"),
+                    value: ListObjectFormat(items, "❌ No hay items en la tienda"),
                 });
 
                 return embed;
             };
 
-            // Generates navigation buttons for pagination ( ← or → )
             const generateButtons = (page) => {
                 return new ActionRowBuilder().addComponents(
                     new ButtonBuilder()
@@ -93,13 +83,11 @@ module.exports = {
                 );
             };
 
-            // Sends the initial paginated store message.
             const message = await interaction.editReply({
                 embeds: [generateEmbed(currentPage)],
                 components: [generateButtons(currentPage)],
             });
 
-            // Collects button interactions for pagination.
             const collector = message.createMessageComponentCollector({ time: 120000 });
 
             collector.on("collect", async (btn) => {
@@ -107,10 +95,9 @@ module.exports = {
                     return await btn.reply({ content: "❌ No puedes usar estos botones.", ephemeral: true });
                 }
 
-                // Handles pagination button logic.
-                if (buttonInteraction.customId === "prev_page" && currentPage > 0) {
+                if (btn.customId === "prev_page" && currentPage > 0) {
                     currentPage--;
-                } else if (buttonInteraction.customId === "next_page" && currentPage < paginatedItems.length - 1) {
+                } else if (btn.customId === "next_page" && currentPage < paginatedItems.length - 1) {
                     currentPage++;
                 }
 
@@ -120,7 +107,6 @@ module.exports = {
                 });
             });
 
-            // Disables buttons after the collector ends.
             collector.on("end", () => {
                 interaction.editReply({ components: [] }).catch(() => {});
             });
@@ -140,4 +126,3 @@ module.exports = {
         }
     }
 };
-

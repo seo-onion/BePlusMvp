@@ -144,21 +144,9 @@ class UserService {
     const { guildId, userId, roleId } = req;
 
     try {
+      // token to authenticate requests to the Discord API.
       let token = BOT_TOKEN;
-      
-      try {
-        await axios.get(
-          `https://discord.com/api/guilds/${guildId}/members/${userId}`,
-          { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
-        );
-      } catch (error) {
-        if (error.response && error.response.status === 401) {
-          console.log("Token expirado, intentando refrescar...");
-          token = await refreshDiscordToken(userId);
-        } else {
-          throw error;
-        }
-      }
+
 
       const memberResponse = await axios.get(
         `https://discord.com/api/guilds/${guildId}/members/${userId}`,

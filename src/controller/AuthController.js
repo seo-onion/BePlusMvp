@@ -3,16 +3,12 @@ const { getOAuthToken } = require("../services/token/tokenService");
 const { createUser, assignRoleToUser } = require("../services/user/userService");
 const PrivateChannelNotificationService = require("../services/notification/privateNotificationService");
 
-const { getOAuthToken } = require("../services/token/tokenService");
 const UserService = require("../services/user/userService");
-const GoogleFitService  = require("../services/google/fitService");
-const PrivateChannelNotificationService = require("../services/notification/privateNotificationService");
+const GoogleFitService = require("../services/google/fitService");
 const GUILD_ID = process.env.DISCORD_GUILD_ID;
 const VERIFICATED_ROLE = process.env.DISCORD_VERIFICATED_ROLE;
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+
 
 const DISCORD_APPLICATION_ID = process.env.DISCORD_APPLICATION_ID;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
@@ -20,8 +16,8 @@ const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
+const TOKEN_URL=process.env.DISCORD_TOKEN_URL
 
-<<<<<<< HEAD
 // Generates the URL for redirecting the user to Discord's OAuth2 consent screen.
 const discordRedirect = async (req, res) => {
     const authUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_APPLICATION_ID}&response_type=code&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&scope=identify%20email%20guilds%20connections`;
@@ -36,8 +32,7 @@ const discordAuth = async (req, res) => {
     }
 
     try {
-        // Requesting the access token from Discord using the provided authorization code.
-        const tokenUrl = "https://discord.com/api/oauth2/token";
+
         const params = new URLSearchParams({
             client_id: DISCORD_APPLICATION_ID,
             client_secret: DISCORD_CLIENT_SECRET,
@@ -45,8 +40,9 @@ const discordAuth = async (req, res) => {
             grant_type: "authorization_code",
             redirect_uri: DISCORD_REDIRECT_URI,
         });
+        
         // Fetching the authenticated user's information from Discord.
-        const tokenResponse = await getOAuthToken(tokenUrl, params);
+        const tokenResponse = await getOAuthToken(TOKEN_URL, params);
         const { access_token, refresh_token } = tokenResponse;
 
         const userResponse = await axios.get("https://discord.com/api/users/@me", {
@@ -100,45 +96,48 @@ const googleRedirect = async (req, res) => {
 const googleAuth = async (req, res) => {
     const { code, state } = req.query;
 
-  try {
-    // Paso 1: Obtener Token
-    const tokenUrl = "https://discord.com/api/oauth2/token";
-    const params = new URLSearchParams({
-      client_id: DISCORD_CLIENT_ID,
-      client_secret: DISCORD_CLIENT_SECRET,
-      code,
-      grant_type: "authorization_code",
-      redirect_uri: DISCORD_REDIRECT_URI,
-    });
-
     try {
-        // Requesting the access token from Google using the provided authorization code.
+        // Paso 1: Obtener Token
+        const tokenUrl = "https://discord.com/api/oauth2/token";
         const params = new URLSearchParams({
+            client_id: DISCORD_CLIENT_ID,
+            client_secret: DISCORD_CLIENT_SECRET,
             code,
-            client_id: GOOGLE_CLIENT_ID,
-            client_secret: GOOGLE_CLIENT_SECRET,
-            redirect_uri: GOOGLE_REDIRECT_URI,
             grant_type: "authorization_code",
+            redirect_uri: DISCORD_REDIRECT_URI,
         });
 
-        const { access_token, refresh_token } = tokenResponse;
+        try {
+            // Requesting the access token from Google using the provided authorization code.
+            const params = new URLSearchParams({
+                code,
+                client_id: GOOGLE_CLIENT_ID,
+                client_secret: GOOGLE_CLIENT_SECRET,
+                redirect_uri: GOOGLE_REDIRECT_URI,
+                grant_type: "authorization_code",
+            });
 
-        const response = await getOAuthToken(tokenUrl, params);
-        const { access_token, refresh_token } = response;
 
-       // Adding Google Fit authentication data to the user profile
-        const authUser = await GoogleFitService.addGoogleAuth({
-            token: access_token,
-            refreshToken: refresh_token,
-            userId: state,
-        });
 
-        // Sending a private notification confirming successful Google Fit linking.
-        PrivateChannelNotificationService.sendPrivateChannelNotification(state, "Vinculado exitosamente con Google Fit");
-        res.render("response", authUser);
+            const response = await getOAuthToken(tokenUrl, params);
+            const { access_token, refresh_token } = response;
 
-    } catch (error) {
-        console.error("❌ Error en la autenticación con Google:", error);
-        res.status(500).send("Error al autenticar con Google.");
+            // Adding Google Fit authentication data to the user profile
+            const authUser = await GoogleFitService.addGoogleAuth({
+                token: access_token,
+                refreshToken: refresh_token,
+                userId: state,
+            });
+
+            // Sending a private notification confirming successful Google Fit linking.
+            PrivateChannelNotificationService.sendPrivateChannelNotification(state, "Vinculado exitosamente con Google Fit");
+            res.render("response", authUser);
+
+        } catch (error) {
+            console.error("❌ Error en la autenticación con Google:", error);
+            res.status(500).send("Error al autenticar con Google.");
+        }
+    } catch (error){
+        console.error(error)
     }
-};
+}

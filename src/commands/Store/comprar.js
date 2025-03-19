@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require("discord.js");
 const storeInstance = require("../../services/Store/storeService");
-const createErrorEmbed = require("../../utils/errorEmbed");
+const createErrorEmbed = require("../../utils/embed/errorEmbed");
 
 let categoryChoices = [];
 

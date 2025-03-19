@@ -2,7 +2,7 @@
 const { SlashCommandBuilder } = require("discord.js");
 const Items = require("../../models/Item/Items");
 const Store = require("../../models/Store/Store");
-const createAlertEmbed = require("../../utils/alertEmbed");
+const createAlertEmbed = require("../../utils/embed/alertEmbed");
 const s3Service = require("../../services/aws/s3Service"); // ✅ S3 service importado para listar archivos
 
 const ROLE_ADMIN = process.env.ADMIN_ROLE;

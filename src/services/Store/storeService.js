@@ -1,3 +1,5 @@
+const Items = require("../../models/Item/Items")
+
 class StoreManager {
     // It uses Singleton to create a single Store
     /*

@@ -1,9 +1,9 @@
 const path = require('path');
 const dotenv = require('dotenv');
+
 // Load .env production or development
 const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development';
 dotenv.config({ path: path.resolve(__dirname, `../config/dotenv/${envFile}`) });
-
 // Load global environment variables
 dotenv.config({ path: path.resolve(__dirname, '../config/dotenv/.env') });
 
@@ -21,7 +21,7 @@ const {
   googleAuth,
 } = require("./controller/AuthController");
 
-const { editUser } = require("./services/usear/userService");
+const { editUser } = require("./services/user/userService");
 
 // View settings
 app.set("views", path.join(__dirname, "./views"));

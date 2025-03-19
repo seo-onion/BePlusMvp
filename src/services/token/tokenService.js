@@ -15,8 +15,8 @@ exports.getOAuthToken = async (tokenUrl, params) => {
         });
         return response.data;
     } catch (error) {
-        console.error("Error en al obtener el token:", error.response?.data || error.message);
-        throw new Error("Error en al obtener el token:", error.response?.data || error.message);
+        console.error("Error getting token: ", error.response?.data || error.message);
+        throw new Error("Error getting token: ", error.response?.data || error.message);
     }
 };
 
@@ -26,12 +26,12 @@ exports.refreshGoogleToken = async (userId) => {
     const auth = await Auth.findOne({ where: { userId } });
 
     if (!auth || !auth.googleRefreshToken) {
-        console.error("Id/Token no encontrado", error.response?.data || error.message);
-        throw new Error("Id/Token no encontrado");
+        console.error("Id/Token not found", error.response?.data || error.message);
+        throw new Error("Id/Token not found");
     }
 
     try {
-        console.log("Obteniendo nuevo token");
+        console.log("Getting a new token");
 
         const response = await axios.post("https://oauth2.googleapis.com/token", null, {
             params: {
@@ -57,16 +57,16 @@ exports.refreshGoogleToken = async (userId) => {
 
 // Refreshes the Discord OAuth token using the stored refresh token for the specified user.
 exports.refreshDiscordToken = async (userId) => {
-    console.log(`El token de discord del usuario ${userId} expiró, se ejecutó refreshDiscordToken()`);
+    console.log(`The Discord token for user ${userId} has expired, refreshDiscordToken() was executed`);
     const auth = await Auth.findOne({ where: { userId } });
 
     if (!auth || !auth.discordRefreshToken) {
-        console.error("Id invalido o no se encontró un refresh token para Discord", error.response?.data || error.message);
-        throw new Error("Id/token no encontrado");
+        console.error("Invalid ID or no refresh token found for Discord", error.response?.data || error.message);
+        throw new Error("Id/token not found");
     }
 
     try {
-        console.log("Obteniendo nuevo token");
+        console.log("getting a new token");
         const response = await axios.post("https://discord.com/api/oauth2/token", null, {
             params: {
                 client_id: DISCORD_CLIENT_ID,
@@ -81,12 +81,12 @@ exports.refreshDiscordToken = async (userId) => {
 
         auth.update({ token: access_token });
 
-        console.log("✅ Nuevo token obtenido y guardado:", access_token);
+        console.log("New token obtained and saved", access_token);
         return access_token;
 
     } catch (error) {
-        console.error("Error al refrescar token de Discord:", error.response?.data || error.message);
-        throw new Error("No se pudo refrescar el token de Discord.");
+        console.error("Error refreshing Discord token: ", error.response?.data || error.message);
+        throw new Error("Failed to refresh Discord token.");
     }
 };
 
