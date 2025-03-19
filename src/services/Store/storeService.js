@@ -1,27 +1,10 @@
-const { EmbedBuilder } = require("discord.js");
-const Items = require("../../models/Item/Items");
-const Store = require("../../models/Store/Store");
-const User = require("../../models/User/Users");
-const UserItems = require("../../models/Item/UserItems");
-const createErrorEmbed = require("../../utils/embed/errorEmbed");
-const alertEmbedList = require("../../utils/embed/alertEmbedList");
-const ListObjectsFormat = require("../../utils/ListObjects");
-const successEmbed = require("../../utils/embed/successEmbed");
-const EconomyService = require("../../services/item/economyService.js");
-const userItemsService = require("../../services/user/userItemsService");
-const ItemService = require("../../services/item/ItemService");
-
 class StoreManager {
     // It uses Singleton to create a single Store
     /*
     constructor() {
         if (!StoreManager.instance) {
             StoreManager.instance = this;
-<<<<<<< HEAD
-            this.store = null;
-=======
             this.store = null; // 🔹 Cache for store instance
->>>>>>> origin/feature/aws-rockie-integracion
         }
         return StoreManager.instance;
     }*/
@@ -39,9 +22,9 @@ class StoreManager {
         return store;
     }
 
-    async getCategories(){
+    async getCategories() {
         // Tries to return all the categories from the Items Table
-        try{
+        try {
             const categories = await Items.findAll({
                 attributes: ['category'],
                 group: ['category'],
@@ -84,7 +67,7 @@ class StoreManager {
         const store = await this.getStore();
 
         // Finds the Item by the category and the name set by the User
-        const item = await this.getItemByCategoryAndName(category,itemName);
+        const item = await this.getItemByCategoryAndName(category, itemName);
         console.log("🛒 Item encontrado en DB:", item ? item.dataValues : "❌ No encontrado");
 
         // Check if the category of the Item exists
@@ -96,16 +79,16 @@ class StoreManager {
 
             // If the category exists it Fetch all items in the category
             if (categoryExists) {
-                const categoryItems = await ItemService.getAllItemsByCategory(category,store,["name", "price"]) || [];
+                const categoryItems = await ItemService.getAllItemsByCategory(category, store, ["name", "price"]) || [];
 
                 return {
                     success: false,
                     embed: alertEmbedList("⚠️ Artículo No Encontrado",
                         `El artículo **${itemName}** no existe en la categoría **${category}**, pero aquí \n
-                                        están los artículos disponibles en esa categoría:`,
+                        están los artículos disponibles en esa categoría:`,
                         [{
                             name: `📂 Artículos en ${category}`,
-                            value: ListObjectsFormat(categoryItems,"❌ No hay artículos en esta categoría."),
+                            value: ListObjectsFormat(categoryItems, "❌ No hay artículos en esta categoría."),
                         }]
                     ),
                 };
@@ -152,7 +135,7 @@ class StoreManager {
         // If the price of the Item is greater than the User's RockyCoins
         if (user.rockyCoins < item.price) {
             // Fetch all available store items
-            const allStoreItems = await ItemService.getAllItemsByCategory(category,store);
+            const allStoreItems = await ItemService.getAllItemsByCategory(category, store);
 
             // 🔹 Get all items the user owns
             const userOwnedItems = await userItemsService.getAllItemsByUser(userId);
@@ -187,7 +170,7 @@ class StoreManager {
         // If the user has Items
         if (existingPurchase) {
             // Fetch all items in the same category
-            const otherItems = await ItemService.getAllItemsByCategory(category,store);
+            const otherItems = await ItemService.getAllItemsByCategory(category, store);
 
             // 🔹 Get all items the user owns
             const userOwnedItems = await userItemsService.getAllItemsByUser(userId);
@@ -196,7 +179,6 @@ class StoreManager {
             const ownedItemIds = userOwnedItems.map(ui => ui.itemId);
             console.log("🔍 IDs de artículos que posee el usuario:", ownedItemIds);
 
-            const ownedItemIds = userOwnedItems.map(ui => ui.itemId);
             const ownedItems = otherItems.filter(i => ownedItemIds.includes(i.id));
             const unownedItems = otherItems.filter(i => !ownedItemIds.includes(i.id));
 
@@ -217,7 +199,7 @@ class StoreManager {
                         },
                         {
                             name: "🛑 Accesorios que ya posees",
-                            value: ListObjectsFormat(ownedItems,"No tienes otros accesorios en esta categoría."),
+                            value: ListObjectsFormat(ownedItems, "No tienes otros accesorios en esta categoría."),
                             inline: true
                         }
                     ]
@@ -229,7 +211,7 @@ class StoreManager {
         await user.save();
 
         // Creates a relation UserItems (The User has one more item)
-        await userItemsService.createUserItems(userId,item.id);
+        await userItemsService.createUserItems(userId, item.id);
 
         // Creates a Transaction withe ProductID and the price of the product
         await EconomyService.createTransaction(userId, item.price, "compra", item.id);
