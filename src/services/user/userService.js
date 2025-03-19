@@ -1,191 +1,196 @@
 const axios = require('axios');
-const { refreshDiscordToken } = require("../token/tokenService");
-const Sequelize = require("sequelize");
+const { Op } = require('sequelize'); // To do postgress operations
 const Users = require('../../models/User/Users');
 const Auth = require('../../models/User/Auth');
 const Profile = require('../../models/User/Profile');
-const ChannelNotificationService = require('../notification/channelNotificationService');
 
-const GENERAL_CHANNEL = process.env.DISCORD_COMMAND_CHANNEL;
-const COMMAND_CHANNEL = process.env.DISCORD_ADMIN_COMMAND_CHANNEL;
-const TESTER = process.env.DISCORD_TESTER_ROLE;
-const VERIFIED = process.env.DISCORD_VERIFICATED_ROLE;
-const NO_VERIFIED = process.env.DISCORD_NOT_VERIFICATED_ROLE;
-const GUILD_ID = process.env.DISCORD_GUILD_ID;
-const BOT_TOKEN = process.env.DISCORD_TOKEN
 
 class UserService {
 
+  // get user by id or email
   static async getUser(identifier) {
     try {
-      return await Users.findOne({
+      const user = await Users.findOne({
         where: {
-          [Sequelize.Op.or]: [{userId: identifier}, {email: identifier}],
-          include: [Auth, Profile]
+          [Op.or]: [
+            { userId: identifier },
+            { email: identifier },
+          ],
         },
+        include: [
+          { model: Auth },
+          { model: Profile },
+        ],
       });
+
+      return user || null;
     } catch (error) {
-      console.error("Error al obtener el usuario:", error.message);
+      console.error("Error to obtain user: ", error.message);
       return null;
     }
   }
 
-  static async getAllUser() {
+  // get all users
+  static async getAllUsers() {
     try {
-      return await Users.findAll({
+      const users = await Users.findAll({
         include: [Auth, Profile],
       });
+
+      return users.length > 0 ? users : null;
+
     } catch (error) {
-      console.error("Error al obtener usuarios:", error.message);
+      console.error("Error to obtain user: ", error.message);
       return null;
     }
   }
 
+  //create new users
   static async createUser(req) {
     try {
       const { userId, email, token, refreshToken } = req;
 
-      if (!userId || !email || !token || !refreshToken) { return null }
+      // Validate input data
+      if (!userId || !email || !token || !refreshToken) {
+        console.error("Missing parameters: userId, email, token or refreshToken is undefined. ")
+        return null;
+      }
 
-      const user = await this.getUser(userId);
+      // Check if the user already exists
+      const existingUser = await this.getUser(userId);
+      if (existingUser) {
+        console.error("user already created")
+        return null;
+      }
 
-      if (user) { return null }
-
+      // Create the new user with Auth and Profile associations
       const newUser = await Users.create(
         {
-          userId: userId,
-          email: email,
+          userId,
+          email,
           Auth: {
-            userId: userId,
-            token: token,
-            refreshToken: refreshToken,
-          },
+            userId,
+            token,
+            refreshToken,},
           Profile: {
-            userId: userId,
-          },
+            userId,},
         },
-        {
-          include: [Auth, Profile],
-        }
+        {include: [Auth, Profile],}
       );
 
-      return newUser;
+      // Return the new user
+      return newUser ? newUser : null;
+
     } catch (error) {
-      console.error("Error al crear usuario:", error.message);
+      console.error("Error creating user:", error.message);
       return null;
     }
   }
 
-  static async editUser(req, res) {
+
+  //edit a user by id or email
+  static async editUser(req) {
     try {
-      const { userid, token, ...updateFields } = req.body;
+      const { identifier, ...updateFields } = req;
 
-      let user = await this.getUser(userid);
+      // Get user
+      const user = await this.getUser(identifier);
 
-      if (token !== process.env.TOKEN) {
-        return res.render("formulario", { mensaje: "Security token incorrecto", user: null });
+      // Validate user exist
+      if (!user) {
+        console.error("User not found");
+        return null;
       }
 
-      if (user && user.Profile) {
-        await user.Profile.update(updateFields);
-        console.log("Se hizo el update");
-        await this.assignRoleToUser({
-          guildId: GUILD_ID,
-          userId: userid,
-          roleId: TESTER_ROLE,
-        });
-
-        await ChannelNotificationService.sendChannelNotification(
-          `✅ ${updateFields.name || 'El usuario'} ha sido validado exitosamente. 🎉`,
-          `un saludo a nuestro nuevo usuario  <@${updateFields.nickname || userid}>`
-        );
-
-        return res.render("formulario", { mensaje: "Usuario editado correctamente", user });
+      // Update the fields
+      const models = [user, user.Auth, user.Profile];
+      for (const model of models) {
+        if (model) {
+          await model.update(updateFields).catch(() => { });
+        }
       }
 
-      return res.render("formulario", { mensaje: "El usuario no existe en la base de datos", user });
+      return user;
     } catch (error) {
-      console.error("Error al actualizar usuario:", error);
-      return res.render("formulario", { mensaje: "Error en el servidor", user: null });
-    }
-  }
-
-  static async getUserProfile(userId) {
-    try {
-      const profile = await Profile.findByPk(userId);
-      return profile;
-    } catch {
-      console.error("No se encontró al usuario");
+      console.error("Error to update user:", error);
       return null;
     }
   }
 
+
+  //delete a user by id or email
   static async deleteUser(identifier) {
     try {
-      const user = await Users.findOne({
-        where: {
-          [Sequelize.Op.or]: [{ userId: identifier }, { email: identifier }],
-        },
-      });
+      const user = await this.getUser(identifier);
 
       if (!user) {
-        console.log(`No se encontró el usuario con identificador ${identifier}`);
-        return;
+        console.error("User not found");
+        return null;
       }
 
       await user.destroy();
-      console.log(`Se eliminó el usuario ${identifier}`);
+      return user;
     } catch (error) {
-      console.error("Error al eliminar usuario:", error.message);
+      console.error("Error deleting user:", error.message);
+      return null;
     }
   }
 
+  //Assing a role to user by id
   static async assignRoleToUser(req) {
-    const { guildId, userId, roleId } = req;
+    const GUILD_ID = process.env.DISCORD_GUILD_ID;
+    const BOT_TOKEN = process.env.DISCORD_TOKEN;
+    const { userId, roleId } = req;
+
+    const user = await this.getUser(userId);
+    if (!user) {
+      console.error("user not found");
+      return false;
+    }
+
+    // Parameter validation
+    if (!userId || !roleId) {
+      console.error("Missing parameters: userId or roleId is undefined.");
+      return false;
+    }
 
     try {
-      let token = BOT_TOKEN;
-      
-      try {
-        await axios.get(
-          `https://discord.com/api/guilds/${guildId}/members/${userId}`,
-          { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
-        );
-      } catch (error) {
-        if (error.response && error.response.status === 401) {
-          console.log("Token expirado, intentando refrescar...");
-          token = await refreshDiscordToken(userId);
-        } else {
-          throw error;
-        }
-      }
+      let memberResponse;
 
-      const memberResponse = await axios.get(
-        `https://discord.com/api/guilds/${guildId}/members/${userId}`,
-        { headers: { Authorization: `Bot ${token}` } }
-      );
+      try {
+        memberResponse = await axios.get(
+          `https://discord.com/api/guilds/${GUILD_ID}/members/${userId}`,
+          { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
+      } catch (error) {
+        console.error("Cannot assing role to user: ", error)
+        return false
+      }
 
       const userRoles = memberResponse.data.roles;
+
+      // verified id role already assigned
       if (userRoles.includes(roleId)) {
-        console.log(`✅ El usuario ${userId} ya tiene el rol ${roleId}.`);
-        return { success: true, message: "El usuario ya tiene el rol." };
+        console.log(`User ${userId} already has role ${roleId}`);
+        return true;
       }
 
+      // Assign role
       await axios.put(
-        `https://discord.com/api/guilds/${guildId}/members/${userId}/roles/${roleId}`,
+        `https://discord.com/api/guilds/${GUILD_ID}/members/${userId}/roles/${roleId}`,
         {},
         {
           headers: {
-            Authorization: `Bot ${token}`,
+            Authorization: `Bot ${BOT_TOKEN}`,
             "Content-Type": "application/json",
           },
         }
       );
 
-      return { success: true, message: "Rol asignado exitosamente." };
+      return true
+
     } catch (error) {
-      console.error("❌ Error al asignar el rol:", error.response?.data || error.message);
-      throw new Error(error.response?.data || error.message);
+      console.error("Error assigning role:", error.response?.data || error.message);
+      return false;
     }
   }
 

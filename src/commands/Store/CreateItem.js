@@ -8,7 +8,7 @@ const ItemService = require("../../services/item/ItemService");
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("item")
+        .setName("item1")
         .setDescription("Añade o actualiza un artículo en la tienda.")
         .addStringOption(option =>
             option.setName("category")

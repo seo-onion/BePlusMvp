@@ -22,7 +22,7 @@ loadCategories();
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("comprar")
+        .setName("comprar1")
         .setDescription("Compra un artículo de la tienda Rocky.")
         .addStringOption(option =>
             option.setName("category")

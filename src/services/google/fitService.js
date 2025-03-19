@@ -10,36 +10,7 @@ const { addRockyCoins } = require("../item/economyService");
 const { Op } = require("sequelize");
 
 class GoogleFitService {
-    static async addGoogleAuth(req) {
-        try {
-            const { token, refreshToken, userId } = req;
 
-            if (!token || !refreshToken || !userId) {
-                return { success: false, message: "Faltan datos requeridos" };
-            }
-
-            const auth = await Auth.findOne({ where: { userId: userId } });
-
-            if (!auth) return { success: false, message: "El usuario no existe" };
-
-            await auth.update({
-                googleToken: token,
-                googleRefreshToken: refreshToken,
-            });
-
-            return {
-                success: true,
-                message: "Vinculación realizada correctamente con Google Fit",
-                auth,
-            };
-        } catch (error) {
-            console.error("Error al agregar usuario de Google Fit:", error);
-            return {
-                success: false,
-                message: "No se ha podido vincular con Google Fit",
-            };
-        }
-    }
 
     static async registerSteps(req) {
         const { userId, steps } = req;
