@@ -55,8 +55,10 @@ describe("Comando /yo", () => {
 
   });
 
-  //Test 2: Right Answer Test
+  //Test 2: Don't have a profile
   test("Debe responder con un error si no se encuentra el perfil", async () => {
+
+    const date = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
 
     interaction = {
       commandName: "yo",
@@ -73,16 +75,9 @@ describe("Comando /yo", () => {
         },
     });
 
-    expect(user).not.toBeNull();
+    console.log(user);
 
-    //Should be with a real user in the database
-    const mockProfile = {
-      name: "UsuarioEjemplo",
-      nickname: "Ejemplo123",
-      description: "Este es un perfil de prueba.",
-      age: 20,
-      gender: "Masculino",
-    };
+    expect(user).not.toBeNull();
 
     await execute(interaction);
 
@@ -95,7 +90,10 @@ describe("Comando /yo", () => {
     expect(embed.data.title).toEqual("No se encontró tu perfil");
     expect(embed.data.fields).toEqual(
       [{"inline": true, "name": "🚨", "value": expect.stringMatching(/\*\*Por favor, contacta con un\s+administrador o repórtalo\s+para resolver este problema\s+lo antes posible\.\*\*/m)},
-        {"inline": true, "name": "📅", "value": "18 de marzo de 2025"}]
+        {"inline": true, "name": "📅", "value": date}]
     );
   });
+
+  //Test 3: Response with the user profile
+
 });
