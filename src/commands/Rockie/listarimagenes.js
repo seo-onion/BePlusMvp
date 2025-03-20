@@ -30,7 +30,6 @@ module.exports = {
                     { name: "Bocas", value: "bocas/" }
                 )
         ),
-
     async execute(interaction) {
         await interaction.deferReply({ ephemeral: true });
 

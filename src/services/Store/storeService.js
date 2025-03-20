@@ -1,17 +1,7 @@
 const Items = require("../../models/Item/Items")
-
+const TransactionService = require("../item/transactionServices")
 class StoreManager {
-    // It uses Singleton to create a single Store
-    /*
-    constructor() {
-        if (!StoreManager.instance) {
-            StoreManager.instance = this;
-            this.store = null; // 🔹 Cache for store instance
-        }
-        return StoreManager.instance;
-    }*/
 
-    // Get or create the store once (caching mechanism)
     async getStore() {
         // Return cached store if available
         if (this.store) return this.store;
@@ -216,7 +206,12 @@ class StoreManager {
         await userItemsService.createUserItems(userId, item.id);
 
         // Creates a Transaction withe ProductID and the price of the product
-        await EconomyService.createTransaction(userId, item.price, "compra", item.id);
+        await TransactionService.createTransaction({
+            userId: userId,
+            amount: item.price,
+            type: "compra",
+            productId: item.id
+        });
 
         return {
             success: true,

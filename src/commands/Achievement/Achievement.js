@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const AchievementGetService = require("../../services/achievement/achievementGetService");
-const { getUserAchievementById, getAchievementByName } = require("../../services/achievement/achievementService");
-const { addRockyGems } = require("../../services/item/economyService");
+const AchievementService = require("../../services/achievement/achievementService")
+const economyService = require("../../services/item/economyService")
 const alertEmbed = require("../../utils/embed/alertEmbed");
 const createErrorEmbed = require("../../utils/embed/errorEmbed");
 
@@ -9,7 +9,6 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("desbloquear")
     .setDescription("Desbloquea un logro en el sistema de recompensas"),
-
   restricted: true, // Restricts this command for specific users (like Beta Testers).
 
   async execute(interaction) {
@@ -32,11 +31,11 @@ module.exports = {
 
       for (const achievement of achievements) {
         try {
-          const achievementData = await getAchievementByName(achievement.name);
+          const achievementData = await AchievementService.getAchievementByName(achievement.name);
           const achievementId = achievementData.id;
 
           // Checks if the user already has the achievement.
-          const existingAchievement = await getUserAchievementById({ userId, achievementId });
+          const existingAchievement = await AchievementService.getUserAchievementById({ userId, achievementId });
 
           if (!existingAchievement) {
             const unlockedAchievement = await achievement.method();
@@ -49,7 +48,7 @@ module.exports = {
               });
 
               // Adds Rocky Gems to the user as a reward for unlocking the achievement.
-              await addRockyGems({ userId, quantity: unlockedAchievement.point });
+              await economyService.addRockyGems({ userId, quantity: unlockedAchievement.point });
 
               console.log(`✅ Logro desbloqueado: ${unlockedAchievement.name}`);
             } else {

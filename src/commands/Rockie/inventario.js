@@ -9,7 +9,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName("inventario")
         .setDescription("Muestra tu inventario de accesorios y permite ver a Rockie."),
-
+        restricted: true, // Restricts this command for specific users (like Beta Testers).
     async execute(interaction) {
         const userId = interaction.user.id;
         await interaction.deferReply({ ephemeral: true });

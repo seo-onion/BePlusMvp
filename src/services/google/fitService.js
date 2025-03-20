@@ -1,42 +1,55 @@
 const axios = require('axios');
-const Auth = require("../../models/User/Auth");
-const { Users } = require("../../models/User/Users");
-const Transaction = require("../../models/Item/Transaction");
+const UserService = require("../../services/user/userService");
 const UserSteps = require("../../models/Fit/UserSteps");
 const DateHelper = require("../../utils/dateHelper");
-const Items = require("../../models/Item/Items");
 const { refreshGoogleToken } = require("../token/tokenService");
-const { addRockyCoins } = require("../item/economyService");
-const { Op } = require("sequelize");
+const EconomyService = require("../item/economyService");
+const { error } = require('console');
+const TransactionService = require('../item/transactionServices');
 
 class GoogleFitService {
 
-
     static async registerSteps(req) {
-        const { userId, steps } = req;
-        const { today } = DateHelper.getTodayDate();
-        const registro = await UserSteps.findOne({ where: { userId, date: today } });
+        try {
+            const { userId, steps } = req;
+            const { today } = DateHelper.getTodayDate();
+            const registro = await UserSteps.findOne({ where: { userId, date: today } });
 
-        if (registro) {
-            await registro.update({ steps: steps });
-            console.log("Aumentando el número de pasos");
-        } else {
-            await UserSteps.create({ userId, steps, date: today });
-            console.log("Registrando pasos");
+            if (registro) {
+                await registro.update({ steps: steps });
+                console.log("Increasing the number of steps");
+            } else {
+                await UserSteps.create({ userId, steps, date: today });
+                console.log("Recording steps");
+            }
+
+            return true
+        } catch {
+            console.error("Error recording steps ", error)
+            return false
         }
     }
 
     static async getDaySteps(req) {
-        const { userId, date } = req;
-
-        const totalSteps = await UserSteps.findOne({ where: { userId, date: date } });
-
-        return totalSteps || null;
+        try {
+            const { userId, date } = req;
+            const totalSteps = await UserSteps.findOne({ where: { userId, date: date } });
+            return totalSteps || null;
+        } catch (error) {
+            console.error("Error fetching day steps ", error)
+            return null
+        }
     }
 
     static async getAccumulatedSteps(userId) {
-        const result = await UserSteps.sum("steps", { where: { userId } });
-        return result || null;
+        try {
+            const result = await UserSteps.sum("steps", { where: { userId } });
+            return result || null;
+        } catch (error) {
+            console.error("Error fetching accumulated steps ", error)
+            return null
+        }
+
     }
 
     static async getSteps(req) {
@@ -44,14 +57,13 @@ class GoogleFitService {
 
         try {
             if (!startTimeMillis || !endTimeMillis || !userId) {
-                return { success: false, message: "Faltan datos requeridos" };
+                return null;
             }
 
-            const auth = await Auth.findOne({ where: { userId: userId } });
 
-
-            if (!auth) {
-                return { success: false, message: "El usuario no existe" };
+            const user = await UserService.getUser(userId);
+            if (!user) {
+                return null;
             }
 
             let response;
@@ -65,7 +77,7 @@ class GoogleFitService {
                         startTimeMillis,
                         endTimeMillis,
                     },
-                    { headers: { 'Authorization': `Bearer ${auth.googleToken}`, 'Content-Type': 'application/json' } }
+                    { headers: { 'Authorization': `Bearer ${user.Auth.googleToken}`, 'Content-Type': 'application/json' } }
                 );
             } catch {
                 const newToken = await refreshGoogleToken(userId);
@@ -96,33 +108,23 @@ class GoogleFitService {
 
     static async claimRockyCoins(userId) {
         try {
-            console.log("Obteniendo las recompensas del día anterior");
-            const now = new Date();
-            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-            const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            console.log("Getting the rewards from the previous day");
+            
 
-            const itemId = await Items.findOne({ where: { name: "RockyCoin" } });
-            const lastClaim = await Transaction.findOne({
-                where: {
-                    userId: userId,
-                    type: "reward",
-                    productId: itemId.id,
-                    createdAt: { [Op.between]: [startOfDay, endOfDay] },
-                },
-            });
-
+            const lastClaim = await TransactionService.getLastDailyReward(userId)
+            console.log(lastClaim)
             if (lastClaim) {
-                console.log("Recompensa ya obtenida");
-                return null;
+                console.log("Reward already obtained");
+                return null;    
             }
 
             const { startTimeMillis, endTimeMillis } = DateHelper.getYesterday();
 
-            const newClaim = await this.getSteps({ startTimeMillis, endTimeMillis, userId });
-            const rockyCoinsObtained = Math.floor(newClaim / 50);
-            await addRockyCoins({ userId: userId, quantity: rockyCoinsObtained });
+            const newClaim = await this.getSteps({ startTimeMillis: startTimeMillis, endTimeMillis: endTimeMillis, userId: userId });
 
-            console.log("Rockycoins reclamadas correctamente");
+            const rockyCoinsObtained = Math.floor(newClaim / 50);
+            await EconomyService.addRockyCoins({ userId, quantity: rockyCoinsObtained });
+            console.log("Rockycoins successfully claimed");
             return rockyCoinsObtained;
 
         } catch (error) {

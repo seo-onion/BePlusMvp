@@ -21,7 +21,7 @@ const {
   googleAuth,
 } = require("./controller/AuthController");
 
-const { editUser } = require("./services/user/userService");
+const UserController = require("./controller/UserController");
 
 // View settings
 app.set("views", path.join(__dirname, "./views"));
@@ -44,7 +44,8 @@ app.get("/form", async (req, res) => {
 });
 
 // Route to handle user data updates from Discord.
-app.post("/api/auth/discord/update-user", editUser);
+app.post("/api/auth/discord/update-user", UserController.updateUser);
+
 
 // Execute deploy-commands before starting the server
 async function deployCommands() {

@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, AttachmentBuilder, EmbedBuilder } = require("discord.js");
 const rockieService = require("../../services/rockie/rockieService");
-const {Users} = require("../../models/User/Users");
+const UserServices = require("../../services/user/userService")
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -11,6 +11,7 @@ module.exports = {
      * Ejecuta el comando /rockie.
      * @param {import("discord.js").ChatInputCommandInteraction} interaction
      */
+    restricted: true, // Restricts this command for specific users (like Beta Testers).
     async execute(interaction) {
         const userId = interaction.user.id;
         const username = interaction.user.username;
@@ -43,7 +44,7 @@ module.exports = {
             }
 
             // Obtener datos del usuario
-            const user = await Users.findByPk(userId);
+            const user = await UserServices.getUser(userId);
             console.log(`✅ Usuario encontrado en BD: ${user ? user.userId : "No encontrado"}`);
 
             // Checks if the user exists in the database.

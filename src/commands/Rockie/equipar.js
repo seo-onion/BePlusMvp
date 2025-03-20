@@ -13,7 +13,7 @@ module.exports = {
                 .setDescription("Nombre del accesorio que deseas equipar.")
                 .setRequired(true)
         ),
-
+        restricted: true, // Restricts this command for specific users (like Beta Testers).
     /**
      * Executes the command to equip an accessory on Rockie.
      * @param {ChatInputCommandInteraction} interaction - The interaction object.

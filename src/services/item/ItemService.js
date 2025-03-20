@@ -1,22 +1,18 @@
-const { Sequelize } = require('sequelize');
-const axios = require('axios');
+const { Op } = require("sequelize");
 const Items = require('../../models/Item/Items');
-const ChannelNotificationService = require('../notification/channelNotificationService');
-
-const BOT_TOKEN = process.env.DISCORD_TOKEN;
 
 class ItemService {
 
-    // Get a Single Item by ID or Name
+    // Get a item by ID or Name
     static async getItem(identifier) {
         try {
             return await Items.findOne({
                 where: {
-                    id: identifier, // Usamos el parámetro correctamente
-                },
+                    [Op.or]: [{ id: identifier }, { name: identifier }],
+                }
             });
         } catch (error) {
-            console.error("❌ Error al obtener el ítem:", error.message);
+            console.error("Error to get item ", error.message);
             return null;
         }
     }
@@ -26,19 +22,19 @@ class ItemService {
         try {
             return await Items.findAll();
         } catch (error) {
-            console.error("❌ Error al obtener los ítems:", error.message);
+            console.error("Error to get items", error.message);
             return null;
         }
     }
 
-    // ✅ Create an Item
-    static async createItem(itemData) {
+    // Create an Item
+    static async createItem(req) {
         try {
 
-            // FALTA ARREGLAR LO DE LA LOGICA DEL STORE
-            const { name, price, category, storeId } = itemData;
+            const { name, price, category, storeId } = req;
             if (!name || !price || !category || storeId ) {
-                throw new Error("Faltan datos requeridos para crear el item.");
+                console.error("Required data is missing to create the item.")
+                return null 
             }
 
             return await Items.create({
@@ -50,73 +46,60 @@ class ItemService {
                 badge: "coin",
             });
         } catch (error) {
-            console.error("❌ Error al crear el ítem:", error.message);
+            console.error("Error creating item:", error.message);
             return null;
         }
     }
 
-    // ✅ Update an Item
-    static async updateItemPrice(id, price) {
+    // Update an Item
+    static async updateItem(req) {
         try {
-            const item = await Items.update(
-                { price }, // Se actualiza solo el campo `price`
-                { where: { id } } // Se filtra por ID
-            );
 
-            if (!item[0]) { // `update` devuelve un array con el número de filas afectadas
-                console.error(`❌ No se encontró el ítem con ID: ${id}`);
+            const { identifier, ...updateFields } = req;
+            
+            if (!identifier || Object.keys(updateFields).length === 0) {
+                console.error("Error: An identifier and at least one field are required to update.");
                 return null;
             }
 
-            return item; // Retorna el resultado de la actualización
+            const item = await this.getItem(identifier);
+
+            if (!item) {
+                console.error(`Item with ID or Name: ${identifier} not found`);
+                return null;
+            }
+
+            // Update fields
+            await item.update(updateFields);
+
+            return item;
 
         } catch (error) {
-            console.error("❌ Error al actualizar el ítem:", error.message);
+            console.error("Error updating item:", error.message);
             return null;
         }
     }
 
-    // ✅ Delete an Item
-    static async deleteItem(identifier, interaction, category, itemName) {
+    // Delete an Item
+    static async deleteItem(req) {
+        const {identifier, interaction, category, itemName} = req
         try {
-            await interaction.deferReply();
+
             const item = await this.getItem(identifier);
             if (!item) {
-                return await interaction.editReply(`❌ No se encontró el artículo **${itemName}** en la categoría **${category}**.`);
+                console.error(`Item not found`);
+                return null;
             }
 
             await item.destroy();
+            return item;
 
-            console.log(`✅ Ítem eliminado: ${identifier}`);
-            return await interaction.editReply(`✅ En la categoría **${category}**, el artículo **${itemName}** ha sido eliminado correctamente.`);
         } catch (error) {
-            console.error("❌ Error al eliminar el ítem:", error.message);
-            return await interaction.editReply(`❌ Ocurrió un error al intentar eliminar el artículo **${itemName}** en la categoría **${category}**.`);
+            console.error("Error deleting item:", error.message);
+            return null;
         }
     }
 
-
-    // ✅ Assign Role to User (Example Function, if relevant)
-    static async assignRoleToUser(req) {
-        const { guildId, userId, roleId } = req;
-
-        try {
-            const response = await axios.put(
-                `https://discord.com/api/guilds/${guildId}/members/${userId}/roles/${roleId}`,
-                {},
-                {
-                    headers: {
-                        Authorization: `Bot ${BOT_TOKEN}`,
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
-            return { success: true, message: "Rol asignado exitosamente.", data: response.data };
-        } catch (error) {
-            console.error("❌ Error al asignar el rol:", error.response?.data || error.message);
-            throw new Error(error.response?.data || error.message);
-        }
-    }
     static async getAllItemsByCategory(category, store, attributes = ["id", "name", "price"]) {
         if (!category || !store?.id) {
             console.error("❌ Error: Falta la categoría o el ID de la tienda.");

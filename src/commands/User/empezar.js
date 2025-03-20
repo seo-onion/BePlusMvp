@@ -7,7 +7,7 @@ module.exports = {
   data: new SlashCommandBuilder()
       .setName("empezar")
       .setDescription("Vincula tu cuenta de Discord para generar una cuenta :D"),
-
+  
   async execute(interaction) {
     if (!interaction.member.roles.cache.has(NO_VERIFIED)) {
       const embed = createAlertEmbed("Ya estás registrado en Be+");

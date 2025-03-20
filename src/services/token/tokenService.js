@@ -46,7 +46,7 @@ exports.refreshGoogleToken = async (userId) => {
 
         await auth.update({ googleToken: access_token });
 
-        console.log("✅ Nuevo token obtenido y guardado:", access_token);
+        console.log("New token obtained and saved", access_token);
 
         return access_token;
     } catch (error) {

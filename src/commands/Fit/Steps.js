@@ -30,7 +30,6 @@ module.exports = {
             const userId = interaction.user.id;
             const time = interaction.options.getString('tiempo');
 
-            console.log(`📌 Usuario ${userId} solicitó pasos para: ${time}`);
 
             let steps;
             let timePeriod;
@@ -56,7 +55,7 @@ module.exports = {
             }
 
             // If no steps could be retrieved, show an error message.
-            if (!steps) {
+            if (!steps && steps != 0) {
                 const errorEmbed = createErrorEmbed({
                     title: "⚠️ No se ha podido recuperar el número de pasos. Inténtalo más tarde."
                 });

@@ -92,6 +92,10 @@ class UserService {
   static async editUser(req) {
     try {
       const { identifier, ...updateFields } = req;
+      if (!identifier || Object.keys(updateFields).length === 0) {
+        console.error("Error: An identifier and at least one field are required to update.");
+        return null;
+    }
 
       // Get user
       const user = await this.getUser(identifier);
