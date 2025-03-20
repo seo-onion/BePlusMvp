@@ -6,7 +6,7 @@ const TOKEN = process.env.DISCORD_TOKEN;
 const APPLICATION_ID = process.env.DISCORD_APPLICATION_ID;
 
 if (!TOKEN || !APPLICATION_ID) {
-    console.error('DISCORD_TOKEN o DISCORD_APPLICATION_ID no están definidos en las variables de entorno.');
+    console.error('DISCORD_TOKEN or DISCORD_APPLICATION_ID are not defined in environment variables.');
     process.exit(1);
 }
 
@@ -31,9 +31,8 @@ for (const folder of commandFolders) {
 
             // Add the valid command to the commands array.
             commands.push(command.data.toJSON());
-            console.log(`Comando cargado: ${command.data.name}`);
         } catch (error) {
-            console.error(`Error en el comando "${file}" en la carpeta "${folder}":`, error.message);
+            console.error(`Error in command "${file}" in folder "${folder}":`, error.message);
             process.exit(1);
         }
     }
@@ -45,10 +44,10 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
     try {
         console.log('Registering commands to Discord...');
         await rest.put(Routes.applicationCommands(APPLICATION_ID), { body: commands });
-        console.log('Comandos registrados exitosamente.');
+        console.log('Commands registered successfully.');
         process.exit(0);
     } catch (error) {
-        console.error('Error registrando comandos:', error);
+        console.error('Error registering commands:', error);
         process.exit(1); 
     }
 })();

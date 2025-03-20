@@ -1,89 +1,104 @@
-const { createCanvas, loadImage } = require("canvas");
-const path = require("path");
-const fs = require("fs");
+// 📌 src/services/rockie/rockieService.js
 const Rockie = require("../../models/Rockie/Rockie");
+const renderRockieService = require("./renderRockieService");
 
-// Retrieve the Rockie instance for a given user.
-async function getRockie(userId) {
-    return await Rockie.findOne({ where: { id: userId } });
-}
-
-// Create a new Rockie for the user if one doesn't already exist.
-async function createRockie(userId, username) {
-    const existingRockie = await getRockie(userId);
-    if (existingRockie) return existingRockie;
-
-    // Select a random color for the new Rockie. (Use name of the carpets without the letter 'c')
-    const colors = ["1", "2", "3", "4", "5", "6"];
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
-
-    const newRockie = await Rockie.create({
-        id: userId,
-        name: username,
-        level: 1,
-        color: randomColor,
-        skinItem: "1.png",
-        hatItem: null,
-        clothesItem: null,
-        experience: 0,
-    });
-
-    return newRockie;
-}
-
-// Level up Rockie, ensuring it doesn't exceed the maximum level.
-async function levelUpRockie(userId) {
-    const rockie = await getRockie(userId);
-    if (!rockie) return null;
-
-    const newLevel = Math.min(rockie.level + 1, 4);
-    await rockie.update({ level: newLevel });
-
-    return rockie;
-}
-
-// Generate and return Rockie's image, considering its accessories and color.
-async function renderRockie(userId) {
-    const rockie = await getRockie(userId);
-    if (!rockie) return null;
-
-    const { color, level, hatItem, clothesItem } = rockie;
-    const basePath = path.join(__dirname, "../../images/rockie/");
-    const rockieBasePath = path.join(basePath, "colores", color, `${level}.png`);
-    const hatPath = hatItem ? path.join(basePath, "conjuntos", hatItem) : null;
-    const clothesPath = clothesItem ? path.join(basePath, "conjuntos", `${clothesItem}.png`) : null;
-
-    const canvas = createCanvas(512, 512);
-    const ctx = canvas.getContext("2d");
-
-    try {
-        // Load and draw the base Rockie image.
-        const baseImage = await loadImage(rockieBasePath);
-        ctx.drawImage(baseImage, 0, 0, 512, 512);
-
-        // Load and draw the clothes image if it exists.
-        if (clothesPath && fs.existsSync(clothesPath)) {
-            const clothesImage = await loadImage(clothesPath);
-            ctx.drawImage(clothesImage, 0, 0, 512, 512);
+/**
+ * RockieService - Manages Rockie data and actions.
+ */
+class RockieService {
+    constructor() {
+        if (!RockieService.instance) {
+            RockieService.instance = this;
         }
+        return RockieService.instance;
+    }
 
-        // Load and draw the hat image if it exists.
-        if (hatPath && fs.existsSync(hatPath)) {
-            const hatImage = await loadImage(hatPath);
-            ctx.drawImage(hatImage, 0, 0, 512, 512);
-        }
+    /**
+     * Retrieves the Rockie associated with a user.
+     * @param {string} userId - Discord user ID.
+     * @returns {Promise<Rockie|null>} - Rockie instance or null.
+     */
+    async getRockie(userId) {
+        return await Rockie.findByPk(userId);
+    }
 
-        return canvas.toBuffer("image/png");
+    /**
+     * Creates a new Rockie with default values.
+     * @param {string} userId - Discord user ID.
+     * @param {string} username - Discord username.
+     * @returns {Promise<Rockie>} - Newly created Rockie.
+     */
+    async createRockie(userId, username) {
+        const existing = await this.getRockie(userId);
+        if (existing) return existing;
 
-    } catch (error) {
-        console.error(`❌ Error cargando la imagen:`, error);
-        throw error;
+        const defaultColor = "1"; // Default color
+        const defaultSkin = "1.png"; // Default skin item
+
+        const rockie = await Rockie.create({
+            id: userId,
+            name: username,
+            level: 1,
+            color: defaultColor,
+            skinItem: defaultSkin,
+            hatItem: null,
+            clothesItem: null,
+            experience: 0
+        });
+
+        return rockie;
+    }
+
+    /**
+     * Updates attributes of an existing Rockie.
+     * @param {string} userId - Discord user ID.
+     * @param {Object} updates - Attributes to update.
+     * @returns {Promise<Rockie|null>} - Updated Rockie or null.
+     */
+    async updateRockie(userId, updates) {
+        const rockie = await this.getRockie(userId);
+        if (!rockie) return null;
+
+        await rockie.update(updates);
+        return rockie;
+    }
+
+    /**
+     * Deletes a Rockie associated with a user.
+     * @param {string} userId - Discord user ID.
+     * @returns {Promise<boolean>} - True if deleted.
+     */
+    async deleteRockie(userId) {
+        const rockie = await this.getRockie(userId);
+        if (!rockie) return false;
+
+        await rockie.destroy();
+        return true;
+    }
+
+    /**
+     * Levels up a Rockie by 1, max level is 4.
+     * @param {string} userId - Discord user ID.
+     * @returns {Promise<Rockie|null>} - Updated Rockie or null.
+     */
+    async levelUpRockie(userId) {
+        const rockie = await this.getRockie(userId);
+        if (!rockie) return null;
+
+        const newLevel = Math.min(rockie.level + 1, 4);
+        await rockie.update({ level: newLevel });
+        return rockie;
+    }
+
+    /**
+     * Renders the Rockie image using renderRockieService.
+     * @param {string} userId - Discord user ID.
+     * @returns {Promise<Buffer|null>} - PNG buffer or null.
+     */
+    async renderRockie(userId) {
+        return await renderRockieService.renderRockie(userId);
     }
 }
 
-module.exports = {
-    getRockie,
-    createRockie,
-    levelUpRockie,
-    renderRockie,
-};
+module.exports = new RockieService();
+

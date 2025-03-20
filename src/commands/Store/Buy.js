@@ -55,7 +55,9 @@ module.exports = {
             if (!storeInstance || typeof storeInstance.buyItem !== "function") {
                 console.error("❌ Error: storeInstance no está definido o buyItem() no existe.");
                 return interaction.editReply({
-                    embeds: [createErrorEmbed("⚠️ No se pudo acceder a la tienda en este momento. Intenta más tarde.")]
+                    embeds: [createErrorEmbed({
+                        title: "⚠️ No se pudo acceder a la tienda en este momento. Intenta más tarde."
+                    })]
                 });
             }
 
@@ -73,15 +75,7 @@ module.exports = {
 
         } catch (error) {
             console.error("❌ Error executing the command:", error);
-
-            const errorEmbed = new EmbedBuilder()
-                .setColor("#FF0000")
-                .setTitle("❌ Error en la Compra")
-                .setDescription("Hubo un error al procesar tu compra. Inténtalo nuevamente.")
-                .setFooter({ text: "Tienda Rocky • Contacta a un admin si el problema persiste." })
-                .setTimestamp();
-
-            return interaction.editReply({ embeds: [errorEmbed] });
+            return interaction.editReply({ embeds: [createErrorEmbed("❌ Error al efectuar la compra. Inténtalo nuevamente.")]});
         }
     }
 };

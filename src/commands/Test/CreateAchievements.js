@@ -23,18 +23,19 @@ module.exports = {
         .setDescription("Crea todos los logros predefinidos."),
 
     async execute(interaction) {
+        await interaction.deferReply();
         const member = interaction.member;
 
         // Checks if the user has the required DEV or ADMIN role.
-        if (!member.roles.cache.has(DEV) && !member.roles.cache.has(ADMIN)) {
-            const embed = createAlertEmbed("🚫 No deberías estar ejecutando este comando.");
-            return await interaction.reply({ embeds: [embed], ephemeral: true });
+        const hasPermission = member.roles.cache.has(DEV) ||
+            member.roles.cache.has(ADMIN) ||
+            member.permissions.has(PermissionFlagsBits.Administrator);
+
+        if (!hasPermission) {
+            const embed = createAlertEmbed("🚫 No tienes permisos para ejecutar este comando.");
+            return await interaction.editReply({ embeds: [embed] });
         }
 
-        // Defers the reply to prevent timeout errors while processing achievements.
-        if (!interaction.deferred && !interaction.replied) {
-            await interaction.deferReply({ ephemeral: true });
-        }
 
         try {
             // Iterates over each predefined achievement and creates it.
@@ -62,7 +63,7 @@ module.exports = {
                     content: "❌ Ocurrió un error al intentar crear los logros."
                 });
             } else {
-                return await interaction.reply({
+                return await interaction.editReply({
                     content: "❌ Ocurrió un error al intentar crear los logros.",
                     ephemeral: true
                 });

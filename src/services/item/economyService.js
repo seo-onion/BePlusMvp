@@ -1,6 +1,6 @@
 const Item = require("../../models/Item/Items");
-const Transaction = require("../../models/Item/Transaction");
-const Users = require("../../models/User/Users");
+const TransactionService = require("./transactionServices")
+const UserService = require("../user/userService")
 
 class EconomyService {
 
@@ -20,40 +20,31 @@ class EconomyService {
         });
     }
 
-    static async createTransaction(req) {
-        const { userId, amount, type, productId } = req;
-        console.log("Creando transacción");
-
-        try {
-            const transaction = await Transaction.create({
-                userId,
-                amount,
-                type,
-                productId,
-            });
-          
-            console.log(`✅ Transacción creada con éxito`);
-            return {
-                success: true,
-                message: `Transacción creada: ${transaction.id} | Usuario: ${userId} | Monto: ${amount}`,
-                transaction,
-            };
-        } catch (error) {
-            console.error("❌ Error al crear la transacción:", error);
-            return { success: false, message: "Error al crear la transacción." };
-        }
-    }
 
     static async addRockyGems(req) {
         try {
-            console.log("Añadiendo rockyGems");
+            
             const { userId, quantity } = req;
-            const user = await Users.findByPk(userId);
+            
+            // Find user
+            let user = await UserService.getUser(userId);
 
+            if (!user) {
+                console.error(`User with id ${userId} not found.`);
+                return false;
+            }
+            // Convert to JSON to avoid references to Sequelize
+            user = user.toJSON();
+
+            // Calculate new RockyCoins value
             const newRockyGems = user.rockyGems + quantity;
-            await user.update({ rockyGems: newRockyGems });
 
-            await this.createTransaction({
+            await UserService.editUser({ 
+                identifier: userId, 
+                rockyGems: newRockyGems 
+            });
+
+            await TransactionService.createTransaction({
                 userId: userId,
                 amount: quantity,
                 type: "reward",
@@ -61,34 +52,53 @@ class EconomyService {
             });
 
             return true;
+
         } catch (error) {
-            console.error("❌ Error al añadir RockyGems:", error);
+            console.error("Error adding RockyGems:", error);
             return false;
         }
     }
 
     static async addRockyCoins(req) {
         try {
-            console.log("Añadiendo rockyCoins");
+
             const { userId, quantity } = req;
-            const user = await Users.findByPk(userId);
-
-            const newRockyCoins = user.rockyCoins + quantity;
-            await user.update({ rockyCoins: newRockyCoins });
-
-            await this.createTransaction({
+    
+            // Find user
+            let user = await UserService.getUser(userId);
+    
+            if (!user) {
+                console.error(`User with id ${userId} not found.`);
+                return false;
+            }
+    
+            // Convert to JSON to avoid references to Sequelize
+            user = user.toJSON();
+    
+            // Calculate new RockyCoins value
+            const newRockyCoins = (user.rockyCoins || 0) + quantity;
+    
+            // Update the user with the new RockyCoins value
+            await UserService.editUser({ 
+                identifier: userId, 
+                rockyCoins: newRockyCoins 
+            });
+    
+            // Record the reward transaction
+            await TransactionService.createTransaction({
                 userId: userId,
                 amount: quantity,
                 type: "reward",
-                productId: "db98908a-466d-4681-a40a-fe8e06af9d8b",
+                productId: "rockyCoin",
             });
-
+    
             return true;
         } catch (error) {
-            console.error("❌ Error al añadir RockyCoins:", error);
+            console.error("Error adding RockyCoins:", error);
             return false;
         }
     }
+    
 }
 
 module.exports = EconomyService;

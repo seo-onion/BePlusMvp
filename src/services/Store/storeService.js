@@ -1,146 +1,113 @@
-const Items = require("../../models/Item/Items");
-const Store = require("../../models/Store/Store");
-const User = require("../../models/User/Users.js");
-const UserItems = require("../../models/Item/UserItems");
-const Transaction = require("../../models/Item/Transaction");
-const { EmbedBuilder } = require("discord.js");
-
+const Items = require("../../models/Item/Items")
+const TransactionService = require("../item/transactionServices")
 class StoreManager {
-    // It uses Singleton to create a single Store
-    constructor() {
-        if (!StoreManager.instance) {
-            StoreManager.instance = this;
-            this.store = null;
-        }
-        return StoreManager.instance;
-    }
 
-    // ✅ Get or create the store once (caching mechanism)
     async getStore() {
-        // ✅ Return cached store if available
+        // Return cached store if available
         if (this.store) return this.store;
 
         // Finds or creates a Store
         let store = await Store.findOne();
-        if (!store) {
-            store = await Store.create({ name: "Rocky Store" });
-        }
+        if (!store) store = await Store.create({ name: "Rocky Store" });
 
         this.store = store;
         return store;
     }
 
-    async getCategories(){
+    async getCategories() {
         // Tries to return all the categories from the Items Table
-        try{
+        try {
             const categories = await Items.findAll({
                 attributes: ['category'],
                 group: ['category'],
                 raw: true
-            })
+            });
             return categories.map(cat => cat.category) || [];
-        } catch(error){
-            console.log("❌ Error fetching categories from database:", error);
+        } catch (error) {
+            console.error("❌ Error al obtener categorías:", error);
             return [];
         }
     }
 
-    // ✅ Get all items
+    // Get all items
     async getItems() {
         const store = await this.getStore();
         return await Items.findAll({ where: { storeId: store.id } });
     }
 
-    // ✅ Get items by category
+    // Get items by category
     async getItemsByCategory(category) {
         const store = await this.getStore();
         return await Items.findAll({ where: { category, storeId: store.id } });
     }
 
-    // ✅ Get a single item by category and name
+    // Get a single item by category and name
     async getItemByCategoryAndName(category, itemName) {
         const store = await this.getStore();
-
         return await Items.findOne({
             where: {
-                category: category, // ✅ `category` is already a string
-                storeId: store.id, // ✅ No need to convert `storeId`
+                category: category, // `category` is already a string
+                storeId: store.id, // No need to convert `storeId`
                 name: itemName
             }
         });
     }
 
-    // ✅ Buy an item with RockyCoins
+    // Buy an item with RockyCoins
     async buyItem(userId, itemName, category) {
         // Gets the Store
         const store = await this.getStore();
 
         // Finds the Item by the category and the name set by the User
-        const item = await Items.findOne({
-            where: { name: itemName, storeId: store.id, category: category }
-        });
+        const item = await this.getItemByCategoryAndName(category, itemName);
         console.log("🛒 Item encontrado en DB:", item ? item.dataValues : "❌ No encontrado");
 
-        // ✅ Check if the category of the Item exists
+        // Check if the category of the Item exists
         if (!item) {
             const categoryExists = await Items.findOne({
                 where: { category },
                 raw: true
             });
 
-            // ✅ If the category exists it Fetch all items in the category
+            // If the category exists it Fetch all items in the category
             if (categoryExists) {
-                const categoryItems = await Items.findAll({
-                    where: { category },
-                    attributes: ["name", "price"],
-                    raw: true
-                });
-
-                // ✅ Format category items as a list
-                const formattedCategoryItems = categoryItems.length > 0
-                    ? `\`\`\`css\n${categoryItems.map(i => `• ${i.name.padEnd(10)} ${i.price} 🪙`).join("\n")}\n\`\`\``
-                    : "❌ No hay artículos en esta categoría.";
+                const categoryItems = await ItemService.getAllItemsByCategory(category, store, ["name", "price"]) || [];
 
                 return {
                     success: false,
-                    embed: new EmbedBuilder()
-                        .setColor("#FFA500") // 🟠 Warning color
-                        .setTitle("⚠️ Artículo No Encontrado")
-                        .setDescription(`El artículo **${itemName}** no existe en la categoría **${category}**, pero aquí \n
-                                        están los artículos disponibles en esa categoría:`)
-                        .addFields({
+                    embed: alertEmbedList("⚠️ Artículo No Encontrado",
+                        `El artículo **${itemName}** no existe en la categoría **${category}**, pero aquí \n
+                        están los artículos disponibles en esa categoría:`,
+                        [{
                             name: `📂 Artículos en ${category}`,
-                            value: formattedCategoryItems
-                        })
-                        .setFooter({ text: "Tienda Rocky • Verifica el nombre del artículo." })
-                        .setTimestamp()
+                            value: ListObjectsFormat(categoryItems, "❌ No hay artículos en esta categoría."),
+                        }]
+                    ),
                 };
             } else {
                 // If the category does not exist Fetch all available categories
                 const categories = await this.getCategories();
 
-                // ✅ Format categories as a list
+                // Format categories as a list
                 const formattedCategories = categories.length > 0
                     ? `\`\`\`yaml\n${categories.map(c => `- ${c}`).join("\n")}\n\`\`\``
                     : "❌ No hay categorías disponibles.";
 
                 return {
                     success: false,
-                    embed: new EmbedBuilder()
-                        .setColor("#FF0000") // 🔴 Error color
-                        .setTitle("❌ Categoría No Encontrada")
-                        .setDescription(`La categoría **${category}** no existe.`)
-                        .addFields({
+                    embed: alertEmbedList(
+                        "❌ Categoría No Encontrada",
+                        `La categoría **${category}** no existe.`,
+                        [{
                             name: "📂 Categorías Disponibles",
-                            value: formattedCategories
-                        })
-                        .setFooter({ text: "Tienda Rocky • Prueba otra categoría." })
-                        .setTimestamp()
+                            value: formattedCategories,
+                        }]
+                    ),
                 };
             }
         }
 
-        console.log("✅ Item encontrado:", item.name);
+        console.log("Item encontrado:", item.name);
 
         const user = await User.findByPk(userId);
 
@@ -148,12 +115,9 @@ class StoreManager {
         if (!user) {
             return {
                 success: false,
-                embed: new EmbedBuilder()
-                    .setColor("#FF0000")
-                    .setTitle("❌ Usuario No Encontrado")
-                    .setDescription("No se pudo encontrar tu perfil en la base de datos.")
-                    .setFooter({ text: "Tienda Rocky • Contacta a un administrador si el problema persiste." })
-                    .setTimestamp()
+                embed: createErrorEmbed({
+                    title: "❌ Usuario No Encontrado. No se pudo encontrar tu perfil en la base de datos.",
+                }),
             };
         }
 
@@ -162,48 +126,33 @@ class StoreManager {
 
         // If the price of the Item is greater than the User's RockyCoins
         if (user.rockyCoins < item.price) {
-            // ✅ Fetch all available store items
-            const allStoreItems = await Items.findAll({
-                where: { storeId: store.id , category},
-                attributes: ["id", "name", "price"],
-                raw: true
-            });
+            // Fetch all available store items
+            const allStoreItems = await ItemService.getAllItemsByCategory(category, store);
 
-            // ✅ Get all items the user owns
-            const userOwnedItems = await UserItems.findAll({
-                where: { userId: userId },
-                attributes: ["itemId"],
-                raw: true
-            });
+            // 🔹 Get all items the user owns
+            const userOwnedItems = await userItemsService.getAllItemsByUser(userId);
 
-            // ✅ Convert owned items into an array of IDs
+            // Convert owned items into an array of IDs
             const ownedItemIds = userOwnedItems.map(ui => ui.itemId);
 
-            // ✅ Filter only items the user can afford AND doesn't own
+            // Filter only items the user can afford AND doesn't own
             const affordableUnownedItems = allStoreItems.filter(i =>
                 i.price <= user.rockyCoins && !ownedItemIds.includes(i.id)
             );
 
-            // ✅ Format the list
-            const formattedAffordableItems = affordableUnownedItems.length > 0
-                ? `\`\`\`css\n${affordableUnownedItems.map(i => `• ${i.name.padEnd(10)} ${i.price} 🪙`).join("\n")}\n\`\`\``
-                : "❌ No puedes comprar ningún artículo con tu saldo actual.";
-
-
             return {
                 success: false,
-                embed: new EmbedBuilder()
-                    .setColor("#FFA500")
-                    .setTitle("❌ Fondos Insuficientes")
-                    .setDescription(`Necesitas **${item.price}** RockyCoins para comprar **${itemName}**.  
+                embed: alertEmbedList(
+                    "❌ Fondos Insuficientes",
+                    `Necesitas **${item.price}** RockyCoins para comprar **${itemName}**.  
                         Actualmente tienes **${user.rockyCoins}** RockyCoins.  
-                        Te faltan **${item.price - user.rockyCoins}** RockyCoins.`)
-                    .addFields({
-                        name: "🛒 Artículos que puedes comprar",
-                        value: formattedAffordableItems
-                    })
-                    .setFooter({ text: "Tienda Rocky • ¡Ahorra más para comprar este artículo!" })
-                    .setTimestamp()
+                        Te faltan **${item.price - user.rockyCoins}** RockyCoins.`,
+                    [
+                        {
+                            name: " 🎭 Pero puedes comprar estos items",
+                            value: ListObjectsFormat(affordableUnownedItems, "❌ No puedes comprar ningún artículo con tu saldo actual.")
+                        }
+                    ]),
             };
         }
 
@@ -212,54 +161,41 @@ class StoreManager {
 
         // If the user has Items
         if (existingPurchase) {
-            // ✅ Fetch all items in the same category
-            const otherItems = await Items.findAll({
-                where: { category: category, storeId: store.id },
-                attributes: ["id", "name", "price"],
-                raw: true
-            });
+            // Fetch all items in the same category
+            const otherItems = await ItemService.getAllItemsByCategory(category, store);
+
             // 🔹 Get all items the user owns
-            const userOwnedItems = await UserItems.findAll({
-                where: { userId: userId },
-                attributes: ["itemId"], // ✅ Only need itemId to compare
-                raw: true
-            });
+            const userOwnedItems = await userItemsService.getAllItemsByUser(userId);
+
             // 🔹 Convert owned items into an array of IDs
             const ownedItemIds = userOwnedItems.map(ui => ui.itemId);
             console.log("🔍 IDs de artículos que posee el usuario:", ownedItemIds);
 
-            // 🔹 Separate owned and unowned items
             const ownedItems = otherItems.filter(i => ownedItemIds.includes(i.id));
             const unownedItems = otherItems.filter(i => !ownedItemIds.includes(i.id));
 
-            console.log("✅ Artículos disponibles para sugerir:", unownedItems);
-            console.log("✅ Artículos ya comprados:", ownedItems);
-
-            const padEndNumber = 15;
-
-            // ✅ Format the available items
-            const formattedUnownedItems = unownedItems.length > 0
-                ? `\`\`\`css\n${unownedItems.map(i => `• ${i.name.padEnd(padEndNumber)} ${i.price} 🪙`).join("\n")}\n\`\`\``
-                : "❌ No hay otros accesorios disponibles en esta categoría.\n" +
-                "Seguramente ya hayas comprado todos los items disponibles.";
-
-            // ✅ Format the owned items
-            const formattedOwnedItems = ownedItems.length > 0
-                ? `\`\`\`css\n${ownedItems.map(i => `• ${i.name.padEnd(padEndNumber)} ${i.price} 🪙`).join("\n")}\n\`\`\``
-                : "No tienes otros accesorios en esta categoría.";
+            console.log("Artículos disponibles para sugerir:", unownedItems);
+            console.log("Artículos ya comprados:", ownedItems);
 
             return {
                 success: false,
-                embed: new EmbedBuilder()
-                    .setColor("#FFFF00")
-                    .setTitle("⚠️ Artículo Ya Comprado")
-                    .setDescription(`Ya tienes **${item.name}** en tu inventario.`)
-                    .addFields(
-                        { name: "🎭 Otros Accesorios Disponibles", value: formattedUnownedItems },
-                        { name: "🛑 Accesorios que ya posees", value: formattedOwnedItems }
-                    )
-                    .setFooter({ text: "Tienda Rocky • No puedes comprarlo dos veces." })
-                    .setTimestamp()
+                embed: alertEmbedList("⚠️ Artículo Ya Comprado",
+                    `Ya tienes **${item.name}** en tu inventario.`,
+                    [
+                        {
+                            name: "🎭 Otros Accesorios Disponibles",
+                            value: ListObjectsFormat(
+                                unownedItems, "❌ No hay otros accesorios disponibles en esta categoría.\n" +
+                                "Seguramente ya hayas comprado todos los items disponibles."),
+                            inline: true
+                        },
+                        {
+                            name: "🛑 Accesorios que ya posees",
+                            value: ListObjectsFormat(ownedItems, "No tienes otros accesorios en esta categoría."),
+                            inline: true
+                        }
+                    ]
+                ),
             };
         }
         // It uploads the rockyCoins of the User and saves it in the DB
@@ -267,11 +203,11 @@ class StoreManager {
         await user.save();
 
         // Creates a relation UserItems (The User has one more item)
-        await UserItems.create({ userId, itemId: item.id });
+        await userItemsService.createUserItems(userId, item.id);
 
         // Creates a Transaction withe ProductID and the price of the product
-        await Transaction.create({
-            userId,
+        await TransactionService.createTransaction({
+            userId: userId,
             amount: item.price,
             type: "compra",
             productId: item.id
@@ -279,18 +215,11 @@ class StoreManager {
 
         return {
             success: true,
-            embed: new EmbedBuilder()
-                .setColor("#00FF00")
-                .setTitle("✅ Compra Exitosa")
-                .setDescription(`Has comprado de la categoría **${item.category}** el item **${item.name}** \n por **${item.price}** RockyCoins! 🎉`)
-                .addFields(
-                    { name: "🔠 Categoría", value: `**${category}**`, inline: true },
-                    { name: "🛒 Artículo", value: `**${itemName}**`, inline: true },
-                    { name: "💰 Precio", value: `**${item.price}** RockyCoins`, inline: true },
-
-                )
-                .setFooter({ text: "Tienda Rocky • ¡Gracias por tu compra!" })
-                .setTimestamp()
+            embed: successEmbed({
+                item,
+                category: item.category,
+                itemName: item.name,
+            }),
         };
     }
 }
