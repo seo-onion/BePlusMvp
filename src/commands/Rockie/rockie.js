@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, AttachmentBuilder, EmbedBuilder } = require("discord.js");
 const rockieService = require("../../services/rockie/rockieService");
 const UserServices = require("../../services/user/userService")
+const createErrorEmbed = require("../../utils/embed/errorEmbed");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -16,48 +17,46 @@ module.exports = {
         const userId = interaction.user.id;
         const username = interaction.user.username;
 
-        console.log(`📌 Ejecutando /rockie para el usuario: ${username} (${userId})`);
-
         try {
-            // ✅ Defiere la respuesta para evitar timeouts
             await interaction.deferReply({ ephemeral: true });
 
-            // Buscar o crear Rockie
-            let rockie = await rockieService.getRockie(userId);
-            if (!rockie) {
-                console.log(`🔹 No se encontró Rockie para ${username}. Creando uno nuevo...`);
-                rockie = await rockieService.createRockie(userId, username);
-            } else {
-                console.log(`✅ Rockie encontrado: ${rockie.name} (Nivel ${rockie.level})`);
-            }
-
-            // Renderizar imagen de Rockie (con logging de URLs)
-            const rockieImageBuffer = await rockieService.renderRockie(userId, {
-                debug: true // 🚨 Para imprimir URLs
-            });
-
-            if (!rockieImageBuffer) {
-                console.error("❌ No se pudo generar la imagen de Rockie.");
-                return await interaction.editReply({
-                    content: "❌ No se pudo generar la imagen de tu Rockie."
-                });
-            }
-
-            // Obtener datos del usuario
+            // Get user
             const user = await UserServices.getUser(userId);
-            console.log(`✅ Usuario encontrado en BD: ${user ? user.userId : "No encontrado"}`);
 
             // Checks if the user exists in the database.
             if (!user) {
-                console.error("❌ No se encontró al usuario en la base de datos.");
-                return await interaction.editReply({
-                    content: "❌ No se encontró información de tu cuenta."
+                console.error("user not found");
+                const errorEmbed = createErrorEmbed({
+                    title: "Usuario no encontrado",
+                    description: "No se logró recuperar tu información. Intenta actualizarlo."
                 });
+                return await interaction.editReply({ embeds: [errorEmbed] });
+            }
+
+            // find or create a rocky
+            let rockie = await rockieService.getRockie(userId);
+            if (!rockie) {
+                console.log(`No Rockie found for ${username}. Creating a new one...`);
+                rockie = await rockieService.createRockie(userId, username);
+            }
+
+            // Render Rockie image (with URL logging)
+            const rockieImageBuffer = await rockieService.renderRockie(userId, {
+                debug: true // to print url's 
+            });
+
+            if (!rockieImageBuffer) {
+                console.error("Rockie image could not be generated.");
+                const errorEmbed = createErrorEmbed({
+                    title: "Error al renderizar a tu rockie",
+                    description: "No se pudo generar la imagen de tu Rockie"
+                });
+                return await interaction.editReply({ embeds: [errorEmbed] });
             }
 
             // Creates an embed message with the Rockie's details.
             const embed = new EmbedBuilder()
-                .setTitle(`🐻 Tu Rockie - ${rockie.name}`)
+                .setTitle(`🪨 Tu Rockie - ${rockie.name}`)
                 .setDescription(`Aquí está tu Rockie con su información actual:`)
                 .addFields(
                     { name: "⭐ Nivel", value: `${rockie.level}`, inline: true },
@@ -69,19 +68,17 @@ module.exports = {
             // Attaches the Rockie image to the embed message.
             const attachment = new AttachmentBuilder(rockieImageBuffer, { name: "rockie.png" });
 
-            // ✅ Editar la respuesta diferida
             await interaction.editReply({ embeds: [embed], files: [attachment] });
 
         } catch (error) {
-            console.error("❌ Error ejecutando /rockie:", error);
+            console.error("Error executing /rockie: ", error);
 
-            const errorMsg = "❌ Hubo un error al mostrar tu Rockie. Inténtalo más tarde.";
+            const errorEmbed = createErrorEmbed({
+                title: "Error ejecutando /rockie:",
+                description: "Hubo un error al mostrar tu Rockie. Inténtalo más tarde."
+            });
 
-            if (interaction.deferred) {
-                await interaction.editReply({ content: errorMsg });
-            } else {
-                await interaction.reply({ content: errorMsg, ephemeral: true });
-            }
+            return await interaction.editReply({ embeds: [errorEmbed] });
         }
     },
 };

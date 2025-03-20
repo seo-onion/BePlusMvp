@@ -1,5 +1,4 @@
 const { Client, GatewayIntentBits, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
-const createErrorEmbed = require("../../utils/embed/errorEmbed"); 
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers]
@@ -41,7 +40,6 @@ class PrivateChannelNotificationService {
 
             console.log(`Private notification sent on channel ${CHANNEL_ID} visible only to ${member.user.tag}`);
         } catch (error) {
-            const errorEmbed = createAlertEmbed({description: `Tuvimos un error al enviarte esta notificacion: ${error.message}`});
             console.error(error);
         }
     }

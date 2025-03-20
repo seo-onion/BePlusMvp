@@ -8,7 +8,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("yo")
     .setDescription("Muestra tu perfil y tus logros"),
-    restricted: true,
+  restricted: true,
 
   async execute(interaction) {
     try {
@@ -26,7 +26,7 @@ module.exports = {
         return await interaction.editReply({ embeds: [errorEmbed] });
       }
 
-      const user = userData.toJSON(); 
+      const user = userData.toJSON();
       const profile = user.Profile;
 
       //  Check if the user has a profile
@@ -76,18 +76,14 @@ module.exports = {
       await interaction.editReply({ embeds: [embed] });
 
     } catch (error) {
-      console.error("❌ Error executing /yo command:", error);
+      console.error("Error executing /yo command:", error);
       const errorEmbed = createErrorEmbed({
         title: "❌ Ocurrió un error inesperado",
         description: "Hubo un problema al obtener tu perfil. Inténtalo de nuevo más tarde."
       });
+      
+      await interaction.editReply({ embeds: [errorEmbed] });
 
-      //  Handle errors properly
-      if (interaction.replied || interaction.deferred) {
-        await interaction.editReply({ embeds: [errorEmbed] });
-      } else {
-        await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
-      }
     }
   },
 };

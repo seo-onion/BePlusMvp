@@ -9,7 +9,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("desbloquear")
     .setDescription("Desbloquea un logro en el sistema de recompensas"),
-  restricted: true, // Restricts this command for specific users (like Beta Testers).
+  restricted: true, 
 
   async execute(interaction) {
     try {
