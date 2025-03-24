@@ -39,7 +39,7 @@ class ItemService {
 
             return await Items.create({
                 name,
-                description: `Un ${category} del tipo ${name}`,
+                description: `Un ${category} del tipo ${name}`, //TODO: Do description a parameter
                 price,
                 category,
                 storeId,

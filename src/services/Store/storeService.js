@@ -31,14 +31,19 @@ class StoreManager {
 
     // Get all items
     async getItems() {
-        const store = await this.getStore();
-        return await Items.findAll({ where: { storeId: store.id } });
+        try {
+            const store = await this.getStore();
+            return await Items.findAll({ where: { storeId: store.id } }); //! DELETE
+        } catch(error){
+            console.error("Error to get all items ", error)
+            return null
+        }
     }
 
     // Get items by category
     async getItemsByCategory(category) {
         const store = await this.getStore();
-        return await Items.findAll({ where: { category, storeId: store.id } });
+        return await Items.findAll({ where: { category, storeId: store.id } }); //! DELETE
     }
 
     // Get a single item by category and name
@@ -46,7 +51,7 @@ class StoreManager {
         const store = await this.getStore();
         return await Items.findOne({
             where: {
-                category: category, // `category` is already a string
+                category: category, // `category` is already a string //! DELETE
                 storeId: store.id, // No need to convert `storeId`
                 name: itemName
             }
@@ -54,7 +59,7 @@ class StoreManager {
     }
 
     // Buy an item with RockyCoins
-    async buyItem(userId, itemName, category) {
+    async buyItem(userId, itemName, category) { //TODO: Change to item service, and change the object returned (Osea, retornados en pasado simple en ingles americano)
         // Gets the Store
         const store = await this.getStore();
 
@@ -80,7 +85,7 @@ class StoreManager {
                         están los artículos disponibles en esa categoría:`,
                         [{
                             name: `📂 Artículos en ${category}`,
-                            value: ListObjectsFormat(categoryItems, "❌ No hay artículos en esta categoría."),
+                            value: ListObjectsFormat(categoryItems, "❌ No hay artículos en esta categoría."), //TODO: change to item service
                         }]
                     ),
                 };

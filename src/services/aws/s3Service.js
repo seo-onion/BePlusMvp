@@ -4,7 +4,7 @@ require("dotenv").config();
 const BUCKET_NAME = process.env.AWS_BUCKET_NAME;
 const REGION = process.env.AWS_REGION;
 
-// ✅ Construir URL pública dinámica del bucket
+// Build dynamic public bucket URL
 const BUCKET_BASE_URL = `https://${BUCKET_NAME}.s3.${REGION}.amazonaws.com`;
 
 class S3Service {
@@ -20,7 +20,7 @@ class S3Service {
         return S3Service.instance;
     }
 
-    // 📤 Subir archivo PNG
+    // Subir archivo PNG
     async uploadFileToS3(fileBuffer, filePath) {
         const params = {
             Bucket: BUCKET_NAME,
@@ -33,7 +33,7 @@ class S3Service {
             const result = await this.s3.upload(params).promise();
             return result.Location; // ✅ URL pública
         } catch (error) {
-            console.error("❌ Error al subir archivo a S3:", error);
+            console.error("❌ E rror al subir archivo a S3:", error);
             return null;
         }
     }
