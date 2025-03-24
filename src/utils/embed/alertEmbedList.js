@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require("discord.js");
 const color = "#FFA500";
-
-/**
+//TODO: convert 1 embed
+/** 
  * @param {string} title - Title of the embed
  * @param {string} description - Description of the embed
  * @param {Array<Object>} fields - Array of fields to be added to the embed
