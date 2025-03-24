@@ -1,8 +1,8 @@
 const Achievements = require("../../models/Achievement/Achievements");
 const UserAchievements = require("../../models/Achievement/UserAchievements");
 
+// Creates a new achievement record in the database.
 class AchievementService {
-
     static async createAchievement(req) {
         const { name, description, emoji, points } = req;
         return await Achievements.create({
