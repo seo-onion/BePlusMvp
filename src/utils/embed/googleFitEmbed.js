@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require("discord.js");
 const color = "#34A853";
-
+//TODO: convert 1 embed
 module.exports = function errorEmbed({
                                          title = "Vinculación con Google Fit",
                                          description = "Bienvenido a GoogleFit.",
