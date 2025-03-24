@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const { Client, Collection, GatewayIntentBits, Events } = require("discord.js");
 const createErrorEmbed = require("./utils/embed/errorEmbed");
-const verification = require("./utils/verification");
+
 
 // Load environment variables for channel and role IDs.
 const GENERAL_CHANNEL = process.env.DISCORD_COMMAND_CHANNEL;
