@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require("discord.js");
 const color = "#00FF00";
-
+//TODO: convert 1 embed
 module.exports = function successEmbed({
                                            title = "Compra exitosa",
                                            item, // Se recibe el objeto item completo

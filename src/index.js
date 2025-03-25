@@ -74,12 +74,12 @@ async function main() {
     await sequelize.sync({ alter: true });
     console.log("Synchronized models.");
 
-    const PORT = process.env.PORT || 3000;
+    const PORT = process.env.DB_PORT || 3000;
     const HOST = process.env.DB_HOST || "127.0.0.1";
 
     // Start the server and listen on all network interfaces for Render at port 0.0.0.0.
     app.listen(PORT, HOST, () => {
-      console.log(`Server running in http://${HOST}:${PORT}`);
+      console.log(`Server running in http://localhost:${PORT}`);
     });
 
     // Deploy discord bot
