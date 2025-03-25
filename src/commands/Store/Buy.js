@@ -2,7 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const storeInstance = require("../../services/Store/storeService");
 const createErrorEmbed = require("../../utils/embed/errorEmbed");
 
-// ✅ Fetch categories BEFORE defining the command
+// Pre-fetches categories before defining the command to ensure they are available.
 let categoryChoices = [];
 
 async function loadCategories() {
@@ -19,7 +19,7 @@ async function loadCategories() {
     }
 }
 
-// ✅ Call this function when the bot starts
+// Calls the function to load categories when the bot starts.
 loadCategories();
 
 module.exports = {
@@ -30,7 +30,7 @@ module.exports = {
             option.setName("category")
                 .setDescription("Elige una categoría de artículos")
                 .setRequired(true)
-                .addChoices(...categoryChoices) // ✅ Uses preloaded choices
+                .addChoices(...categoryChoices) // Uses preloaded choices.
         )
         .addStringOption(option =>
             option.setName("item")
@@ -38,10 +38,11 @@ module.exports = {
                 .setRequired(true)
         ),
 
-    restricted: true, // ✅ Se restringe el comando para que solo Beta Testers lo usen
+    restricted: true, // Restricts the command to specific users like Beta Testers.
 
     async execute(interaction) {
-        await interaction.deferReply({ ephemeral: true }); // 🔄 Deferimos la respuesta para evitar errores con editReply()
+        // Defers the reply to prevent timeout issues during processing.
+        await interaction.deferReply({ ephemeral: true });
 
         try {
             const category = interaction.options.getString("category");
@@ -50,36 +51,31 @@ module.exports = {
 
             console.log(`🛒 Usuario ${userId} intenta comprar: ${itemName} (Categoría: ${category})`);
 
-
-            // 🚨 Validar que la tienda está inicializada
-
+            // Validates if the store instance and its buyItem method are defined.
             if (!storeInstance || typeof storeInstance.buyItem !== "function") {
                 console.error("❌ Error: storeInstance no está definido o buyItem() no existe.");
-                return interaction.editReply({ 
-                    embeds: [createErrorEmbed("⚠️ No se pudo acceder a la tienda en este momento. Intenta más tarde.")] 
+                return interaction.editReply({
+                    embeds: [createErrorEmbed({
+                        title: "⚠️ No se pudo acceder a la tienda en este momento. Intenta más tarde."
+                    })]
                 });
             }
 
+            // Attempts to process the purchase and returns the result as an embed.
             const result = await storeInstance.buyItem(interaction.user.id, itemName, category);
 
+            // If no valid embed is returned, sends an error message.
             if (!result.embed) {
                 console.error("❌ Error: `buyItem()` did not return a valid embed.");
                 return interaction.editReply("❌ Hubo un error al procesar tu compra.");
             }
 
+            // Sends the successful purchase response.
             return interaction.editReply({ embeds: [result.embed] });
 
         } catch (error) {
             console.error("❌ Error executing the command:", error);
-
-            const errorEmbed = new EmbedBuilder()
-                .setColor("#FF0000")
-                .setTitle("❌ Error en la Compra")
-                .setDescription("Hubo un error al procesar tu compra. Inténtalo nuevamente.")
-                .setFooter({ text: "Tienda Rocky • Contacta a un admin si el problema persiste." })
-                .setTimestamp();
-
-            return interaction.editReply({ embeds: [errorEmbed] });
+            return interaction.editReply({ embeds: [createErrorEmbed("❌ Error al efectuar la compra. Inténtalo nuevamente.")]});
         }
     }
 };

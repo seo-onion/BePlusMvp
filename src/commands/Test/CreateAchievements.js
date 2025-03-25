@@ -5,6 +5,7 @@ const createAlertEmbed = require("../../utils/embed/alertEmbed");
 const DEV = process.env.DEV_ROLE;
 const ADMIN = process.env.ADMIN_ROLE;
 
+// Predefined achievements with their descriptions, emojis, and point values.
 const logros = [
     { name: "Racha Perfecta", description: "Lograste completar 30 días consecutivos sin fallar tu hábito. ¡Eres imparable!", emoji: "🏆", points: 100 },
     { name: "Primeros 7 Días", description: "Completaste tu primera semana. ¡Buen comienzo!", emoji: "🥇", points: 50 },
@@ -22,20 +23,22 @@ module.exports = {
         .setDescription("Crea todos los logros predefinidos."),
 
     async execute(interaction) {
+        await interaction.deferReply();
         const member = interaction.member;
 
-        // ✅ Validación de roles
-        if (!member.roles.cache.has(DEV) && !member.roles.cache.has(ADMIN)) {
-            const embed = createAlertEmbed("🚫 No deberías estar ejecutando este comando.");
-            return await interaction.reply({ embeds: [embed], ephemeral: true });
+        // Checks if the user has the required DEV or ADMIN role.
+        const hasPermission = member.roles.cache.has(DEV) ||
+            member.roles.cache.has(ADMIN) ||
+            member.permissions.has(PermissionFlagsBits.Administrator);
+
+        if (!hasPermission) {
+            const embed = createAlertEmbed("🚫 No tienes permisos para ejecutar este comando.");
+            return await interaction.editReply({ embeds: [embed] });
         }
 
-        // ✅ Deferir la interacción para evitar errores de tiempo de espera
-        if (!interaction.deferred && !interaction.replied) {
-            await interaction.deferReply({ ephemeral: true });
-        }
 
         try {
+            // Iterates over each predefined achievement and creates it.
             for (const logro of logros) {
                 await createAchievement({
                     name: logro.name,
@@ -60,7 +63,7 @@ module.exports = {
                     content: "❌ Ocurrió un error al intentar crear los logros."
                 });
             } else {
-                return await interaction.reply({
+                return await interaction.editReply({
                     content: "❌ Ocurrió un error al intentar crear los logros.",
                     ephemeral: true
                 });

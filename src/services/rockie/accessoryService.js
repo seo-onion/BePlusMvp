@@ -1,78 +1,160 @@
-const { Items } = require("../../models/Item/Items");
-const  UserItems  = require("../../models/Item/UserItems");
-const { Users } = require("../../models/User/Users");
+// 📌 src/services/rockie/accessoryService.js
+const Items = require("../../models/Item/Items");
+const UserItems = require("../../models/Item/UserItems");
 const Rockie = require("../../models/Rockie/Rockie");
 const storeService = require("../Store/storeService");
-const { renderRockie } = require("./rockieService");
+const renderRockieService = require("./renderRockieService");
+const s3Service = require("../aws/s3Service"); // ✅ Validación en S3
 
-// 📌 Obtener todas las categorías de accesorios disponibles
-async function getAccessoryCategories() {
-    return await Items.findAll({ attributes: ["category"], group: ["category"] });
-}
-
-// 📌 Obtener todos los accesorios de una categoría específica
-async function getAccessoriesByCategory(category) {
-    return await Items.findAll({ where: { category } });
-}
-
-// 📌 Comprar un accesorio para Rockie
-async function buyAccessory(userId, itemName) {
-    const result = await storeService.buyItem(userId, itemName);
-    return result;
-}
-
-// 📌 Verificar si un usuario tiene un accesorio específico
-async function userOwnsAccessory(userId, accessoryId) {
-    const userItem = await UserItems.findOne({ where: { userId, itemId: accessoryId } });
-    return !!userItem;
-}
-
-// 📌 Equipar un accesorio en Rockie
-async function equipAccessory(userId, itemName) {
-    const accessory = await Items.findOne({ where: { name: itemName } });
-    if (!accessory) return { success: false, message: "❌ Accesorio no encontrado." };
-
-    const rockie = await Rockie.findByPk(userId);
-    if (!rockie) return { success: false, message: "❌ No tienes un Rockie registrado." };
-
-    // 📌 Verificar que el usuario haya comprado el accesorio
-    const ownsAccessory = await userOwnsAccessory(userId, accessory.id);
-    if (!ownsAccessory) {
-        return { success: false, message: "❌ No has comprado este accesorio." };
+/**
+ * Handles logic for Rockie accessories: purchase, equip, update.
+ */
+class AccessoryService {
+    /**
+     * Gets all unique accessory categories in the store.
+     * @returns {Promise<string[]>}
+     */
+    async getAccessoryCategories() {
+        const categories = await Items.findAll({
+            attributes: ["category"],
+            group: ["category"],
+            raw: true
+        });
+        return categories.map(cat => cat.category);
     }
 
-    // 📌 Determinar el tipo de accesorio y asignarlo al Rockie
-    let updateField = null;
-    if (accessory.category === "sombrero") updateField = "hatItem";
-    if (accessory.category === "ropa") updateField = "clothesItem";
-    if (accessory.category === "color") updateField = "color"; // Si se permite cambiar el color con un item
+    /**
+     * Gets all accessories within a specific category.
+     * @param {string} category 
+     * @returns {Promise<Items[]>}
+     */
+    async getAccessoriesByCategory(category) {
+        return await Items.findAll({ where: { category } });
+    }
 
-    if (!updateField) return { success: false, message: "❌ Este accesorio no se puede equipar." };
+    /**
+     * Buys an accessory for the user using storeService.
+     * @param {string} userId - Discord user ID.
+     * @param {string} itemName - Item name.
+     * @returns {Promise<Object>} Store response.
+     */
+    async buyAccessory(userId, itemName) {
+        return await storeService.buyItem(userId, itemName);
+    }
 
-    await rockie.update({ [updateField]: accessory.name });
+    /**
+     * Checks if the user owns a specific accessory.
+     * @param {string} userId 
+     * @param {string} accessoryId 
+     * @returns {Promise<boolean>}
+     */
+    async userOwnsAccessory(userId, accessoryId) {
+        const userItem = await UserItems.findOne({ where: { userId, itemId: accessoryId } });
+        return !!userItem;
+    }
 
-    // 📌 Regenerar la imagen de Rockie
-    await renderRockie(userId);
+    /**
+     * Validates if a file exists in a given S3 folder.
+     * @param {string} fileName - Name of the file.
+     * @param {string} folder - Folder path in S3.
+     * @returns {Promise<boolean>}
+     */
+    async fileExistsInS3(fileName, folder) {
+        const files = await s3Service.listFilesInS3(folder);
+        return files.includes(fileName);
+    }
 
-    return { success: true, message: `✅ Has equipado ${accessory.name} en tu Rockie.` };
+    /**
+     * Equips an accessory (if valid) on Rockie and triggers render.
+     * Validates image existence in S3 before equipping.
+     * @param {string} userId 
+     * @param {string} itemName 
+     * @returns {Promise<Object>} Result message.
+     */
+    async equipAccessory(userId, itemName) {
+        const accessory = await Items.findOne({ where: { name: itemName } });
+        if (!accessory) return { success: false, message: "❌ Accesorio no encontrado." };
+
+        const rockie = await Rockie.findByPk(userId);
+        if (!rockie) return { success: false, message: "❌ No tienes un Rockie registrado." };
+
+        const owns = await this.userOwnsAccessory(userId, accessory.id);
+        if (!owns) return { success: false, message: "❌ No has comprado este accesorio." };
+
+        let updateField = null;
+        let s3Folder = null;
+
+        switch (accessory.category) {
+            case "sombrero":
+                updateField = "hatItem";
+                s3Folder = "sombreros/";
+                break;
+            case "ropa":
+                updateField = "clothesItem";
+                s3Folder = "ropas/";
+                break;
+            case "color":
+                updateField = "color";
+                // 🟡 No se valida color porque se usa como subcarpeta (bases/color/...)
+                break;
+            default:
+                return { success: false, message: "❌ Este accesorio no se puede equipar." };
+        }
+
+        // ✅ Validate existence in S3 (for hat/ropa only)
+        if (s3Folder) {
+            const exists = await this.fileExistsInS3(itemName, s3Folder);
+            if (!exists) {
+                return {
+                    success: false,
+                    message: `❌ La imagen **${itemName}** no existe en S3 en la carpeta **${s3Folder}**. No se puede equipar.`
+                };
+            }
+        }
+
+        await rockie.update({ [updateField]: itemName });
+        await renderRockieService.renderRockie(userId);
+
+        return { success: true, message: `✅ Has equipado **${itemName}** en tu Rockie.` };
+    }
+
+    /**
+     * Updates Rockie attributes and re-renders the image.
+     * @param {string} userId 
+     * @param {Object} updates 
+     * @returns {Promise<Object>} Update result.
+     */
+    async updateRockieAttributes(userId, updates) {
+        const rockie = await Rockie.findByPk(userId);
+        if (!rockie) return { success: false, message: "❌ No tienes un Rockie registrado." };
+
+        await rockie.update(updates);
+        await renderRockieService.renderRockie(userId);
+
+        return { success: true, message: "✅ Atributos de Rockie actualizados correctamente." };
+    }
+  /**
+   * Obtiene todos los accesorios que el usuario ha comprado con detalles del ítem.
+   * @param {string} userId
+   * @returns {Promise<Array>} Lista de objetos { name, category, price }
+   */
+  async getUserItemsWithDetails(userId) {
+    const userItems = await UserItems.findAll({
+      where: { userId },
+      include: [{ model: Items, as: 'Item', attributes: ['name', 'category', 'price'] }],
+      raw: true,
+      nest: true,
+    });
+
+
+    // Mapear a un formato sencillo
+    return userItems.map((ui) => ({
+      name: ui.Item.name,
+      category: ui.Item.category,
+      price: ui.Item.price,
+    }));
+  }
 }
 
-// 📌 Editar atributos de Rockie (PUT/PATCH)
-async function updateRockieAttributes(userId, updates) {
-    const rockie = await Rockie.findByPk(userId);
-    if (!rockie) return { success: false, message: "❌ No tienes un Rockie registrado." };
-
-    await rockie.update(updates);
-    await renderRockie(userId);
-
-    return { success: true, message: "✅ Atributos de Rockie actualizados correctamente." };
-}
-
-module.exports = {
-    getAccessoryCategories,
-    getAccessoriesByCategory,
-    buyAccessory,
-    equipAccessory,
-    updateRockieAttributes,
-};
-
+// 📌 Singleton Export
+module.exports = new AccessoryService();

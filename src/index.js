@@ -1,12 +1,11 @@
 const path = require('path');
 const dotenv = require('dotenv');
+
 // Load .env production or development
 const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development';
 dotenv.config({ path: path.resolve(__dirname, `../config/dotenv/${envFile}`) });
-
 // Load global environment variables
 dotenv.config({ path: path.resolve(__dirname, '../config/dotenv/.env') });
-
 
 const express = require("express");
 const { sequelize } = require("./config/database");
@@ -14,6 +13,7 @@ const { execSync } = require("child_process");
 const client = require("./bot");
 const app = express();
 
+// Import authentication and user service controllers.
 const {
   discordRedirect,
   discordAuth,
@@ -21,71 +21,73 @@ const {
   googleAuth,
 } = require("./controller/AuthController");
 
-const { editUser } = require("./services/user/userService");
+const UserController = require("./controller/UserController");
 
-// Vies settings
+// View settings
 app.set("views", path.join(__dirname, "./views"));
 app.set("view engine", "ejs");
 
-// Middlewares
+// Middleware for parsing incoming request bodies.
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Rutas
+// Define authentication routes for Discord and Google.
 app.get("/api/auth/discord", discordRedirect);
 app.get("/api/auth/discord/callback", discordAuth);
 
 app.get("/api/auth/google", googleRedirect);
 app.get("/api/auth/google/callback", googleAuth);
 
+// Route to render the user form.
 app.get("/form", async (req, res) => {
   res.render("formulario", { mensaje: null, user: null });
 });
 
-app.post("/api/auth/discord/update-user", editUser);
+// Route to handle user data updates from Discord.
+app.post("/api/auth/discord/update-user", UserController.updateUser);
 
-// Execute deploy-commands before to start the server
+
+// Execute deploy-commands before starting the server
 async function deployCommands() {
   try {
-    console.log("🚀 Ejecutando despliegue de comandos en Discord...");
+    console.log("Executing command deployment in Discord...");
     execSync('node src/deploy-commands.js', { stdio: 'inherit' });
-    console.log("✅ Comandos registrados exitosamente.");
+    console.log("Commands registered successfully.");
   } catch (error) {
-    console.error("❌ Error al ejecutar deploy-commands.js:", error.message);
-    process.exit(1); // Salir si hay error en el despliegue
+    console.error("Error executing deploy-commands.js:", error.message);
+    process.exit(1); // Exit if there is an error in the deployment
   }
 }
 
-// Inicialización de la aplicación
+
+// Main function to initialize database, server, and Discord bot.
 async function main() {
   try {
-    //Execute before to start server
+    // Execute before starting the server
     await deployCommands();
 
     console.log(`Environment: ${process.env.NODE_ENV}`);
 
-    console.log("⏳ Conectando a la base de datos...");
     await sequelize.authenticate();
-    console.log("✅ Base de datos conectada.");
+    console.log("Connected database.");
 
-    console.log("⏳ Sincronizando modelos...");
     await sequelize.sync({ alter: true });
-    console.log("✅ Modelos sincronizados.");
+    console.log("Synchronized models.");
 
     const PORT = process.env.PORT || 3000;
     const HOST = process.env.DB_HOST || "127.0.0.1";
 
+    // Start the server and listen on all network interfaces for Render at port 0.0.0.0.
     app.listen(PORT, HOST, () => {
-      console.log(`🚀 Servidor corriendo en http://${HOST}:${PORT}`);
+      console.log(`Server running in http://${HOST}:${PORT}`);
     });
 
     // Deploy discord bot
     if (!client.isReady()) {
       await client.login(process.env.TOKEN);
     }
-
   } catch (error) {
-    console.error("❌ Error en la aplicación:", error);
+    console.error("Error to execute: ", error);
   }
 }
 
