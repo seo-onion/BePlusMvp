@@ -78,8 +78,8 @@ async function main() {
     const HOST = process.env.DB_HOST || "127.0.0.1";
 
     // Start the server and listen on all network interfaces for Render at port 0.0.0.0.
-    app.listen(PORT, HOST, () => {
-      console.log(`Server running in http://localhost:${PORT}`);
+    app.listen(3000, HOST, () => {
+      console.log(`Server running in http://localhost:3000`);
     });
 
     // Deploy discord bot
