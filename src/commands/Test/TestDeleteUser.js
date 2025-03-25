@@ -1,6 +1,5 @@
 const { SlashCommandBuilder } = require("discord.js");
 const { deleteUser } = require("../../services/user/userService");
-const verification = require("../../utils/verification");
 const TESTER_ROLE = process.env.TESTER_ROLE;
 
 module.exports = {
