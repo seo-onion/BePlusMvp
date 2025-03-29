@@ -1,11 +1,31 @@
 // commands/Image Verification/verify.js
-
 const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require("discord.js");
 const { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } = require("@google/generative-ai");
 const errorEmbed = require("../../utils/embed/errorEmbed");
 const fetch = require('node-fetch');
+const { addRockyCoins, addRockyGems } = require("../../services/item/economyService");
 
-// --- Inicialización del Cliente Gemini ---
+//List of channels where the command can be used
+const ALLOWED_CHANNEL_IDS = new Set([
+  '1349815097228394646',
+  '1349807860196048906',
+  '1349813484988141578',
+  '1349814812443672636',
+])
+
+//--Modification of the rockie coins and gems--
+void async function modifyRockyCoinsAndGems(userId, quantity) {
+  try {
+    await addRockyCoins(userId, quantity); // Add RockyCoins
+    await addRockyGems(userId, quantity); // Add RockyGems
+  }
+  catch (error) {
+    console.error("Error al modificar RockyCoins y RockyGems:", error);
+  }
+}
+
+
+// --- Initialization of Gemini ---
 let genAI;
 let geminiModel;
 if (process.env.GEMINI_API_KEY) {
@@ -42,6 +62,7 @@ async function urlToGenerativePart(url, mimeType) {
   }
 }
 
+// --- Function to analyze the image with Gemini ---
 /**
  * Analiza la imagen usando Gemini Pro Vision para determinar si coincide
  * con la descripción del usuario, aplicando razonamiento.
@@ -88,12 +109,12 @@ Tu respuesta:`; // End of the prompt
     let explanation = "Gemini no proporcionó una explicación clara o no siguió el formato.";
     const metodo = "Razonamiento Gemini";
 
-    // Busca SÍ o NO al principio de la respuesta (insensible a mayúsculas/acentos si es posible, aunque regex simple es más fácil)
-    // Dividimos por línea para separar SÍ/NO de la explicación
+    //Try to look for SÍ/NO in the first line of the response
+    // Divide line by line to get the final response
     const lines = responseText.split('\n');
-    const firstLine = lines[0]?.trim().toUpperCase(); // Primera línea en mayúsculas
+    const firstLine = lines[0]?.trim().toUpperCase(); // First line in uppercase
 
-    if (firstLine === 'SÍ' || firstLine === 'SI') { // Acepta con o sin acento
+    if (firstLine === 'SÍ' || firstLine === 'SI') { // Accept both "SÍ" and "SI"
       cumple = true;
       explanation = lines.slice(1).join('\n').trim() || "Gemini confirmó pero no dio explicación detallada."; // El resto es la explicación
     } else if (firstLine === 'NO') {
@@ -160,6 +181,34 @@ module.exports = {
       return;
     }
 
+    const channelId = interaction.channelId;
+    const userId = interaction.user.id;
+
+    // --- Determine the channel is a thread is used ---
+    let effectiveChannelId;
+    let isThread = false;
+    if (channel.isThread()) {
+        effectiveChannelId = channel.parentId;
+        isThread = true;
+        console.log(`Comando ejecutado en hilo ${channel.id}, canal padre efectivo: ${effectiveChannelId}`);
+    } else {
+        effectiveChannelId = channel.id;
+        console.log(`Comando ejecutado en canal ${channel.id}, canal efectivo: ${effectiveChannelId}`);
+    }
+
+    // --- Verificatión of the channel ---
+    if (!effectiveChannelId || !ALLOWED_PARENT_CHANNEL_IDS.has(effectiveChannelId)) {
+      console.log(`Comando bloqueado para ${userId} en canal/hilo no permitido (efectivo: ${effectiveChannelId})`);
+      const errEmbed = errorEmbed({
+          title: "Lugar Incorrecto",
+          description: "Este comando solo puede usarse en los canales de retos designados o en hilos dentro de esos canales."
+      });
+      try {
+        return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
+      } catch (replyError) { console.error("Error al enviar mensaje de error:", replyError); }
+      return;
+    }
+
     try {
       await interaction.deferReply();
 
@@ -217,19 +266,24 @@ module.exports = {
           iconURL: interaction.user.displayAvatarURL(),
         });
 
+        if(cumple) {
+          // Modify RockyCoins and Gems if the image matches the description
+          await modifyRockyCoinsAndGems(userId, 10); // Example: adding 1 RockyCoin
+        }
+
       return await interaction.editReply({ embeds: [resultEmbed] });
 
     } catch (error) {
       console.error(`❌ Error en el comando /${interaction.commandName}:`, error);
-      const errorEmbed = new EmbedBuilder()
-        .setColor("#FF0000")
-        .setTitle("❌ Error Inesperado")
-        .setDescription(error.message.startsWith("No se pudo") || error.message.startsWith("Error al interactuar") || error.message.startsWith("El análisis fue bloqueado") ? error.message : "Ocurrió un error al procesar tu solicitud con Gemini.");
+      const embedDeError = errorEmbed({
+        title: "Error en el comando",
+        description: `\`\`\`${error.message || "No hay detalles adicionales."}\`\`\``,
+      });
 
       if (interaction.deferred || interaction.replied) {
-        return await interaction.editReply({ embeds: [errorEmbed] });
+        return await interaction.editReply({ embeds: [embedDeError] });
       } else {
-        return await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
+        return await interaction.reply({ embeds: [embedDeError], flags: MessageFlags.Ephemeral });
       }
     }
   },
