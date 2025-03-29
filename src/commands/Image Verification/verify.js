@@ -5,24 +5,25 @@ const errorEmbed = require("../../utils/embed/errorEmbed");
 const fetch = require('node-fetch');
 const { addRockyCoins, addRockyGems } = require("../../services/item/economyService");
 
-//List of channels where the command can be used
-const ALLOWED_CHANNEL_IDS = new Set([
+const ALLOWED_PARENT_CHANNEL_IDS = new Set([
   '1349815097228394646',
   '1349807860196048906',
   '1349813484988141578',
   '1349814812443672636',
-])
+  '1332533398731886595', // borrar
+  '1332605936640196689', // borrar
+]);
 
 //--Modification of the rockie coins and gems--
-void async function modifyRockyCoinsAndGems(userId, quantity) {
+async function modifyRockyCoinsAndGems(userId, quantity) {
   try {
-    await addRockyCoins(userId, quantity); // Add RockyCoins
-    await addRockyGems(userId, quantity); // Add RockyGems
+    await addRockyCoins({userId, quantity}); // Add RockyCoins
+    await addRockyGems({userId, quantity}); // Add RockyGems
   }
   catch (error) {
     console.error("Error al modificar RockyCoins y RockyGems:", error);
   }
-}
+};
 
 
 // --- Initialization of Gemini ---
@@ -181,12 +182,11 @@ module.exports = {
       return;
     }
 
-    const channelId = interaction.channelId;
-    const userId = interaction.user.id;
+    const channel = interaction.channel; // Obtener el objeto canal/hilo
+    const userId = interaction.user.id; // Obtener el ID del usuario que ejecuta el comando
 
-    // --- Determine the channel is a thread is used ---
+    // --- 1. Determinar el ID del Canal Efectivo (Padre si es Hilo) ---
     let effectiveChannelId;
-    let isThread = false;
     if (channel.isThread()) {
         effectiveChannelId = channel.parentId;
         isThread = true;
@@ -196,7 +196,7 @@ module.exports = {
         console.log(`Comando ejecutado en canal ${channel.id}, canal efectivo: ${effectiveChannelId}`);
     }
 
-    // --- Verificatión of the channel ---
+    // --- 2. Verificación de Canal Permitido (usando el ID efectivo) ---
     if (!effectiveChannelId || !ALLOWED_PARENT_CHANNEL_IDS.has(effectiveChannelId)) {
       console.log(`Comando bloqueado para ${userId} en canal/hilo no permitido (efectivo: ${effectiveChannelId})`);
       const errEmbed = errorEmbed({
@@ -277,7 +277,7 @@ module.exports = {
       console.error(`❌ Error en el comando /${interaction.commandName}:`, error);
       const embedDeError = errorEmbed({
         title: "Error en el comando",
-        description: `\`\`\`${error.message || "No hay detalles adicionales."}\`\`\``,
+        description: `\`\`\`${"No hay detalles adicionales."}\`\`\``,
       });
 
       if (interaction.deferred || interaction.replied) {
