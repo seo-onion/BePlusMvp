@@ -182,10 +182,10 @@ module.exports = {
       return;
     }
 
-    const channel = interaction.channel; // Obtener el objeto canal/hilo
-    const userId = interaction.user.id; // Obtener el ID del usuario que ejecuta el comando
+    const channel = interaction.channel; // Get the channel where the command was executed
+    const userId = interaction.user.id; // Get the user ID of the command executor
 
-    // --- 1. Determinar el ID del Canal Efectivo (Padre si es Hilo) ---
+    // --- 1. Check the id of the channel or thread ---
     let effectiveChannelId;
     if (channel.isThread()) {
         effectiveChannelId = channel.parentId;
@@ -196,7 +196,7 @@ module.exports = {
         console.log(`Comando ejecutado en canal ${channel.id}, canal efectivo: ${effectiveChannelId}`);
     }
 
-    // --- 2. Verificación de Canal Permitido (usando el ID efectivo) ---
+    // --- 2. Verify if the channel is allowed or not ---
     if (!effectiveChannelId || !ALLOWED_PARENT_CHANNEL_IDS.has(effectiveChannelId)) {
       console.log(`Comando bloqueado para ${userId} en canal/hilo no permitido (efectivo: ${effectiveChannelId})`);
       const errEmbed = errorEmbed({
@@ -224,14 +224,14 @@ module.exports = {
       const imageUrl = attachment.url;
       const imageMimeType = attachment.contentType;
 
-      // 2. Analizar la imagen usando Gemini con la descripción en español
+      // 2. Analyze the image with Gemini
       const { cumple, explanation, metodo } = await analyzeImageWithGemini(
         imageUrl,
         imageMimeType,
-        descripcionEs // Pasamos la descripción en español directamente
+        descripcionEs
       );
 
-      // 3. Crear y enviar el Embed de resultado (en español)
+      // 3. Create and send the result embed
       const resultEmbed = new EmbedBuilder()
         .setColor(cumple ? "#00FF00" : "#FF4500")
         .setTitle("🧠 Resultado del Análisis con de la Imagen Gemini Vision")
