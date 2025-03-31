@@ -21,8 +21,10 @@ const {
   googleRedirect,
   googleAuth,
 } = require("./controller/AuthController");
+const validateCoupon = require("./controller/QrController")
 
 const UserController = require("./controller/UserController");
+const DiscountController = require("./controller/discountController");
 
 // View settings
 app.set("views", path.join(__dirname, "./views"));
@@ -46,6 +48,12 @@ app.get("/form", async (req, res) => {
 
 // Route to handle user data updates from Discord.
 app.post("/api/auth/discord/update-user", UserController.updateUser);
+
+app.get("/cupones/validar/:token", validateCoupon);
+
+// Route to add a new coupons
+app.get("/descuentos/nuevo", DiscountController.showCreateForm);
+app.post("/descuentos/crear", DiscountController.createDiscount);
 
 
 // Execute deploy-commands before starting the server
@@ -72,7 +80,7 @@ async function main() {
     await sequelize.authenticate();
     console.log("Connected database.");
 
-    await sequelize.sync({ force: true });
+    await sequelize.sync({ alter: true });
     console.log("Synchronized models.");
 
     const PORT = process.env.DB_PORT || 3000;

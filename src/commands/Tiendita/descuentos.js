@@ -1,9 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-const Discount = require("../../models/Tiendita/Discount");
 const DiscountService = require("../../services/tiendita/discountServices")
 const createErrorEmbed = require("../../utils/embed/errorEmbed");
 const createAlertEmbed = require("../../utils/embed/alertEmbed");
-const ListObjectFormat = require("../../utils/ListObjects");
+const ListDiscountsFormat = require("../../utils/ListDiscounts");
 
 const ITEMS_PER_PAGE = 5;
 
@@ -56,7 +55,7 @@ module.exports = {
 
                 embed.addFields({
                     name: `📌 ${category.charAt(0).toUpperCase() + category.slice(1)}`,
-                    value: ListObjectFormat(items, "❌ No hay items en la tienda"),
+                    value: ListDiscountsFormat(items, "No hay items en la tienda"),
                 });
 
                 return embed;

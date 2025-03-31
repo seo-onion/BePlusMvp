@@ -1,8 +1,35 @@
 const { Op } = require("sequelize");
 const Discounts = require('../../models/Tiendita/Discount');
+const UserCoupon = require("../../models/Tiendita/UserCoupon")
+const UserService = require("../../services/user/userService")
+const TransactionService = require("../../services/item/transactionServices")
+const { v4: uuidv4 } = require("uuid");
 
 class DiscountService {
 
+    static async validateCoupon(req) {
+        const { userId, discount } = req
+        if (!userId || !discount) {
+            console.error("Missing parameters")
+            return null
+        }
+        try {
+            const token = uuidv4();
+
+            return await UserCoupon.create({
+                userId,
+                discountName: discount.name,
+                product: discount.category,
+                discountValue: discount.discount,
+                token,
+                status: "pending",
+                discountId: discount.id || null,
+            });
+        } catch (error) {
+            console.error("Qr could not be validated ", error)
+        }
+
+    }
     static async getDiscount(identifier) {
         try {
             return await Discounts.findOne({
@@ -28,7 +55,7 @@ class DiscountService {
     static async getAvailableDiscounts() {
         try {
             return await Discounts.findAll({
-                attributes: ["id", "name", "discount", "category"],
+                attributes: ["id", "name", "discount", "category", "price"],
                 raw: true,
                 order: [["category", "ASC"]],
             });
@@ -41,7 +68,7 @@ class DiscountService {
 
     static async createDiscount(req) {
         try {
-            const { name, discount, category } = req;
+            const { name, discount, category, price } = req;
 
             if (!name || !discount || !category) {
                 console.error("Faltan datos requeridos para crear el descuento.");
@@ -51,7 +78,8 @@ class DiscountService {
             return await Discounts.create({
                 name,
                 discount,
-                category
+                category,
+                price
             });
 
         } catch (error) {
@@ -103,29 +131,71 @@ class DiscountService {
         }
     }
 
-    static async getDiscountsByCategory(category, attributes = ["id", "name", "discount"]) {
-        if (!category) {
-            console.error("Falta la categoría para buscar descuentos.");
-            return null;
-        }
-
+    static async getItemByCategoryAndName(req) {
+        const { name, category } = req;
         try {
-            const discounts = await Discounts.findAll({
-                where: { category },
-                attributes,
-                raw: true
-            });
-
-            if (discounts.length === 0) {
-                console.log(`No se encontraron descuentos en la categoría: ${category}`);
-                return [];
+            if (!name || !category) {
+                console.error("Name or category dont given.");
+                return null;
             }
 
-            return discounts;
+            const discount = await Discounts.findOne({
+                where: {
+                    name: { [Op.iLike]: name },
+                    category,
+                }
+            });
+
+            if (!discount) {
+                return null;
+            }
+            return discount;
 
         } catch (error) {
-            console.error("Error al buscar descuentos por categoría:", error.message);
+            console.error("Error searching for item by name and category: ", error);
             return null;
+        }
+    }
+
+    static async buyItemByCategoryAndName(req) {
+        const { userId, name, category } = req
+        try {
+            if (!userId || !name || !category) {
+                console.error("Data missing");
+                return false;
+            }
+
+            const discount = await this.getItemByCategoryAndName({ name, category })
+
+
+            if (!discount) {
+                console.error("Discount not found.");
+                return false;
+            }
+
+            const user = await UserService.getUser(userId);
+            if (!user) {
+                console.error("user not found");
+                return false;
+            }
+
+            console.log(user.rockyGems)
+            const price = discount.price;
+            if (user.rockyGems < price) {
+                console.error(`No tienes suficientes rocky gems`);
+                return false;
+            }
+
+            await TransactionService.createTransaction({ userId, amount: price, type: "compra", badge: "rockyGem", productId: discount.name })
+
+            user.rockyGems -= price;
+            await user.save();
+
+            return true;
+
+        } catch (error) {
+            console.error("Error al comprar ítem:", error.message);
+            return false;
         }
     }
 

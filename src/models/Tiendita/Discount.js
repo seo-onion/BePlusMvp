@@ -11,6 +11,10 @@ const Discounts = sequelize.define("Discounts", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  price : {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
   discount: {
     type: DataTypes.DOUBLE,
     allowNull: false,
