@@ -10,8 +10,6 @@ const ALLOWED_PARENT_CHANNEL_IDS = new Set([
   '1349807860196048906',
   '1349813484988141578',
   '1349814812443672636',
-  '1332533398731886595', // borrar
-  '1332605936640196689', // borrar
 ]);
 
 //--Modification of the rockie coins and gems--
