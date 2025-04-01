@@ -15,9 +15,11 @@ const Transaction = sequelize.define("Transaction", {
         type: DataTypes.INTEGER
     },
     type: {
-        type: DataTypes.ENUM("reward", "compra") //Types of transaction (it will be more), "compra" está en homenaje a un wbn que prefirió escribir en español
+        type: DataTypes.ENUM("reward", "compra", "discount") //Types of transaction (it will be more), "compra" está en homenaje a un wbn que prefirió escribir en español
     },
-
+    badge: {
+        type: DataTypes.ENUM("rockyCoin", "rockyGem")
+    },
     productId: {
         type: DataTypes.STRING,
         allowNull: false,

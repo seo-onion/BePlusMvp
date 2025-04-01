@@ -87,16 +87,16 @@ class TransactionService {
     // Create a new transaction
     static async createTransaction(req) {
         try {
-            const { userId, amount, type, productId } = req;
+            const { userId, amount, type, badge, productId } = req;
 
             // validate data
-            if (!userId || !amount || !type || !productId) {
-                console.error("Missing parameters: userId, amount, type or productId.");
+            if (!userId || !amount || !type || !productId || !badge) {
+                console.error("Missing parameters: userId, amount, type, badge or productId.");
                 return null;
             }
 
             // create and return a new Transaction
-            return await Transaction.create({ userId, amount, type, productId });
+            return await Transaction.create({ userId, amount, type, badge, productId });
         } catch (error) {
             console.error("Error creating transaction:", error.message);
             return null;
