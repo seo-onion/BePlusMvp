@@ -30,7 +30,7 @@ module.exports = {
                     title: "Usuario no encontrado",
                     description: "No se logró recuperar tu información. Intenta actualizarlo."
                 });
-                return await interaction.editReply({ embeds: [errorEmbed] });
+                return await interaction.editReply({ embeds: [errorEmbed], ephemeral: true });
             }
 
             // find or create a rocky
@@ -51,7 +51,7 @@ module.exports = {
                     title: "Error al renderizar a tu rockie",
                     description: "No se pudo generar la imagen de tu Rockie"
                 });
-                return await interaction.editReply({ embeds: [errorEmbed] });
+                return await interaction.editReply({ embeds: [errorEmbed], ephemeral: true });
             }
 
             // Creates an embed message with the Rockie's details.
@@ -78,7 +78,7 @@ module.exports = {
                 description: "Hubo un error al mostrar tu Rockie. Inténtalo más tarde."
             });
 
-            return await interaction.editReply({ embeds: [errorEmbed] });
+            return await interaction.editReply({ embeds: [errorEmbed], ephemeral: true });
         }
     },
 };

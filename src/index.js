@@ -69,7 +69,6 @@ async function deployCommands() {
 }
 
 
-// Main function to initialize database, server, and Discord bot.
 async function main() {
   try {
     // Execute before starting the server
@@ -78,17 +77,17 @@ async function main() {
     console.log(`Environment: ${process.env.NODE_ENV}`);
 
     await sequelize.authenticate();
-    console.log("Connected database.");
+    console.log("Connected to the database.");
 
     await sequelize.sync({ alter: true });
     console.log("Synchronized models.");
 
-    const PORT = process.env.DB_PORT || 3000;
+    const PORT = 3000;
     const HOST = process.env.DB_HOST || "127.0.0.1";
 
-    // Start the server and listen on all network interfaces for Render at port 0.0.0.0.
-    app.listen(3000, HOST, () => {
-      console.log(`Server running in http://localhost:3000`);
+    console.log(`Starting server at http://${HOST}:${PORT}`);
+    app.listen(PORT, HOST, () => {
+      console.log(`Server running at http://${HOST}:${PORT}`);
     });
 
     // Deploy discord bot
@@ -99,5 +98,6 @@ async function main() {
     console.error("Error to execute: ", error);
   }
 }
+
 
 main();

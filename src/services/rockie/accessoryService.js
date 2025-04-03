@@ -103,7 +103,9 @@ class AccessoryService {
 
         // ✅ Validate existence in S3 (for hat/ropa only)
         if (s3Folder) {
-            const exists = await this.fileExistsInS3(itemName, s3Folder);
+            const filePath = `assets/${s3Folder}${itemName}`;
+            console.log(filePath);
+            const exists = await this.fileExistsInS3(filePath);
             if (!exists) {
                 return {
                     success: false,

@@ -64,6 +64,8 @@ class S3Service {
 
     // ✅ Verificar existencia de archivo
     async fileExistsInS3(filePath) {
+        console.log(`Verificando existencia del archivo en S3 con el path: ${filePath}`);
+
         const params = {
             Bucket: BUCKET_NAME,
             Key: filePath,

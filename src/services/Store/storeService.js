@@ -1,4 +1,17 @@
 const Items = require("../../models/Item/Items")
+
+const Store = require("../../models/Store/Store");  // Asegúrate de importar correctamente el modelo Store
+const User = require("../../models/User/Users");
+const UserItems = require("../../models/Item/UserItems");
+const userItemsService = require("../../services/user/userItemsService.js");
+const alertEmbed = require("../../utils/embed/alertEmbed.js");
+const errorEmbed = require("../../utils/embed/errorEmbed.js");
+const successEmbed = require("../../utils/embed/successEmbed.js");
+const ItemService = require("../../services/item/ItemService.js");
+const alertEmbedList = require("../../utils/embed/alertEmbedList");
+const ListObjectsFormat = require("../../utils/ListObjects.js");
+
+
 const TransactionService = require("../item/transactionServices")
 class StoreManager {
 
@@ -208,7 +221,7 @@ class StoreManager {
         await user.save();
 
         // Creates a relation UserItems (The User has one more item)
-        await userItemsService.createUserItems(userId, item.id);
+        await userItemsService.createUserItems(item, userId); //ESTABA AL REVES LA CONCHASUPUTAMADRE
 
         // Creates a Transaction withe ProductID and the price of the product
         await TransactionService.createTransaction({

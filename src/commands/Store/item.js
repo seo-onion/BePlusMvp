@@ -34,6 +34,10 @@ module.exports = {
                 .setAutocomplete(true)
         ),
 
+
+    restricted: true, // Restricts the command to specific users like Beta Testers.
+
+
     // ✅ Autocompletado para imagen_url basado en archivos de S3
 async autocomplete(interaction) {
     try {
@@ -73,11 +77,6 @@ async autocomplete(interaction) {
 
         const member = interaction.member;
 
-        // ✅ Check user permissions
-        if (!member.roles.cache.has(DEV) && !member.roles.cache.has(ROLE_ADMIN)) {
-            const embed = createAlertEmbed("🚫 No deberías estar probando estos comandos.");
-            return await interaction.reply({ embeds: [embed], ephemeral: true });
-        }
 
         await interaction.deferReply({ ephemeral: true });
 
