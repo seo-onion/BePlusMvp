@@ -27,11 +27,7 @@ exports.discordRedirect = async (req, res) => {
 exports.discordAuth = async (req, res) => {
     const code = req.query.code;
 
-    const user = await UserService.getUser(code)
-
-    if (!user) {
-        return res.status(400).send("ya has sido registrado en BePlus");
-    }
+    
 
     if (!code) {
         return res.status(400).send("No se recibió el código de autorización.");

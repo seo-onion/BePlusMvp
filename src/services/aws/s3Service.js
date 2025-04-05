@@ -33,7 +33,7 @@ class S3Service {
             const result = await this.s3.upload(params).promise();
             return result.Location; // ✅ URL pública
         } catch (error) {
-            console.error("❌ E rror al subir archivo a S3:", error);
+            console.error("❌ Error al subir archivo a S3:", error);
             return null;
         }
     }
@@ -59,12 +59,19 @@ class S3Service {
     // 🔗 Obtener URL pública de archivo
     getFileUrl(fileName, folder = "") {
         const path = folder ? `${folder}${fileName}` : fileName;
+        console.log(`Generando URL: ${BUCKET_BASE_URL}/${path}`); // Log para depuración
         return `${BUCKET_BASE_URL}/${path}`;
     }
 
     // ✅ Verificar existencia de archivo
     async fileExistsInS3(filePath) {
         console.log(`Verificando existencia del archivo en S3 con el path: ${filePath}`);
+
+        // Verificar si el filePath es válido
+        if (!filePath) {
+            console.error("❌ El archivo no tiene una ruta válida.");
+            return false;
+        }
 
         const params = {
             Bucket: BUCKET_NAME,
@@ -73,9 +80,13 @@ class S3Service {
 
         try {
             await this.s3.headObject(params).promise();
+            console.log(`✅ El archivo existe en S3 con el path: ${filePath}`);
             return true; // ✅ Existe
         } catch (err) {
-            if (err.code === 'NotFound') return false;
+            if (err.code === 'NotFound') {
+                console.log(`❌ El archivo no fue encontrado en S3 con el path: ${filePath}`);
+                return false;
+            }
             console.error("❌ Error verificando archivo en S3:", err);
             return false;
         }

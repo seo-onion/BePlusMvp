@@ -33,7 +33,8 @@ class RenderRockieService {
       // ✅ Validación HEAD en S3
       const urlsToCheck = [basePath, eyesPath, mouthPath, clothesPath, hatPath].filter(Boolean);
       for (const filePath of urlsToCheck) {
-        const exists = await s3Service.fileExistsInS3(  );
+        console.log(`Verificando archivo en S3 con el path: ${filePath}`);  // Para debug
+        const exists = await s3Service.fileExistsInS3(filePath);
         if (!exists) throw new Error(`❌ Archivo de ${filePath} no encontrado en S3.`);
       }
 
