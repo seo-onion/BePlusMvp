@@ -25,7 +25,7 @@ module.exports = function alertEmbedList(
         .setColor(color)
         .setTitle(title)
         .setDescription(description)
-        .setImage("https://media.discordapp.net/attachments/1333263880566210561/1350712349753086022/ADAPTABLE_2.png?ex=67d7bc67&is=67d66ae7&hm=6e3e2c1bc23a34c6a501cc64300b7def7be7dd6733d8c0ab8dd1bc331883ebb2&=&format=webp&quality=lossless&width=250&height=250")
+        .setImage("https://media.discordapp.net/attachments/1331719510243282986/1358065546867773613/EMOTES_2asasdad.PNG?ex=67f27c9a&is=67f12b1a&hm=eec0733369e55d9b6c7307301afe61b4f392457abc88861ed8caad1be1f6cb2a&=&format=webp&quality=lossless&width=250&height=250")
         .addFields(fields)
         .setTimestamp()
         .setFooter({ text: "Tienda Rocky • Bienvenido a la tienda Rocky." });

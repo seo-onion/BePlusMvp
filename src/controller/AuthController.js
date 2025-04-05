@@ -26,6 +26,13 @@ exports.discordRedirect = async (req, res) => {
 // Handles the OAuth2 authentication process with Discord.
 exports.discordAuth = async (req, res) => {
     const code = req.query.code;
+
+    const user = await UserService.getUser(code)
+
+    if (!user) {
+        return res.status(400).send("ya has sido registrado en BePlus");
+    }
+
     if (!code) {
         return res.status(400).send("No se recibió el código de autorización.");
     }
@@ -67,10 +74,7 @@ exports.discordAuth = async (req, res) => {
         //TODO: add a embed to notification
         PrivateChannelNotificationService.sendPrivateChannelNotification(id, "Has sido registrado exitosamente :D");
 
-        res.render("response", {
-            success: true,
-            message: "Felicidades, acabas de registrarte en Be+",
-        });
+        res.render("discordLogin");
 
     } catch (error) {
         console.error("Authentication error:", error);
@@ -81,7 +85,7 @@ exports.discordAuth = async (req, res) => {
 // Generates the URL for redirecting the user to Google's OAuth2 consent screen for Google Fit.
 exports.googleRedirect = async (req, res) => {
     const { id } = req.query;
-
+    
     if (!id) return res.status(400).send("Error: Falta el ID de usuario");
 
     try {
@@ -115,7 +119,7 @@ exports.googleAuth = async (req, res) => {
         const { access_token, refresh_token } = response;
 
         // Adding Google Fit authentication data to the user profile
-        const authUser = await UserService.editUser({
+        await UserService.editUser({
             identifier: state,
             googleToken: access_token,
             googleRefreshToken: refresh_token,
@@ -123,7 +127,7 @@ exports.googleAuth = async (req, res) => {
 
         // Sending a private notification confirming successful Google Fit linking.
         PrivateChannelNotificationService.sendPrivateChannelNotification(state, "Vinculado exitosamente con Google Fit");
-        res.render("response", { success: true, message: "Vinculado correctamente" });
+        res.render("fitLogin");
 
     } catch (error) {
         console.error("Google authentication error: ", error);

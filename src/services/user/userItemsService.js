@@ -6,31 +6,31 @@ class UserItemsService {
     static async createUserItems(item, userId) {
         try {
             if (!item || !userId) {
-                console.error("❌ Error: Falta item o userId.");
+                console.error("Missing item or userId.");
                 return null;
             }
 
             const user = await Users.findByPk(userId);
             if (!user) {
-                console.error(`❌ Error: No se encontró el usuario con ID ${userId}`);
+                console.error(`User not found ${userId}`);
                 return null;
             }
 
             const itemExists = await Items.findByPk(item.id);
             if (!itemExists) {
-                console.error(`❌ Error: No se encontró el ítem con ID ${item.id}`);
+                console.error(`Item not found ${item.id}`);
                 return null;
             }
 
             return await UserItems.create({userId, itemId: item.id});
         } catch (error) {
-            console.error("❌ Error al crear UserItems:", error.message);
+            console.error("Error to create UserItems:", error.message);
             return null;
         }
     }
     static async getAllItemsByUser(userId){
         if (!userId) {
-            console.error("❌ Error: Falta item o userId.");
+            console.error("Error: Falta item o userId.");
             return null;
         }
         try {
@@ -47,6 +47,18 @@ class UserItemsService {
         } catch (error) {
             console.error("❌ Error al crear UserItems:", error.message);
             return null;
+        }
+    }
+
+    static async hasUserItem(req) {
+
+        const {userId, itemId} = req;
+        try {
+            const result = await UserItems.findOne({ where: { userId, itemId } });
+            return !!result;
+        } catch (error) {
+            console.error("Error checking user item existence:", error.message);
+            return false;
         }
     }
 }

@@ -4,23 +4,6 @@ const UserService = require("../user/userService")
 
 class EconomyService {
 
-    static async createBadges() {
-        await Item.create({
-            name: "RockyCoin",
-            description: "Moneda virtual para comprar items.",
-            price: 1,
-            category: "badge",
-        });
-
-        await Item.create({
-            name: "RockyGem",
-            description: "Moneda virtual para acceder a descuentos y promociones.",
-            price: 1,
-            category: "badge",
-        });
-    }
-
-
     static async addRockyGems(req) {
         try {
             
@@ -89,6 +72,7 @@ class EconomyService {
                 userId: userId,
                 amount: quantity,
                 type: "reward",
+                badge: "rockyCoin",
                 productId: "rockyCoin",
             });
     

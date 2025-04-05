@@ -51,7 +51,7 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setTitle("🛒 Tienda de descuentos y promociones")
                     .setDescription("Bienvenido a la **Tienda** 🏪\nPuedes comprar usando: `/adquirir`")
-                    .setColor("#FFA501");
+                    .setColor("#FFA501"); 
 
                 embed.addFields({
                     name: `📌 ${category.charAt(0).toUpperCase() + category.slice(1)}`,

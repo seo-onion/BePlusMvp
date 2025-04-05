@@ -71,7 +71,7 @@ module.exports = {
         .setColor("#FFD700") // Gold color representing achievements.
         .setTitle("🏅 ¡Nuevos Logros Desbloqueados!")
         .setDescription("Has logrado grandes avances y desbloqueaste los siguientes logros:")
-        .setThumbnail("https://i.imgur.com/Yk4p2Ox.png") // 🖼 Imagen representativa de logros
+        .setThumbnail("https://i.imgur.com/Yk4p2Ox.png") 
         .setTimestamp();
 
       // Adds each unlocked achievement to the embed.

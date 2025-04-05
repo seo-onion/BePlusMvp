@@ -114,7 +114,9 @@ class UserService {
         }
       }
 
+      console.log(user.toJSON())
       return user;
+
     } catch (error) {
       console.error("Error to update user:", error);
       return null;

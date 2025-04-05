@@ -1,5 +1,8 @@
 const { Op } = require("sequelize");
 const Items = require('../../models/Item/Items');
+const UserService = require("../user/userService");
+const UserItemsService = require("../user/userItemsService");
+const TransactionService = require("../item/transactionServices");
 
 class ItemService {
 
@@ -26,6 +29,7 @@ class ItemService {
             return null;
         }
     }
+
 
     // Create an Item
     static async createItem(req) {
@@ -100,21 +104,21 @@ class ItemService {
         }
     }
 
-    static async getAllItemsByCategory(category, store, attributes = ["id", "name", "price"]) {
-        if (!category || !store?.id) {
+    static async getAllItemsByCategory(category, attributes = ["id", "name", "price"]) {
+        if (!category) {
             console.error("❌ Error: Falta la categoría o el ID de la tienda.");
             return null;
         }
 
         try {
             const items = await Items.findAll({
-                where: { category, storeId: store.id },
+                where: { category },
                 attributes: attributes,
                 raw: true
             });
 
             if (items.length === 0) {
-                console.log(`⚠️ Advertencia: No se encontraron ítems en la categoría "${category}" para la tienda con ID ${store.id}`);
+                console.log(`Advertencia: No se encontraron ítems en la categoría "${category}"`);
                 return [];
             }
             return items;
@@ -124,6 +128,70 @@ class ItemService {
         }
     }
 
+    static async getItemByCategoryAndName(req) {
+        
+        const {category, name} = req;
+        
+        if (!category || !name) {
+            console.error("Error: Both category and name are required.");
+            return null;
+        }
+        try {
+            const where = {
+                category,
+                name,
+            };
+    
+            const item = await Items.findOne({ where });
+    
+            if (!item) {
+                console.log(`Item "${name}" not found in category "${category}"`);
+                return null;
+            }
+    
+            return item;
+    
+        } catch (error) {
+            console.error("Error getting item by category and name:", error.message);
+            return null;
+        }
+    }
+
+    static async buyItem(req) {
+        const {userId, itemName, category} = req
+        try {
+            const item = await this.getItemByCategoryAndName({ category, name: itemName});
+    
+            if (!item) return null;
+    
+            const user = await UserService.getUser(userId);
+            if (!user) return null;
+    
+            if (user.rockyCoins < item.price) return null;
+    
+            const existingPurchase = await UserItemsService.hasUserItem({ userId, itemId: item.id });
+            if (existingPurchase) return null;
+    
+            user.rockyCoins -= item.price;
+            await user.save();
+    
+            await UserItemsService.createUserItems(item, userId);
+            await TransactionService.createTransaction({
+                userId,
+                amount: item.price,
+                type: "compra",
+                badge: "rockyCoin",
+                productId: item.id
+            });
+    
+            return item;
+    
+        } catch (error) {
+            console.error("Error in buyItem:", error.message);
+            return null;
+        }
+    }
+    
 }
 
 module.exports = ItemService;

@@ -109,10 +109,8 @@ class GoogleFitService {
     static async claimRockyCoins(userId) {
         try {
             console.log("Getting the rewards from the previous day");
-            
-
             const lastClaim = await TransactionService.getLastDailyReward(userId)
-            console.log(lastClaim)
+            console.log("Last claim: ", lastClaim)
             if (lastClaim) {
                 console.log("Reward already obtained");
                 return null;    

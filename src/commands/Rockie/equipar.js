@@ -2,7 +2,6 @@
 const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require("discord.js");
 const accessoryService = require("../../services/rockie/accessoryService");
 const renderRockieService = require("../../services/rockie/renderRockieService");
-const { Items } = require("../../models/Item/Items.js");
 
 module.exports = {
     data: new SlashCommandBuilder()

@@ -33,14 +33,14 @@ class RenderRockieService {
       // ✅ Validación HEAD en S3
       const urlsToCheck = [basePath, eyesPath, mouthPath, clothesPath, hatPath].filter(Boolean);
       for (const filePath of urlsToCheck) {
-        const exists = await s3Service.fileExistsInS3(filePath);
+        const exists = await s3Service.fileExistsInS3(  );
         if (!exists) throw new Error(`❌ Archivo de ${filePath} no encontrado en S3.`);
       }
 
       // 🖼️ Descargar imágenes desde S3
       const [baseBuffer, eyesBuffer, mouthBuffer] = await Promise.all([
         s3Service.getFileBuffer(basePath),
-        s3Service.getFileBuffer(eyesPath),
+        s3Service.getFileBuffer(eyesPath), 
         s3Service.getFileBuffer(mouthPath)
       ]);
 

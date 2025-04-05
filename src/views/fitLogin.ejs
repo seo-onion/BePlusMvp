@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect Google Fit - B+</title>
+    <style>
+        /* Base Styling */
+        body {
+            font-family: 'Balabeloo', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .title {
+            font-size: 36px;
+            color: #7abddd;
+            font-weight: bold;
+            margin-bottom: 20px;
+            animation: fadeIn 2s ease-in-out;
+        }
+
+        .message {
+            font-size: 18px;
+            color: #333333;
+            margin-bottom: 30px;
+            max-width: 500px;
+            line-height: 1.5;
+        }
+
+        .rockie-image {
+            width: 150px;
+            height: 150px;
+            background-image: url('https://media.discordapp.net/attachments/1331719510243282986/1358064091436155040/Ilustracionjk_12.png?ex=67f27b3f&is=67f129bf&hm=b94f888736f47ed8d08760323e97613098c84dca6e154e60c01d3a21be189de0&=&format=webp&quality=lossless&width=897&height=897'); 
+            background-size: contain;
+            background-position: center;
+            animation: rockieLift 1.5s ease-in-out infinite alternate;
+            margin-bottom: 30px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes rockieLift {
+            0% {
+                transform: translateY(0);
+            }
+            100% {
+                transform: translateY(-10px); /* Move Rockie up and down */
+            }
+        }
+
+        .cta-button {
+            background-color: #ffd166;
+            padding: 12px 25px;
+            font-size: 18px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+
+        .cta-button:hover {
+            background-color: #ffb84d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="rockie-image"></div>
+        <div class="title">Great job! You're connected!</div>
+        <div class="message">
+            You've successfully linked your Google Fit account to B+! Now Rockie will track your steps and help you earn rewards. Keep moving and stay active!
+        </div>
+        <button class="cta-button">Return to discord</button>
+    </div>
+</body>
+</html>

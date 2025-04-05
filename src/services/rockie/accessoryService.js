@@ -2,7 +2,6 @@
 const Items = require("../../models/Item/Items");
 const UserItems = require("../../models/Item/UserItems");
 const Rockie = require("../../models/Rockie/Rockie");
-const storeService = require("../Store/storeService");
 const renderRockieService = require("./renderRockieService");
 const s3Service = require("../aws/s3Service"); // ✅ Validación en S3
 
@@ -39,7 +38,7 @@ class AccessoryService {
      * @returns {Promise<Object>} Store response.
      */
     async buyAccessory(userId, itemName) {
-        return await storeService.buyItem(userId, itemName);
+        return await ItemService.buyItem({userId, itemName, category});
     }
 
     /**
