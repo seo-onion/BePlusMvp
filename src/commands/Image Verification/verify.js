@@ -189,10 +189,8 @@ module.exports = {
     if (channel.isThread()) {
         effectiveChannelId = channel.parentId;
         isThread = true;
-        console.log(`Comando ejecutado en hilo ${channel.id}, canal padre efectivo: ${effectiveChannelId}`);
     } else {
         effectiveChannelId = channel.id;
-        console.log(`Comando ejecutado en canal ${channel.id}, canal efectivo: ${effectiveChannelId}`);
     }
 
     // --- 2. Verify if the channel is allowed or not ---

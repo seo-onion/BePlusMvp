@@ -76,9 +76,9 @@ class TransactionService {
         const COIN_ID = IMAGE_REWARD_IDS[0];
         const GEM_ID = IMAGE_REWARD_IDS[1];
 
-        const MAX_SECONDS_APART = 60;
+        const MAX_SECONDS_APART = 5;
 
-        // Cooldown en horas
+        // Cooldown in hours
         const CLAIM_COOLDOWN_HOURS = 24;
 
         if (!userId) {
@@ -87,7 +87,7 @@ class TransactionService {
         }
 
         try {
-            // 1. Encontrar la última transacción de CADA tipo de recompensa de imagen para el usuario
+            // 1. Find the last reward transaction for each type of reward
             const findLastReward = async (productId) => {
                 return Transaction.findOne({
                     where: {
@@ -95,15 +95,15 @@ class TransactionService {
                         type: "reward",
                         productId: productId
                     },
-                    order: [['createdAt', 'DESC']], // Obtener la más reciente
-                    attributes: ['createdAt'] // Solo necesitamos la fecha
+                    order: [['createdAt', 'DESC']], // Get the most recent transaction
+                    attributes: ['createdAt'] // We only need the createdAt field
                 });
             };
 
             const lastCoinTransaction = await findLastReward(COIN_ID);
             const lastGemTransaction = await findLastReward(GEM_ID);
 
-            // Si nunca ha recibido una de las dos, definitivamente puede reclamar el par
+            // If the user has never received either reward, they can claim it
             if (!lastCoinTransaction || !lastGemTransaction) {
                 console.log(`Usuario ${userId} nunca ha recibido ${!lastCoinTransaction ? COIN_ID : GEM_ID}. Puede reclamar.`);
                 return true;
@@ -112,44 +112,36 @@ class TransactionService {
             const lastCoinTime = lastCoinTransaction.createdAt;
             const lastGemTime = lastGemTransaction.createdAt;
 
-            console.log(`Última ${COIN_ID} para ${userId}: ${lastCoinTime.toISOString()}`);
-            console.log(`Última ${GEM_ID} para ${userId}: ${lastGemTime.toISOString()}`);
-
-            // 2. Verificar si las últimas transacciones ocurrieron juntas
+            // 2. Verify if the last rewards occurred together
             const timeDifferenceSeconds = Math.abs(lastCoinTime.getTime() - lastGemTime.getTime()) / 1000;
 
-            console.log(`Diferencia de tiempo entre últimas recompensas: ${timeDifferenceSeconds.toFixed(2)} segundos.`);
-
             if (timeDifferenceSeconds > MAX_SECONDS_APART) {
-                // Las últimas recompensas de cada tipo no ocurrieron juntas.
-                // Esto implica que la última vez que recibió el *par* (si alguna vez lo hizo)
-                // fue antes de estas dos transacciones separadas. Por lo tanto, puede reclamar.
+                // The last rewards of each type did not occur together and are too far apart. So, the user can claim.
                 console.log(`Las últimas recompensas para ${userId} están demasiado separadas en el tiempo. Puede reclamar.`);
                 return true;
             }
 
-            // 3. Si ocurrieron juntas, verificar el cooldown desde la más reciente de las dos
+            // 3. if they occurred together, check get the max time between the two
             const lastPairClaimTime = new Date(Math.max(lastCoinTime.getTime(), lastGemTime.getTime()));
             const cooldownEndTime = new Date(lastPairClaimTime.getTime() + CLAIM_COOLDOWN_HOURS * 60 * 60 * 1000);
             const now = new Date();
 
             console.log(`Último reclamo del par para ${userId} (estimado): ${lastPairClaimTime.toISOString()}`);
             console.log(`Cooldown termina: ${cooldownEndTime.toISOString()}`);
-            console.log(`Hora actual: ${now.toISOString()}`);
 
             if (now >= cooldownEndTime) {
-                // Han pasado más de 24 horas desde el último reclamo conjunto
+                // Has passed the cooldown period
                 console.log(`Cooldown terminado para ${userId}. Puede reclamar.`);
                 return true;
             } else {
-                // Aún no han pasado 24 horas
+                // Still within the cooldown period
                 console.log(`Cooldown AÚN ACTIVO para ${userId}. No puede reclamar.`);
                 return false;
             }
 
         } catch (error) {
             console.error("Error checking if user can claim daily image reward pair:", error.message);
-            return false; // Seguro devolver false en caso de error
+            return false; // Return false if there's an error
         }
     }
 
