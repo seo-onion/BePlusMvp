@@ -8,6 +8,7 @@ dotenv.config({ path: path.resolve(__dirname, `../config/dotenv/${envFile}`) });
 dotenv.config({ path: path.resolve(__dirname, '../config/dotenv/.env') });
 
 const express = require("express");
+
 const { sequelize } = require("./config/database");
 const { execSync } = require("child_process");
 const client = require("./bot");
@@ -20,8 +21,10 @@ const {
   googleRedirect,
   googleAuth,
 } = require("./controller/AuthController");
+const validateCoupon = require("./controller/QrController")
 
 const UserController = require("./controller/UserController");
+const DiscountController = require("./controller/discountController");
 
 // View settings
 app.set("views", path.join(__dirname, "./views"));
@@ -45,6 +48,12 @@ app.get("/form", async (req, res) => {
 
 // Route to handle user data updates from Discord.
 app.post("/api/auth/discord/update-user", UserController.updateUser);
+
+app.get("/cupones/validar/:token", validateCoupon);
+
+// Route to add a new coupons
+app.get("/descuentos/nuevo", DiscountController.showCreateForm);
+app.post("/descuentos/crear", DiscountController.createDiscount);
 
 
 // Execute deploy-commands before starting the server
@@ -78,8 +87,8 @@ async function main() {
     const HOST = process.env.DB_HOST || "127.0.0.1";
 
     // Start the server and listen on all network interfaces for Render at port 0.0.0.0.
-    app.listen(PORT, HOST, () => {
-      console.log(`Server running in http://localhost:${PORT}`);
+    app.listen(3000, HOST, () => {
+      console.log(`Server running in http://localhost:3000`);
     });
 
     // Deploy discord bot
