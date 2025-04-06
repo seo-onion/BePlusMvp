@@ -4,6 +4,7 @@ const { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } = require("@googl
 const errorEmbed = require("../../utils/embed/errorEmbed");
 const fetch = require('node-fetch');
 const { addRockyCoins, addRockyGems } = require("../../services/item/economyService");
+const TransactionService = require("../../services/item/transactionServices");
 
 const ALLOWED_PARENT_CHANNEL_IDS = new Set([
   '1349815097228394646',
@@ -15,8 +16,8 @@ const ALLOWED_PARENT_CHANNEL_IDS = new Set([
 //--Modification of the rockie coins and gems--
 async function modifyRockyCoinsAndGems(userId, quantity) {
   try {
-    await addRockyCoins({userId, quantity}); // Add RockyCoins
-    await addRockyGems({userId, quantity}); // Add RockyGems
+      await addRockyCoins({userId, quantity}); // Add RockyCoins
+      await addRockyGems({userId, quantity}); // Add RockyGems
   }
   catch (error) {
     console.error("Error al modificar RockyCoins y RockyGems:", error);
@@ -229,9 +230,30 @@ module.exports = {
         descripcionEs
       );
 
-      // 3. Create and send the result embed
+      //--- 3. Check if the image matches the description and if the user can claim the reward ---
+      // Variables to track if the reward was granted and if the cooldown is active
+      let rewardGranted = false;
+      let cooldownActive = false;
+
+      // Verify if the user image matches the description
+      if (cumple) {
+        // Now we check if the user can claim the reward
+        const canClaim = await TransactionService.canClaimDailyImageRewardPair(userId);
+
+        if (canClaim) {
+          //if it's true, we can claim the reward
+          await modifyRockyCoinsAndGems(userId, 10);
+          rewardGranted = true;
+        } else {
+          // If it's false, we can't claim the reward and we set the cooldown to true to avoid giving the reward again
+          cooldownActive = true;
+          console.log(`Cooldown activo para ${userId}. No se otorgan recompensas.`);
+        }
+      }
+
+      // 4. Create and send the result embed
       const resultEmbed = new EmbedBuilder()
-        .setColor(cumple ? "#00FF00" : "#FF4500")
+        .setColor(cumple ? (cooldownActive ? "#FFA500" : "#00FF00") : "#FF4500")
         .setTitle("🧠 Resultado del Análisis con de la Imagen Gemini Vision")
         .setDescription(`Se consultó a Gemini si la imagen muestra "${descripcionEs}".`)
         .setImage(imageUrl)
@@ -244,7 +266,9 @@ module.exports = {
           { name: "\u200B", value: "\u200B" },
           {
             name: "✅ Resultado",
-            value: cumple ? `**Sí**` : `**No**`,
+            value:  cumple
+            ? (rewardGranted ? '**Sí, ¡Reto Verificado y Recompensado!**' : '**Sí, ¡Reto Verificado!** (Recompensa diaria ya reclamada)')
+            : '**No verificado.**',
             inline: true,
           },
           {
@@ -264,10 +288,13 @@ module.exports = {
           iconURL: interaction.user.displayAvatarURL(),
         });
 
-        if(cumple) {
-          // Modify RockyCoins and Gems if the image matches the description
-          await modifyRockyCoinsAndGems(userId, 10); // Example: adding 1 RockyCoin
-        }
+        if (cooldownActive) {
+          resultEmbed.addFields({
+              name: "⏳ Cooldown Activo",
+              value: "Ya has recibido la recompensa por verificación hoy. ¡Vuelve mañana!",
+              inline: false
+          });
+      }
 
       return await interaction.editReply({ embeds: [resultEmbed] });
 
