@@ -4,7 +4,7 @@ const AchievementService = require("../../services/achievement/achievementServic
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("logros")
-        .setDescription("🎖️ Muestra todos los logros disponibles en B+"),
+        .setDescription("Muestra todos los logros disponibles en B+"),
     
     async execute(interaction) {
         await interaction.deferReply({ ephemeral: true });
@@ -28,12 +28,12 @@ module.exports = {
             for (const achievement of achievements) {
                 embed.addFields({
                     name: `${achievement.emoji || "🎖️"} ${achievement.name}`,
-                    value: `📝 ${achievement.description} — **${achievement.point || 0} pts**`,
+                    value: `📝 ${achievement.description} — **${achievement.point || 0} rockyCoins**`,
                     inline: false,
                 });
             }
 
-            await interaction.editReply({ embeds: [embed] });
+            await interaction.editReply({ embeds: [embed], ephemeral:true });
 
         } catch (error) {
             console.error("❌ Error al obtener los logros:", error);

@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 const { Op } = require("sequelize");
 const Items = require("../../models/Item/Items.js");
 const createErrorEmbed = require("../../utils/embed/errorEmbed");
+const createAlertEmbed = require("../../utils/embed/alertEmbed");
 const ListObjectFormat = require("../../utils/ListObjects");
 
 const ITEMS_PER_PAGE = 5;
@@ -14,7 +15,7 @@ module.exports = {
     restricted: true,
 
     async execute(interaction) {
-        await interaction.deferReply();
+        await interaction.deferReply({ ephemeral: true });
 
         try {
             const allItems = await Items.findAll({
@@ -29,7 +30,11 @@ module.exports = {
             });
 
             if (allItems.length === 0) {
-                return await interaction.editReply("❌ No hay artículos en la tienda actualmente.");
+                const alertEmbed = createAlertEmbed({
+                    title: "🥺 ¡Oh no! Nos quedamos sin descuentos",
+                    description: "Por ahora la tienda está vacía de descuentos mágicos...\n\nPero no te preocupes, ¡nuevas ofertas llegarán muy pronto! ✨\nMantente atento y sigue acumulando Rocky Gems 💎"
+                });
+                return await interaction.editReply({ embeds: [alertEmbed], ephemeral: true });
             }
 
             let groupedItems = {};
@@ -86,6 +91,7 @@ module.exports = {
             const message = await interaction.editReply({
                 embeds: [generateEmbed(currentPage)],
                 components: [generateButtons(currentPage)],
+                ephemeral: true
             });
 
             const collector = message.createMessageComponentCollector({ time: 120000 });
@@ -108,21 +114,13 @@ module.exports = {
             });
 
             collector.on("end", () => {
-                interaction.editReply({ components: [] }).catch(() => {});
+                interaction.editReply({ components: [], ephemeral: true }).catch(() => { });
             });
 
         } catch (error) {
-            console.error("❌ Error al obtener los artículos de la tienda:", error);
-
-            const errorEmbed = createErrorEmbed({
-                title: "❌ Hubo un error al obtener los artículos. Intenta más tarde.",
-            });
-
-            if (interaction.replied || interaction.deferred) {
-                await interaction.editReply({ embeds: [errorEmbed] });
-            } else {
-                await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
-            }
+            console.error("Error to get /tienda:", error);
+            const errorEmbed = createErrorEmbed();
+            await interaction.editReply({ embeds: [errorEmbed], ephemeral: true });
         }
     }
 };

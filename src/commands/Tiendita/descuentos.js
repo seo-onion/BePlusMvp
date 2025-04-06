@@ -1,8 +1,9 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const DiscountService = require("../../services/tiendita/discountServices")
+
+const ListDiscountsFormat = require("../../utils/ListDiscounts");
 const createErrorEmbed = require("../../utils/embed/errorEmbed");
 const createAlertEmbed = require("../../utils/embed/alertEmbed");
-const ListDiscountsFormat = require("../../utils/ListDiscounts");
 
 const ITEMS_PER_PAGE = 5;
 
@@ -14,15 +15,18 @@ module.exports = {
     restricted: true,
 
     async execute(interaction) {
-        await interaction.deferReply();
+        await interaction.deferReply({ephemeral: true});
 
         try {
             const allDiscount = await DiscountService.getAvailableDiscounts()
-            
+
 
             if (allDiscount.length === 0) {
-                const alerEmbed = createAlertEmbed({title: "Nos quedamos sin descuentos", description: "Por el momento no contamos con descuentos en la tienda, prueba más tarde"})
-                return await interaction.editReply({ embeds: [alerEmbed] });
+                const alertEmbed = createAlertEmbed({
+                    title: "🥺 ¡Oh no! Nos quedamos sin descuentos",
+                    description: "Por ahora la tienda está vacía de descuentos mágicos...\n\nPero no te preocupes, ¡nuevas ofertas llegarán muy pronto! ✨\nMantente atento y sigue acumulando Rocky Gems 💎"
+                });
+                return await interaction.editReply({ embeds: [alertEmbed], ephemeral: true });
             }
 
             let groupedItems = {};
@@ -51,7 +55,7 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setTitle("🛒 Tienda de descuentos y promociones")
                     .setDescription("Bienvenido a la **Tienda** 🏪\nPuedes comprar usando: `/adquirir`")
-                    .setColor("#FFA501"); 
+                    .setColor("#FFA501");
 
                 embed.addFields({
                     name: `📌 ${category.charAt(0).toUpperCase() + category.slice(1)}`,
@@ -79,6 +83,7 @@ module.exports = {
             const message = await interaction.editReply({
                 embeds: [generateEmbed(currentPage)],
                 components: [generateButtons(currentPage)],
+                ephemeral: true
             });
 
             const collector = message.createMessageComponentCollector({ time: 120000 });
@@ -97,25 +102,19 @@ module.exports = {
                 await btn.update({
                     embeds: [generateEmbed(currentPage)],
                     components: [generateButtons(currentPage)],
+                    ephemeral: true
                 });
             });
 
             collector.on("end", () => {
-                interaction.editReply({ components: [] }).catch(() => {});
+                interaction.editReply({ components: [], ephemeral: true }).catch(() => { });
             });
 
         } catch (error) {
-            console.error("❌ Error al obtener los artículos de la tienda:", error);
+            console.error("Error to get discounts", error);
 
-            const errorEmbed = createErrorEmbed({
-                title: "❌ Hubo un error al obtener los artículos. Intenta más tarde.",
-            });
-
-            if (interaction.replied || interaction.deferred) {
-                await interaction.editReply({ embeds: [errorEmbed] });
-            } else {
-                await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
-            }
+            const errorEmbed = createErrorEmbed();
+            await interaction.editReply({ embeds: [errorEmbed], ephemeral: true });
         }
     }
 };

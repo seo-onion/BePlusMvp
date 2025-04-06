@@ -7,6 +7,19 @@ const { v4: uuidv4 } = require("uuid");
 
 class DiscountService {
 
+    static async categoryExists(category) {
+        try {
+            const exists = await Discounts.findOne({
+                where: { category },
+                raw: true
+            });
+            return !!exists;
+        } catch (error) {
+            console.error("Error to verify categories ", error);
+            return false;
+        }
+    }
+
     static async validateCoupon(req) {
         const { userId, discount } = req
         if (!userId || !discount) {
@@ -131,6 +144,24 @@ class DiscountService {
         }
     }
 
+    static async getAffordableForUser(category, rockyGems) {
+        try {
+
+            const discounts = await Discounts.findAll({
+                where: {
+                    category,
+                    price: { [Op.lte]: rockyGems } 
+                },
+                raw: true
+            });
+    
+            return discounts; 
+        } catch (error) {
+            console.error("Error to get affordable discounts:", error);
+            return [];
+        }
+    }
+
     static async getItemByCategoryAndName(req) {
         const { name, category } = req;
         try {
@@ -157,12 +188,26 @@ class DiscountService {
         }
     }
 
+    static async getAllCategories() {
+        try {
+            const categories = await Discounts.findAll({
+                attributes: ['category'],
+                group: ['category'],
+                raw: true
+            });
+            return categories; 
+        } catch (error) {
+            console.error("Errorto get all categories: ", error);
+            return [];
+        }
+    }
+    
     static async buyItemByCategoryAndName(req) {
         const { userId, name, category } = req
         try {
             if (!userId || !name || !category) {
                 console.error("Data missing");
-                return false;
+                return null;
             }
 
             const discount = await this.getItemByCategoryAndName({ name, category })
@@ -170,20 +215,20 @@ class DiscountService {
 
             if (!discount) {
                 console.error("Discount not found.");
-                return false;
+                return null;
             }
 
             const user = await UserService.getUser(userId);
             if (!user) {
                 console.error("user not found");
-                return false;
+                return null;
             }
 
             console.log(user.rockyGems)
             const price = discount.price;
             if (user.rockyGems < price) {
                 console.error(`No tienes suficientes rocky gems`);
-                return false;
+                return null;
             }
 
             await TransactionService.createTransaction({ userId, amount: price, type: "compra", badge: "rockyGem", productId: discount.name })
@@ -191,11 +236,11 @@ class DiscountService {
             user.rockyGems -= price;
             await user.save();
 
-            return true;
+            return discount;
 
         } catch (error) {
             console.error("Error al comprar ítem:", error.message);
-            return false;
+            return null;
         }
     }
 

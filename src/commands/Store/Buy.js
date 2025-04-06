@@ -53,10 +53,9 @@ module.exports = {
         const userId = interaction.user.id;
 
         try {
-            const item = await ItemService.buyItem({userId, itemName, category});
+            const item = await ItemService.buyItem({ userId, itemName, category });
 
             if (!item) {
-                
                 const user = await UserService.getUser(userId);
                 const categoryExists = await Items.findOne({ where: { category }, raw: true });
 
@@ -74,7 +73,8 @@ module.exports = {
                         embeds: [alertEmbedList("❌ Categoría No Encontrada",
                             `La categoría **${category}** no existe.`,
                             [{ name: "📂 Categorías Disponibles", value: formattedCategories }]
-                        )]
+                        )],
+                        ephemeral: true
                     });
                 }
 
@@ -88,8 +88,9 @@ module.exports = {
                             [{
                                 name: `📂 Artículos en ${category}`,
                                 value: ListObjectsFormat(categoryItems, "❌ No hay artículos en esta categoría.")
-                            }]
-                        )]
+                            }],
+                        )],
+                        ephemeral: true
                     });
                 }
 
@@ -98,11 +99,12 @@ module.exports = {
                         embeds: [createErrorEmbed({
                             title: "❌ Usuario No Encontrado",
                             description: "No se pudo encontrar tu perfil en la base de datos."
-                        })]
+                        })],
+                        ephemeral: true
                     });
                 }
 
-                const alreadyHasItem = await UserItemsService.hasUserItem({userId, itemId: itemInCategory.id});
+                const alreadyHasItem = await UserItemsService.hasUserItem({ userId, itemId: itemInCategory.id });
                 if (alreadyHasItem) {
                     const allItems = await ItemService.getAllItemsByCategory(category);
                     const userItems = await UserItemsService.getAllItemsByUser(userId);
@@ -125,7 +127,8 @@ module.exports = {
                                     inline: true
                                 }
                             ]
-                        )]
+                        )],
+                        ephemeral: true
                     });
                 }
 
@@ -144,7 +147,8 @@ module.exports = {
                                 name: "🎭 Puedes comprar estos artículos:",
                                 value: ListObjectsFormat(affordableUnowned, "❌ No puedes comprar ningún artículo con tu saldo actual.")
                             }]
-                        )]
+                        )],
+                        ephemeral: true
                     });
                 }
 
@@ -158,13 +162,14 @@ module.exports = {
                     item,
                     category: item.category,
                     itemName: item.name,
-                })]
+                })], ephemeral: true
             });
 
         } catch (error) {
             console.error("❌ Error en /comprar:", error);
             return interaction.editReply({
-                embeds: [createErrorEmbed("❌ Error al efectuar la compra. Inténtalo nuevamente.")]
+                embeds: [createErrorEmbed("❌ Error al efectuar la compra. Inténtalo nuevamente.")],
+                ephemeral: true
             });
         }
     }

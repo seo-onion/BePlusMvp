@@ -68,7 +68,7 @@ module.exports = {
             // Attaches the Rockie image to the embed message.
             const attachment = new AttachmentBuilder(rockieImageBuffer, { name: "rockie.png" });
 
-            await interaction.editReply({ embeds: [embed], files: [attachment] });
+            await interaction.editReply({ embeds: [embed], files: [attachment], ephemeral: true });
 
         } catch (error) {
             console.error("Error executing /rockie: ", error);

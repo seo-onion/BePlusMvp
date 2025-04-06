@@ -12,7 +12,7 @@ module.exports = {
 
   async execute(interaction) {
     try {
-      await interaction.deferReply(); //  Prevent command timeout while processing the response
+      await interaction.deferReply({ephemeral: true}); //  Prevent command timeout while processing the response
 
       const userId = interaction.user.id;
 
@@ -23,7 +23,7 @@ module.exports = {
           title: "No se encontró tu perfil",
           description: "Parece que aún no tienes un perfil registrado en el sistema."
         });
-        return await interaction.editReply({ embeds: [errorEmbed] });
+        return await interaction.editReply({ embeds: [errorEmbed], ephemeral: true });
       }
 
       const user = userData.toJSON();
@@ -35,7 +35,7 @@ module.exports = {
           title: "Perfil no encontrado",
           description: "Tu perfil no contiene información suficiente. Intenta actualizarlo."
         });
-        return await interaction.editReply({ embeds: [errorEmbed] });
+        return await interaction.editReply({ embeds: [errorEmbed], ephemeral: true });
       }
 
       //  Retrieve user achievements
@@ -73,16 +73,13 @@ module.exports = {
       });
 
       // Send the final embed
-      await interaction.editReply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed], ephemeral: true });
 
     } catch (error) {
       console.error("Error executing /yo command:", error);
-      const errorEmbed = createErrorEmbed({
-        title: "❌ Ocurrió un error inesperado",
-        description: "Hubo un problema al obtener tu perfil. Inténtalo de nuevo más tarde."
-      });
+      const errorEmbed = createErrorEmbed();
       
-      await interaction.editReply({ embeds: [errorEmbed] });
+      await interaction.editReply({ embeds: [errorEmbed], ephemeral: true });
 
     }
   },

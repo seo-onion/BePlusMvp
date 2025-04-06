@@ -24,7 +24,7 @@ class RenderRockieService {
       }
 
       // ✅ Prefijo assets/ para base, ropa y sombreros
-      const basePath = `assets/bases/${color}/BASE${phase}.png`;
+      const basePath = `assets/bases/1/BASE${phase}.png`;
       const hatPath = hatItem ? `assets/sombreros/${hatItem}` : null;
       const clothesPath = clothesItem ? `assets/ropas/${clothesItem}` : null;
       const eyesPath = `ojos/${eyes}`;

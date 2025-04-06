@@ -2,6 +2,7 @@
 const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require("discord.js");
 const accessoryService = require("../../services/rockie/accessoryService");
 const renderRockieService = require("../../services/rockie/renderRockieService");
+const createErrorEmbed = require("../../utils/embed/errorEmbed");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -27,12 +28,22 @@ module.exports = {
             const result = await accessoryService.equipAccessory(userId, itemName);
 
             if (!result.success) {
-                return await interaction.editReply(result.message);
+                const errorEmbed = createErrorEmbed({
+                    title: "❌ ¡Oops! Tuvimos un error al vestir a Rocky",
+                    description: "Parece que algo salió mal al intentar vestir a Rocky. 😔\n\nPor favor, contacta con un administrador o intenta nuevamente más tarde. 💬"
+                });
+                
+                return await interaction.editReply({embeds: [errorEmbed], ephemeral: true});
             }
 
             const rockieImageBuffer = await renderRockieService.renderRockie(userId);
             if (!rockieImageBuffer) {
-                return await interaction.editReply("❌ Error al generar la imagen de Rockie.");
+                const errorEmbed = createErrorEmbed({
+                    title: "❌ ¡Oops! No pudimos generar la imagen de Rocky",
+                    description: "Parece que algo salió mal al intentar vestir a Rocky. 😔\n\nPor favor, contacta con un administrador o intenta nuevamente más tarde. 💬"
+                });
+            
+                return await interaction.editReply({ embeds: [errorEmbed], ephemeral: true });
             }
 
             const attachment = new AttachmentBuilder(rockieImageBuffer, { name: "rockie.png" });
@@ -44,11 +55,12 @@ module.exports = {
                 .setImage("attachment://rockie.png")
                 .setFooter({ text: "Rockie actualizado" });
 
-            return await interaction.editReply({ embeds: [embed], files: [attachment] });
+            return await interaction.editReply({ embeds: [embed], files: [attachment], ephemeral: true });
 
         } catch (error) {
-            console.error("❌ Error ejecutando el comando /equipar:", error);
-            return await interaction.editReply("❌ Hubo un error al equipar el accesorio. Intenta más tarde.");
+            console.error("Error ejecutando el comando /equipar:", error);
+            const errorEmbed = createErrorEmbed();
+            return await interaction.editReply({ embeds: [errorEmbed], ephemeral: true });
         }
     },
 };

@@ -32,13 +32,14 @@ module.exports = {
                                 "🔗 **Haz clic en el siguiente enlace para vincular tu cuenta:**\n" +
                                 `[📲 Conectar Google Fit](${authUrl})`
                         })]
+                    , ephemeral: true
                 }
             );
-            
+
         } catch (error) {
             console.error("Error executing /v<incularmeconfit ", error);
             const errorEmbed = createErrorEmbed();
-            return await interaction.editReply({ embeds: [errorEmbed] });
+            return await interaction.editReply({ embeds: [errorEmbed], ephemeral: true });
         }
     },
 };
