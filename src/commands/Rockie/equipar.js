@@ -32,7 +32,7 @@ module.exports = {
                     title: "❌ ¡Oops! Tuvimos un error al vestir a Rocky",
                     description: "Parece que algo salió mal al intentar vestir a Rocky. 😔\n\nPor favor, contacta con un administrador o intenta nuevamente más tarde. 💬"
                 });
-                
+                console.log(result.message)
                 return await interaction.editReply({embeds: [errorEmbed], ephemeral: true});
             }
 

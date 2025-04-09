@@ -165,6 +165,7 @@ module.exports = {
 
   async execute(interaction) {
     // We only need to verify geminiModel
+    await interaction.deferReply({ ephemeral: true });
     if (!geminiModel) {
       console.error("Intento de ejecutar comando sin modelo Gemini inicializado.");
       const errorEmbed = new EmbedBuilder()
@@ -207,7 +208,6 @@ module.exports = {
     }
 
     try {
-      await interaction.deferReply();
 
       const attachment = interaction.options.getAttachment("imagen", true);
       const descripcionEs = interaction.options.getString("descripcion", true); //General Description

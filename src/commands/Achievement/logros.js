@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const AchievementService = require("../../services/achievement/achievementService");
-
+const createErrorEmbed = require("../../utils/embed/errorEmbed")
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("logros")
@@ -37,9 +37,8 @@ module.exports = {
 
         } catch (error) {
             console.error("❌ Error al obtener los logros:", error);
-            return interaction.editReply({
-                content: "Ocurrió un error al cargar los logros. Intenta más tarde.",
-            });
+            const errorEmbed = createErrorEmbed();
+            return interaction.editReply({embeds: [errorEmbed], ephemeral: true});
         }
     }
 };

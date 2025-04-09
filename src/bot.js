@@ -14,7 +14,7 @@ const NO_VERIFIED = process.env.DISCORD_NOT_VERIFICATED_ROLE;
 // Define permissions for each channel specifying allowed commands.
 const channelCommandPermissions = {
   [GENERAL_CHANNEL]: ['empezar', 'vincularmeconfit', 'reclamar', 'pasos', 'comprar', 'tienda', 'yo', 'desbloquear', 'rockie', 'equipar', "descuentos" ,"adquirirdescuento", "logros","inventario"],
-  [COMMAND_CHANNEL]: ['item', 'eliminar', 'creardivisas', 'crearlogros','subirimagen']
+  [COMMAND_CHANNEL]: ['item', 'eliminar', 'creardivisas', 'crearlogros','subirimagen', "listarimagenes"]
 };
 
 // Initialize Discord client with necessary intents.

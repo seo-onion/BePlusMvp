@@ -86,7 +86,7 @@ async function main() {
     const HOST = process.env.DB_HOST || "127.0.0.1";
 
     console.log(`Starting server at http://${HOST}:${PORT}`);
-    app.listen(PORT, HOST, () => {
+    app.listen(PORT, "0000", () => {
       console.log(`Server running at http://${HOST}:${PORT}`);
     });
 

@@ -9,15 +9,13 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("desbloquear")
     .setDescription("Desbloquea un logro en el sistema de recompensas"),
-  restricted: true, 
+  restricted: true,
 
   async execute(interaction) {
     try {
       // Defers the reply to prevent timeout issues during processing.
-      if (!interaction.deferred && !interaction.replied) {
-        await interaction.deferReply({ flags: 64 });
-      }
-      
+      await interaction.deferReply({ ephemeral: true });
+
       const userId = interaction.user.id;
       let achievementsObtained = [];
 
@@ -62,8 +60,8 @@ module.exports = {
 
       // If no achievements were unlocked, send an alert message.
       if (achievementsObtained.length === 0) {
-        const alert = alertEmbed("🚀 No has desbloqueado ningún logro nuevo. ¡Sigue esforzándote!");
-        return await interaction.editReply({ embeds: [alert] });
+        const alertEmbed = alertEmbed("🚀 No has desbloqueado ningún logro nuevo. ¡Sigue esforzándote!");
+        return await interaction.editReply({ embeds: [alertEmbed], ephemeral: true });
       }
 
       // Creates an embed displaying the newly unlocked achievements.
@@ -71,7 +69,7 @@ module.exports = {
         .setColor("#FFD700") // Gold color representing achievements.
         .setTitle("🏅 ¡Nuevos Logros Desbloqueados!")
         .setDescription("Has logrado grandes avances y desbloqueaste los siguientes logros:")
-        .setThumbnail("https://i.imgur.com/Yk4p2Ox.png") 
+        .setThumbnail("https://i.imgur.com/Yk4p2Ox.png")
         .setTimestamp();
 
       // Adds each unlocked achievement to the embed.
@@ -83,20 +81,16 @@ module.exports = {
         });
       });
 
-      return await interaction.editReply({ embeds: [embed] });
+      return await interaction.editReply({ embeds: [embed], ephemeral: true });
 
     } catch (error) {
       console.error("❌ Error al ejecutar el comando:", error);
       const errorEmbed = createErrorEmbed(
-          {
-        title: "⚠️ Ocurrió un error inesperado al procesar tus logros.",
-      });
+        {
+          title: "⚠️ Ocurrió un error inesperado al procesar tus logros.",
+        });
 
-      if (interaction.deferred || interaction.replied) {
-        return await interaction.editReply({ embeds: [errorEmbed] });
-      } else {
-        return await interaction.reply({ embeds: [errorEmbed], flags: 64 });
-      }
+      return await interaction.editReply({ embeds: [errorEmbed], ephemeral: true });
     }
   },
 };

@@ -8,26 +8,17 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName("reclamar")
         .setDescription("Convierte tus pasos en RockyCoins"),
-
-
     restricted: true,
 
     async execute(interaction) 
 
     {
         try {
-            await interaction.deferReply() //  Prevent command timeout while processing the response
+            await interaction.deferReply({ephemeral: true}) //  Prevent command timeout while processing the response
             
             const userId = interaction.user.id;
 
             const user = await UserService.getUser(userId)
-            const userAuth = user.toJSON();
-            //console.log(userAuth)
-            // Verify if user sign in with google fit
-            if (!userAuth.Auth.googleToken || !userAuth.Auth.googleRefreshToken) {
-                const errorEmbed = createErrorEmbed(title = "Aún no estas vinculado con google fit", description = "Utiliza el comando /vincularconfit para iniciar");
-                return await interaction.editReply({ embeds: [errorEmbed], ephemeral: true});
-            }
             
             // Attempts to claim RockyCoins for the userID.
             const claim = await GoogleFitService.claimRockyCoins(userId);
@@ -49,7 +40,7 @@ module.exports = {
                 .setFooter({ text: "¡Sigue caminando y gana más recompensas!" })
                 .setTimestamp();
 
-            await interaction.editReply({ embeds: [embed] });
+            await interaction.editReply({ embeds: [embed], ephemeral: true });
 
         } catch (error) {
             console.error("Error to claim rockyCoins", error);

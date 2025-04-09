@@ -104,7 +104,7 @@ module.exports = {
                 });
             }
 
-            const qrContent = `http://localhost:3000/cupones/validar/${userCoupon.token}`;
+            const qrContent = `http://192.168.1.35:3000/cupones/validar/${userCoupon.token}`;
             const qrImage = await generateQR(qrContent, { returnImage: true });
             const qrAttachment = new AttachmentBuilder(qrImage, { name: "qr_descuento.png" });
 

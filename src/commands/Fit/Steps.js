@@ -22,10 +22,9 @@ module.exports = {
 
     async execute(interaction) {
         try {
-            // Defers the reply to avoid timeout issues during processing.
-            if (!interaction.deferred && !interaction.replied) {
-                await interaction.deferReply({ flags: 64 });
-            }
+
+            await interaction.deferReply({ephemeral: true}) 
+
 
             const userId = interaction.user.id;
             const time = interaction.options.getString('tiempo');
@@ -59,7 +58,7 @@ module.exports = {
                 const errorEmbed = createErrorEmbed({
                     title: "⚠️ No se ha podido recuperar el número de pasos. Inténtalo más tarde."
                 });
-                return await interaction.editReply({ embeds: [errorEmbed] });
+                return await interaction.editReply({ embeds: [errorEmbed], ephemeral: true });
             }
 
             // Creates an embed displaying the user's steps information.
@@ -73,7 +72,7 @@ module.exports = {
                 )
                 .setFooter({ text: "¡Sigue caminando para obtener más recompensas!" });
 
-            return await interaction.editReply({ embeds: [embed] });
+            return await interaction.editReply({ embeds: [embed], ephemeral: true });
 
         } catch (error) {
             console.error("❌ Error al obtener los pasos:", error);
